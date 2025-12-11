@@ -6,13 +6,13 @@
     <title>Система сохранения номеров с режимами</title>
     <link rel="stylesheet" href="./style/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="script.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Первый контейнер (основной) -->
+    <div class="container active" id="container1">
         <header>
-            <h1><i class="fas fa-flask"></i> Лабораторная система номеров</h1>
-            <div class="subtitle">Сохраняйте номера с указанием режима анализа</div>
+            <h1><i class="fas fa-flask"></i> Гемотест хелпер</h1>
+            <div class="subtitle">Сохраняйте номера с указанием режима</div>
         </header>
 
         <div class="content">
@@ -68,17 +68,6 @@
                             <button class="mode-btn mode-duplicate" onclick="copyDoubleInfo()" data-mode="duplicate" data-display="Дубликат">
                                 Дубликат
                             </button>
-                            <button class="mode-btn" onclick="setCustomMode()" style="border-left-color: #ff922b;">
-                                <i class="fas fa-edit"></i> Свой
-                            </button>
-                        </div>
-                        
-                        <div class="input-with-icon" style="margin-top: 10px; display: none;" id="customModeContainer">
-                            <i class="fas fa-cogs"></i>
-                            <input type="text" 
-                                   id="customMode" 
-                                   placeholder="Введите свой режим..."
-                                   maxlength="50">
                         </div>
                     </div>
                 </div>
@@ -124,13 +113,6 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; padding: 15px; background: #fff3bf; border-radius: 8px; font-size: 13px;">
-                    <strong><i class="fas fa-info-circle"></i> Для Python:</strong>
-                    <p style="margin-top: 8px; color: #666;">
-                        При сохранении в буфер копируется JSON объект с номером и режимом.
-                        Python может его распарсить и использовать для печати.
-                    </p>
-                </div>
             </div>
 
             <div class="right-panel">
@@ -139,10 +121,51 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Кнопка перехода ко второму контейнеру -->
+        <div class="container-nav">
+            <button class="nav-btn next-btn" onclick="showContainer(2)">
+                <i class="fas fa-arrow-right"></i>
+                Второй блок
+            </button>
+        </div>
+    </div>
+
+    <!-- Второй контейнер (пустой, для вашего наполнения) -->
+    <div class="container" id="container2">
+        <header>
+            <h1><i class="fas fa-cogs"></i> Второй блок</h1>
+            <div class="subtitle">Здесь вы можете добавить свой функционал</div>
+        </header>
+
+        <div class="content">
+            
+            <div class="left-panel">
+                <div class="button-group">
+                    <button class="mode-btn mode-alicvots" onclick="showAlictotContent()">Аликвоты</button>
+                </div>    
+            </div>
+            <div class="right-panel", id="right-panel2">
+            </div>
+        </div>
+        
+        <!-- Кнопки навигации -->
+        <div class="container-nav">
+            <button class="nav-btn prev-btn" onclick="showContainer(1)">
+                <i class="fas fa-arrow-left"></i>
+                Вернуться назад
+            </button>
+        </div>
     </div>
 
     <div class="message" id="message"></div>
 
-    
+    <!-- Индикаторы переключения -->
+    <div class="container-indicators">
+        <span class="indicator active" data-container="1"></span>
+        <span class="indicator" data-container="2"></span>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

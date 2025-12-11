@@ -24,16 +24,10 @@ class PrintMonitor:
             if 'material' in data:
                 material = data['material']
 
-                if material == "Слюна":
-                    zpl = self.print_manager.create_label_cortisol()
+                if material in ["Слюна", "Дубли"]:
+                    zpl = self.print_manager.create_text_zpl(text=material)
                     self.print_manager.print_barcode(zpl)
-                    print("✅ Напечатана метка 'Слюна'")
-                    return True
-
-                elif material == "Дубли":
-                    zpl = self.print_manager.create_double_zpl()
-                    self.print_manager.print_barcode(zpl)
-                    print("✅ Напечатана метка 'Дубли'")
+                    print(f"✅ Напечатана метка {material}")
                     return True
 
                 elif material == "Архив" and 'number' in data:
@@ -43,17 +37,19 @@ class PrintMonitor:
                     self.print_manager.print_barcode(zpl)
                     print(f"✅ Напечатан архив: {archive_number}")
                     return True
+                elif material == "Аликвоты":
+                    zpl = self.print_manager.create_alicvot(name=data['name'],
+                                                            lot=data['lot'],
+                                                            volume=data['volume'])
+                    self.print_manager.print_barcode(
+                        zpl=zpl, retry=data['count'])
 
             # Обработка обычных номеров с режимами
-            elif 'number' in data:
+            elif 'number' in data and len(data['number']) == 10:
                 number = data.get('number')
                 mode = data.get('mode', 'default')
 
-                # Создаем ZPL
-                if mode == 'default':
-                    zpl = self.print_manager.insert_mode_in_label(number)
-                else:
-                    zpl = self.print_manager.insert_mode_in_label(number, mode)
+                zpl = self.print_manager.create_barcode(number, mode)
 
                 # Печатаем
                 success = self.print_manager.print_barcode(zpl, mode)
