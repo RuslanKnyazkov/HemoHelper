@@ -1,17 +1,84 @@
+// === ПЕРЕМЕННЫЕ ДЛЯ ОСНОВНОЙ СИСТЕМЫ ===
 let savedNumbers = [];
 let currentMode = "default";
 let currentModeDisplay = "По умолчанию";
 
+// === ПЕРЕМЕННЫЕ ДЛЯ ГЕМОСТАЗА ===
+let selectedReagent = null;
+let selectedReagentAllowedRacks = [];
+
+// Данные о реагентах и их ограничениях
+const reagentsData = {
+  d1: [null, null, null, null, null, null],
+  d2: [null, null, null, null, null, null],
+  d3: [null, null, null, null, null, null],
+  r1: [null, null, null, null, null, null],
+  r2: [null, null, null, null, null, null],
+  r3: [null, null, null, null, null, null],
+  r4: [null, null, null, null, null, null],
+  r5: [null, null, null, null, null, null],
+  r6: [null, null, null, null, null, null],
+};
+
+// Названия реагентов для отображения
+const reagentDisplayNames = {
+  clean_b: "Clb",
+  clean_b_dil: "ClbDil",
+  aptt_reagent: "APTT-R",
+  aptt_cacl2: "APTT-Ca",
+  at_liquid_reagent: "AT-R",
+  at_liquid_substrat: "AT-S",
+  recombiplastin: "PT",
+  trombintime: "TT",
+  fibrinogen: "O.F.A",
+  ps_C4PV: "C4PV",
+  ps_anti_ps: "PS Latex",
+  f_diluent: "F_D",
+  pc_dil: "PC_D",
+  d_dimer_b: "D-dim B",
+  d_dimer_l: "D-dim L",
+};
+
+// Полные названия
+const reagentFullNames = {
+  clean_b: "Clean B",
+  clean_b_dil: "Clean B Diluled",
+  aptt_reagent: "APTT reagent",
+  aptt_cacl2: "APTT CaCl2",
+  at_liquid_reagent: "AT liquid reagent",
+  at_liquid_substrat: "AT liquid substrat",
+  recombiplastin: "Recombiplastin",
+  trombintime: "Trombin Time",
+  fibrinogen: "O.F.A Fibrinogen",
+  ps_C4PV: "C4BV Latex",
+  ps_anti_ps: "Anti pb latex",
+  f_diluent: "Factor_Diluent",
+  pc_dil: "PC_Diluent",
+  d_dimer_b: "D-dimer Buffer",
+  d_dimer_l: "D-dimer Latex",
+};
+
+// === ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ===
 document.addEventListener("DOMContentLoaded", () => {
   loadSavedNumbers();
   setupEventListeners();
   updateDisplay();
-
   setMode("default", "По умолчанию");
-
+  initReagentSelector();
+  updateHemostasisStatistics();
   document.getElementById("numberInput").focus();
+
+  // Инициализация индикаторов переключения контейнеров
+  const indicators = document.querySelectorAll(".indicator");
+  indicators.forEach((indicator) => {
+    indicator.addEventListener("click", function () {
+      const containerNum = this.dataset.container;
+      showContainer(parseInt(containerNum));
+    });
+  });
 });
 
+// === ОСНОВНЫЕ ФУНКЦИИ СИСТЕМЫ ===
 function setupEventListeners() {
   const numberInput = document.getElementById("numberInput");
 
@@ -28,19 +95,6 @@ function setupEventListeners() {
       setMode(mode, display);
     });
   });
-
-  document
-    .getElementById("customMode")
-    .addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        const customMode = this.value.trim();
-        if (customMode) {
-          setMode("custom", customMode);
-          this.value = "";
-          this.parentElement.style.display = "none";
-        }
-      }
-    });
 
   document.addEventListener("click", (e) => {
     if (
@@ -65,7 +119,9 @@ function setMode(mode, display) {
       btn.classList.add("active");
     }
   });
+
   if (display === "Виртуальный") {
+    // Ничего не делаем, чтобы не показывать сообщение
   } else {
     showMessage(`Режим установлен: ${display}`, "info");
   }
@@ -85,7 +141,6 @@ function loadSavedNumbers() {
 
 function saveNumber() {
   const numberInput = document.getElementById("numberInput");
-
   const number = numberInput.value.trim();
 
   if (!number) {
@@ -112,7 +167,6 @@ function saveNumber() {
   };
 
   savedNumbers.unshift(numberObject);
-
   saveToLocalStorage();
 
   const clipboardObject = {
@@ -142,12 +196,8 @@ function saveNumber() {
     });
 
   updateDisplay();
-
   numberInput.value = "";
   numberInput.focus();
-
-  console.log("Сохраненная проба:", numberObject);
-  console.log("Скопировано в буфер:", clipboardObject);
 }
 
 function saveToLocalStorage() {
@@ -181,10 +231,10 @@ function updateDisplay() {
     const emptyState = document.createElement("div");
     emptyState.className = "empty-state";
     emptyState.innerHTML = `
-                    <i class="fas fa-inbox"></i>
-                    <h3>Нет сохраненных проб</h3>
-                    <p>Добавьте первую пробу через форму слева</p>
-                `;
+            <i class="fas fa-inbox"></i>
+            <h3>Нет сохраненных проб</h3>
+            <p>Добавьте первую пробу через форму слева</p>
+        `;
     listElement.appendChild(emptyState);
     return;
   }
@@ -192,43 +242,34 @@ function updateDisplay() {
   savedNumbers.forEach((item, index) => {
     const itemElement = document.createElement("div");
     itemElement.className = `number-item ${index === 0 ? "active" : ""}`;
-
     const modeClass = `mode-${item.mode}`;
 
     itemElement.innerHTML = `
-                    <div class="number-header">
-                        <div class="number-value">${escapeHtml(
-                          item.number
-                        )}</div>
-                        <div>
-                            <span class="number-mode ${modeClass}">${escapeHtml(
+            <div class="number-header">
+                <div class="number-value">${escapeHtml(item.number)}</div>
+                <div>
+                    <span class="number-mode ${modeClass}">${escapeHtml(
       item.modeDisplay
     )}</span>
-                            <span class="number-time">${item.date}</span>
-                        </div>
-                    </div>
-                    <div class="number-id">ID: ${item.id}</div>
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
-                        <button onclick="copyNumber('${
-                          item.id
-                        }')" style="padding: 5px 10px; font-size: 12px; background: #339af0; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            <i class="fas fa-copy"></i> Копировать JSON
-                        </button>
-                        <button onclick="deleteNumber('${
-                          item.id
-                        }')" style="padding: 5px 10px; font-size: 12px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                `;
+                    <span class="number-time">${item.date}</span>
+                </div>
+            </div>
+            <div class="number-id">ID: ${item.id}</div>
+            <div class="number-actions">
+                <button onclick="copyNumber('${item.id}')" class="copy-btn">
+                    <i class="fas fa-copy"></i> Копировать JSON
+                </button>
+                <button onclick="deleteNumber('${item.id}')" class="delete-btn">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+            </div>
+        `;
     listElement.appendChild(itemElement);
   });
 }
 
 function clearInput() {
   document.getElementById("numberInput").value = "";
-  document.getElementById("customMode").value = "";
-  document.getElementById("customModeContainer").style.display = "none";
   document.getElementById("numberInput").focus();
   showMessage("Форма очищена", "info");
 }
@@ -241,10 +282,8 @@ function clearAllData() {
 
   if (confirm(`Вы уверены? Будет удалено ${savedNumbers.length} проб.`)) {
     savedNumbers = [];
-
     localStorage.removeItem("labNumbersData");
     localStorage.removeItem("lastSaveTime");
-
     updateDisplay();
     showMessage("Все данные удалены", "success");
   }
@@ -314,23 +353,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-window.getNumbers = () => savedNumbers;
-window.getCurrentMode = () => ({
-  mode: currentMode,
-  display: currentModeDisplay,
-});
-window.clearStorage = () => {
-  localStorage.clear();
-  location.reload();
-};
-
-setInterval(() => {
-  if (savedNumbers.length > 0) {
-    saveToLocalStorage();
-    console.log("Автосохранение выполнено");
-  }
-}, 300000);
-
 function copySalivaInfo() {
   const salivaInfo = {
     material: "Слюна",
@@ -357,7 +379,7 @@ function copyArhiveInfo() {
   } else {
     const archiveInfo = {
       material: "Архив",
-      number: input.value, // Берем только строку с номером
+      number: input.value,
       original_mode: input.mode,
     };
 
@@ -368,7 +390,6 @@ function copyArhiveInfo() {
           `✅ JSON виртуального архива "${input.value}" скопирован в буфер`,
           "success"
         );
-        console.log(archiveInfo);
       })
       .catch((err) => {
         console.error("Ошибка копирования:", err);
@@ -393,71 +414,38 @@ function copyDoubleInfo() {
     });
 }
 
-// движение блоков
-
-// Функции для переключения контейнеров
+// === ФУНКЦИИ ДЛЯ ПЕРЕКЛЮЧЕНИЯ КОНТЕЙНЕРОВ ===
 function showContainer(containerNumber) {
-  // Скрыть все контейнеры
   document.querySelectorAll(".container").forEach((container) => {
     container.classList.remove("active");
   });
 
-  // Показать выбранный контейнер
   document
     .getElementById(`container${containerNumber}`)
     .classList.add("active");
 
-  // Обновить индикаторы
   document.querySelectorAll(".indicator").forEach((indicator) => {
     indicator.classList.remove("active");
   });
+
   document
     .querySelector(`.indicator[data-container="${containerNumber}"]`)
     .classList.add("active");
 }
 
-// Обработчики для индикаторов
-document.querySelectorAll(".indicator").forEach((indicator) => {
-  indicator.addEventListener("click", function () {
-    const containerNumber = parseInt(this.dataset.container);
-    showContainer(containerNumber);
-  });
-});
-
-// Инициализация - показать первый контейнер
-document.addEventListener("DOMContentLoaded", function () {
-  showContainer(1);
-});
-
-// Навигация клавишами
-document.addEventListener("keydown", function (e) {
-  if (e.key === "ArrowLeft") {
-    showContainer(1);
-  } else if (e.key === "ArrowRight") {
-    showContainer(2);
-  }
-});
-
-// Show alictovs
-// Function by Ruslan Knyazkov
-
+// === ФУНКЦИИ ДЛЯ АЛИКВОТ ===
 function showAlictotContent() {
-  // Thinck how create table
   const container = document.getElementById("right-panel2");
-
-  // Создаем основной контейнер
   const alicvotsContainer = document.createElement("div");
   alicvotsContainer.className = "alicvots-container";
   alicvotsContainer.id = "alicvotsContent";
 
-  // Создаем HTML структуру
   alicvotsContainer.innerHTML = `
         <div class="alicvots-header">
-            <h2><i class="fas fa-table"></i>Введите данные для аликвот</h2>
+            <h2><i class="fas fa-table"></i> Введите данные для аликвот</h2>
         </div>
         
         <div class="alicvots-content">
-            <!-- Форма ввода -->
             <div class="input-section">
                 <div class="input-group">
                     <label for="alicvotsName">
@@ -466,10 +454,7 @@ function showAlictotContent() {
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-font"></i>
-                        <input type="text" 
-                               id="alicvotsName" 
-                               placeholder="Введите название"
-                               maxlength="50">
+                        <input type="text" id="alicvotsName" placeholder="Введите название" maxlength="50">
                     </div>
                 </div>
                 
@@ -480,38 +465,29 @@ function showAlictotContent() {
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-calculator"></i>
-                        <input type="number" 
-                               id="alicvotsValue" 
-                               placeholder="0"
-                               step="0.01">
+                        <input type="number" id="alicvotsValue" placeholder="0" step="0.01">
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label for="alicvotsCount">
                         <i class="fas fa-hashtag"></i>
-                        Колличество экземпляров:
+                        Количество экземпляров:
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-calculator"></i>
-                        <input type="number" 
-                               id="alicvotsCount" 
-                               placeholder="0"
-                               step="1">
+                        <input type="number" id="alicvotsCount" placeholder="0" step="1">
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label for="alicvotsVolume">
                         <i class="fas fa-hashtag"></i>
-                        Обьём в [мкл , мл]:
+                        Объём в [мкл , мл]:
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-calculator"></i>
-                        <input type="number" 
-                               id="alicvotsVolume" 
-                               placeholder="0 мкл"
-                               >
+                        <input type="number" id="alicvotsVolume" placeholder="0 мкл">
                     </div>
                 </div>
                 
@@ -529,15 +505,13 @@ function showAlictotContent() {
         </div>
     `;
 
-  // Добавляем контейнер в DOM
   checkContainer(container, alicvotsContainer);
 }
 
 function checkContainer(parent, child) {
   if (parent.hasChildNodes()) {
-    for (let i = 0; i < parent.children.length; i++) {
-      console.log(`Удален ${parent.children[i]}`);
-      parent.removeChild(parent.children[i]);
+    while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
     }
   }
   parent.appendChild(child);
@@ -549,9 +523,14 @@ function addAlicvotsItem() {
   const count = document.getElementById("alicvotsCount");
   const volume = document.getElementById("alicvotsVolume");
 
+  if (!name.value || !lot.value || !count.value || !volume.value) {
+    showMessage("Заполните все поля!", "error");
+    return;
+  }
+
   if (count.value > 10) {
     showMessage(
-      "Слишком большое колличество наклеек. Нельзя распечатать больше 10 наклеек",
+      "Слишком большое количество наклеек. Нельзя распечатать больше 10 наклеек",
       "error"
     );
   } else {
@@ -562,16 +541,279 @@ function addAlicvotsItem() {
       count: count.value,
       volume: volume.value,
     };
+
     navigator.clipboard
       .writeText(JSON.stringify(newObject, 0, 2))
       .then(() => {
         showMessage(
-          `Успешая передача на печать ${count.value} этикеток`,
+          `Успешная передача на печать ${count.value} этикеток`,
           "success"
         );
       })
       .catch((error) => {
-        showMessage(`Ошибка ${error}`);
+        showMessage(`Ошибка копирования: ${error}`, "error");
       });
   }
+}
+
+function clearAlicvotsForm() {
+  document.getElementById("alicvotsName").value = "";
+  document.getElementById("alicvotsValue").value = "";
+  document.getElementById("alicvotsCount").value = "";
+  document.getElementById("alicvotsVolume").value = "";
+  showMessage("Форма очищена", "info");
+}
+
+// === ФУНКЦИИ ДЛЯ ГЕМОСТАЗА ===
+function initReagentSelector() {
+  const reagentButtons = document.querySelectorAll(".reagent-btn-select");
+
+  reagentButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      if (this.classList.contains("disabled")) return;
+
+      // Убрать выделение со всех кнопок
+      reagentButtons.forEach((b) => b.classList.remove("active"));
+
+      // Выделить выбранную кнопку
+      this.classList.add("active");
+
+      // Установить выбранный реагент
+      selectedReagent = this.dataset.reagent;
+      selectedReagentAllowedRacks = this.dataset.allowed.split(",");
+
+      // Обновить отображение
+      const displayElement = document.getElementById("selectedReagentDisplay");
+      if (displayElement) {
+        displayElement.textContent =
+          reagentFullNames[selectedReagent] || selectedReagent;
+      }
+    });
+  });
+}
+
+function setHole(rack, hole) {
+  if (!selectedReagent) {
+    showMessage("Сначала выберите реагент!", "error");
+    return;
+  }
+
+  if (["d1", "d2", "d3"].includes(rack) && [3, 4, 4, 5, 6].includes(hole)) {
+    showMessage(
+      `Реагент "${reagentFullNames[selectedReagent]}" не может быть размещен в R${rack}!`,
+      "error"
+    );
+    return;
+  }
+
+  if (!selectedReagentAllowedRacks.includes(rack)) {
+    // Проверить, доступен ли этот реагент для данного река
+    showMessage(
+      `Реагент "${reagentFullNames[selectedReagent]}" не может быть размещен в R${rack}!`,
+      "error"
+    );
+    return;
+  }
+
+  const holeEl = document.getElementById(`hole_${rack}_${hole}`);
+  const holeContainer = document.querySelector(
+    `#rack-${rack} .hole[data-hole="${hole}"]`
+  );
+  const colorHoles = {
+    clean_b: "maintenance",
+    aptt_reagent: "paired_one",
+    at_liquid_reagent: "paired_one",
+    ps_C4PV: "paired_one",
+    aptt_cacl2: "paired_two",
+    at_liquid_substrat: "paired_two",
+    ps_anti_ps: "paired_two",
+    f_diluent: "diluent",
+  };
+
+  if (reagentsData[rack][hole - 1] === selectedReagent) {
+    // Очистить лунку, если там уже этот реагент
+    reagentsData[rack][hole - 1] = null;
+    if (holeEl) holeEl.textContent = "";
+    if (holeContainer)
+      holeContainer.classList.remove(colorHoles[selectedReagent] || "filled");
+    showMessage(`Лунка ${hole} в R${rack} очищена`, "info");
+  } else {
+    // Установить реагент
+
+    console.log(reagentsData, selectedReagent);
+    reagentsData[rack][hole - 1] = selectedReagent;
+    if (holeEl) holeEl.textContent = reagentDisplayNames[selectedReagent];
+    if (holeContainer)
+      holeContainer.classList.add(colorHoles[selectedReagent] || "filled");
+    showMessage(
+      `${reagentFullNames[selectedReagent]} установлен в R${rack}, лунка ${hole}`,
+      "success"
+    );
+  }
+
+  updateHemostasisStatistics();
+}
+
+function clearAllRacks() {
+  if (confirm("Очистить все реки?")) {
+    ["d1", "d2", "d3", "r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
+      for (let i = 1; i <= 9; i++) {
+        reagentsData[rack][i - 1] = null;
+        const holeEl = document.getElementById(`hole_${rack}_${i}`);
+        if (holeEl) holeEl.textContent = "";
+        const holeContainer = document.querySelector(
+          `#rack-${rack} .hole[data-hole="${i}"]`
+        );
+        if (holeContainer) {
+          holeContainer.classList.remove("filled");
+        }
+      }
+    });
+    showMessage("Все реки очищены", "success");
+    updateHemostasisStatistics();
+  }
+}
+
+function clearSelection() {
+  selectedReagent = null;
+  selectedReagentAllowedRacks = [];
+
+  document.querySelectorAll(".reagent-btn-select").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  const displayElement = document.getElementById("selectedReagentDisplay");
+  if (displayElement) {
+    displayElement.textContent = "Ничего не выбрано";
+  }
+
+  // Убрать подсветку с реков
+  document.querySelectorAll(".rack-container").forEach((rack) => {
+    rack.classList.remove("active");
+  });
+
+  showMessage("Выбор реагента снят", "info");
+}
+
+function fillRandom() {
+  if (
+    confirm("Заполнить все реки случайными реагентами с учетом ограничений?")
+  ) {
+    const reagentOptions = {
+      r1: ["aptt_reagent", "at_liquid_reagent"],
+      r2: ["aptt_reagent", "at_liquid_reagent"],
+      r3: [
+        "aptt_cacl2",
+        "at_liquid_substrat",
+        "recombiplastin",
+        "trombintime",
+        "fibrinogen",
+      ],
+      r4: [
+        "aptt_cacl2",
+        "at_liquid_substrat",
+        "recombiplastin",
+        "trombintime",
+        "fibrinogen",
+      ],
+      r5: [
+        "aptt_cacl2",
+        "at_liquid_substrat",
+        "recombiplastin",
+        "trombintime",
+        "fibrinogen",
+      ],
+      r6: [
+        "aptt_cacl2",
+        "at_liquid_substrat",
+        "recombiplastin",
+        "trombintime",
+        "fibrinogen",
+      ],
+    };
+
+    ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
+      const allowedReagents = reagentOptions[rack];
+      for (let i = 1; i <= 6; i++) {
+        const randomReagent =
+          allowedReagents[Math.floor(Math.random() * allowedReagents.length)];
+        reagentsData[rack][i - 1] = randomReagent;
+        const holeEl = document.getElementById(`hole_${rack}_${i}`);
+        if (holeEl) {
+          holeEl.textContent = reagentDisplayNames[randomReagent];
+        }
+        const holeContainer = document.querySelector(
+          `#rack-${rack} .hole[data-hole="${i}"]`
+        );
+        if (holeContainer) {
+          holeContainer.classList.add("filled");
+        }
+      }
+    });
+
+    showMessage(
+      "Все реки заполнены случайными реагентами с учетом ограничений",
+      "success"
+    );
+    updateHemostasisStatistics();
+  }
+}
+
+function generateReport() {
+  let report = "=== ОТЧЕТ ПО РЕАГЕНТАМ ГЕМОСТАЗА ===\n\n";
+
+  ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
+    report += `Рек ${rack}:\n`;
+
+    let filledCount = 0;
+    reagentsData[rack].forEach((reagent, index) => {
+      const reagentName = reagent ? reagentFullNames[reagent] : "пусто";
+      report += `  Лунка ${index + 1}: ${reagentName}\n`;
+      if (reagent) filledCount++;
+    });
+
+    report += `  Заполнено: ${filledCount}/6\n\n`;
+  });
+
+  // Подсчет по типам реагентов
+  const reagentCounts = {};
+  Object.values(reagentsData).forEach((rack) => {
+    rack.forEach((reagent) => {
+      if (reagent) {
+        reagentCounts[reagent] = (reagentCounts[reagent] || 0) + 1;
+      }
+    });
+  });
+
+  report += "=== СТАТИСТИКА ===\n";
+  Object.entries(reagentCounts).forEach(([reagent, count]) => {
+    report += `${reagentFullNames[reagent]}: ${count}\n`;
+  });
+
+  alert(report);
+  showMessage("Отчет сформирован", "success");
+}
+
+function updateHemostasisStatistics() {
+  const totalHoles = 36; // 6 реков * 6 лунок
+  let filledHoles = 0;
+
+  ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
+    reagentsData[rack].forEach((hole) => {
+      if (hole) filledHoles++;
+    });
+  });
+
+  const emptyHoles = totalHoles - filledHoles;
+  const completionPercent = Math.round((filledHoles / totalHoles) * 100);
+
+  const totalEl = document.getElementById("totalHoles");
+  const filledEl = document.getElementById("filledHoles");
+  const emptyEl = document.getElementById("emptyHoles");
+  const percentEl = document.getElementById("completionPercent");
+
+  if (totalEl) totalEl.textContent = totalHoles;
+  if (filledEl) filledEl.textContent = filledHoles;
+  if (emptyEl) emptyEl.textContent = emptyHoles;
+  if (percentEl) percentEl.textContent = `${completionPercent}%`;
 }

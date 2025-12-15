@@ -32,7 +32,7 @@ class PrintManager():
                 retry -= 1
             except Exception as e:
                 print(f"{self.default_printer} не отвечает. Добавляем литерал")
-                self.default_printer = self.default_printer + "(копия 1)"
+                self.default_printer = self.default_printer + " (копия 1)"
                 break
 
     def create_text_zpl(self, text: str) -> str:

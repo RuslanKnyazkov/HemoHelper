@@ -42,7 +42,7 @@ class PrintMonitor:
                                                             lot=data['lot'],
                                                             volume=data['volume'])
                     self.print_manager.print_barcode(
-                        zpl=zpl, retry=data['count'])
+                        zpl=zpl, retry=int(data['count']))
 
             # Обработка обычных номеров с режимами
             elif 'number' in data and len(data['number']) == 10:
