@@ -3,11 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Система сохранения номеров с режимами</title>
+    <title>Гемотест Хелпер - Лабораторная система</title>
     <link rel="stylesheet" href="./style/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Шапка сайта -->
+    <header class="main-header">
+        <div class="header-container">
+            <!-- Левая часть с логотипом -->
+            <div class="logo-section">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="logo-icon">
+                    <i class="fas fa-flask"></i>
+                </div>
+                
+                <div class="logo-text">
+                    <h1>Гемотест Хелпер</h1>
+                    <div class="subtitle">Лабораторная информационная система</div>
+                </div>
+            </div>
+            
+            <!-- Основная навигация -->
+            <nav class="main-nav" id="mainNav">
+                <button class="nav-tab active" onclick="showContainer(1)">
+                    <i class="fas fa-hashtag"></i>
+                    <span>Номера проб</span>
+                </button>
+                
+                <button class="nav-tab" onclick="showContainer(2)">
+                    <i class="fas fa-cogs"></i>
+                    <span>Дополнительно</span>
+                </button>
+                
+                <button class="nav-tab" onclick="showContainer(3)">
+                    <i class="fas fa-tint"></i>
+                    <span>Гемостаз</span>
+                </button>
+            </nav>
+            
+            <!-- Правая часть -->
+            <div class="header-right">
+                <!-- Индикаторы вкладок -->
+                <div class="tab-indicators">
+                    <span class="tab-indicator active" data-tab="1"></span>
+                    <span class="tab-indicator" data-tab="2"></span>
+                    <span class="tab-indicator" data-tab="3"></span>
+                </div>
+                
+                <!-- Информация о пользователе -->
+                <div class="user-info" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">Лаборант</div>
+                        <div class="user-role">Авторизован</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
     <!-- Первый контейнер (основной) -->
     <div class="container active" id="container1">
         <header>
@@ -131,7 +191,7 @@
         </div>
     </div>
 
-    <!-- Второй контейнер (пустой, для вашего наполнения) -->
+    <!-- Второй контейнер -->
     <div class="container" id="container2">
         <header>
             <h1><i class="fas fa-cogs"></i> Второй блок</h1>
@@ -139,17 +199,16 @@
         </header>
 
         <div class="content">
-            
             <div class="left-panel">
                 <div class="button-group">
                     <button class="mode-btn mode-alicvots" onclick="showAlictotContent()">Аликвоты</button>
                 </div>    
             </div>
-            <div class="right-panel", id="right-panel2">
+            <div class="right-panel" id="right-panel2">
             </div>
         </div>
         
- <!-- Кнопки навигации -->
+        <!-- Кнопки навигации -->
         <div class="container-nav">
             <button class="nav-btn prev-btn" onclick="showContainer(1)">
                 <i class="fas fa-arrow-left"></i>
@@ -163,463 +222,447 @@
     </div>
 
     <!-- Третий контейнер - Практика гемостаза -->
-<div class="container" id="container3">
-    <header>
-        <h1><i class="fas fa-tint"></i> Практика гемостаза</h1>
-        <div class="subtitle">Система с ограничениями по размещению реагентов</div>
-    </header>
+    <div class="container" id="container3">
+        <header>
+            <h1><i class="fas fa-tint"></i> Практика гемостаза</h1>
+            <div class="subtitle">Система с ограничениями по размещению реагентов</div>
+        </header>
 
-    <div class="content coagulation-practice">
-        <!-- Левая панель - выбор реагентов -->
-        <div class="reagents-panel">
-            <!-- Дилюенты -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-vial"></i> Diluent`s(Разбавители)</h3>
-                <button class="reagent-btn-select" data-reagent="f_diluent" data-allowed="d1,d2">
-                    Factor Diluent
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="pc_dil" data-allowed="d1,d2">
-                    PC Diluent
-                    
-                </button>
-            </div>
-            <!-- Очиститель -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-vial"></i> Cleaner`s(Очистители)</h3>
-                <button class="reagent-btn-select" data-reagent="clean_b_dil" data-allowed="d3,r1,r2,r5,r6">
-                    Clean B Diluted
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="clean_b" data-allowed="d1,d2,d3,r1,r2,r5,r6">
-                    Clean B
-                    
-                </button>
-            </div>
+        <div class="content coagulation-practice">
+            <!-- Левая панель - выбор реагентов -->
+            <div class="reagents-panel">
+                <!-- Дилюенты -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-vial"></i> Diluent`s(Разбавители)</h3>
+                    <button class="reagent-btn-select" data-reagent="f_diluent" data-allowed="d1,d2">
+                        Factor Diluent
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="pc_dil" data-allowed="d1,d2">
+                        PC Diluent
+                    </button>
+                </div>
+                <!-- Очиститель -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-vial"></i> Cleaner`s(Очистители)</h3>
+                    <button class="reagent-btn-select" data-reagent="clean_b_dil" data-allowed="d3,r1,r2,r5,r6">
+                        Clean B Diluted
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="clean_b" data-allowed="d1,d2,d3,r1,r2,r5,r6">
+                        Clean B
+                    </button>
+                </div>
 
+                <!-- Пара APTT -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-vial"></i> Пара APTT(АЧТВ)</h3>
+                    <button class="reagent-btn-select" data-reagent="aptt_reagent" data-allowed="d3,r1,r2">
+                        APTT reagent
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="aptt_cacl2" data-allowed="r3,r4,r5,r6">
+                        APTT CaCl2
+                    </button>
+                </div>
 
-            <!-- Пара APTT -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-vial"></i> Пара APTT(АЧТВ)</h3>
-                <button class="reagent-btn-select" data-reagent="aptt_reagent" data-allowed="d3,r1,r2">
-                    APTT reagent
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="aptt_cacl2" data-allowed="r3,r4,r5,r6">
-                    APTT CaCl2
-                    
-                </button>
-            </div>
+                <!-- Пара AT-Liquid -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-flask"></i> Пара AT-Liquid(Антитромбин)</h3>
+                    <button class="reagent-btn-select" data-reagent="at_liquid_reagent" data-allowed="d3,r1,r2">
+                        AT liquid reagent
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="at_liquid_substrat" data-allowed="r3,r4,r5,r6">
+                        AT liquid substrat
+                    </button>
+                </div>
 
-            <!-- Пара AT-Liquid -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-flask"></i> Пара AT-Liquid(Антитромбин)</h3>
-                <button class="reagent-btn-select" data-reagent="at_liquid_reagent" data-allowed="d3,r1,r2">
-                    AT liquid reagent
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="at_liquid_substrat" data-allowed="r3,r4,r5,r6">
-                    AT liquid substrat
-                    
-                </button>
-            </div>
+                <!-- Пара D-dimer -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-flask"></i> D-dimer(Д-димер)</h3>
+                    <button class="reagent-btn-select" data-reagent="d_dimer_b" data-allowed="d3,r1,r2">
+                        D-dimer Buffer
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="d_dimer_l" data-allowed="r3,r4,r5,r6">
+                        D-dimer latex
+                    </button>
+                </div>
 
-            <!-- Пара D-dimer -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-flask"></i> D-dimer(Д-димер)</h3>
-                <button class="reagent-btn-select" data-reagent="d_dimer_b" data-allowed="d3,r1,r2">
-                    D-dimer Buffer
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="d_dimer_l" data-allowed="r3,r4,r5,r6">
-                    D-dimer latex
-                    
-                </button>
-            </div>
+                <!-- Пара Free-PS -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-flask"></i> Пара Free-PS(Белок S)</h3>
+                    <button class="reagent-btn-select" data-reagent="ps_C4PV" data-allowed="d3,r1,r2">
+                        C4BV Latex
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="ps_anti_ps" data-allowed="r3,r4,r5,r6">
+                        Anti pb latex
+                    </button>
+                </div>
 
-            <!-- Пара Free-PS -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-flask"></i> Пара Free-PS(Белок S)</h3>
-                <button class="reagent-btn-select" data-reagent="ps_C4PV" data-allowed="d3,r1,r2">
-                    C4BV Latex
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="ps_anti_ps" data-allowed="r3,r4,r5,r6">
-                    Anti pb latex
-                    
-                </button>
-            </div>
+                <!-- Одиночные реагенты -->
+                <div class="reagents-group">
+                    <h3><i class="fas fa-vial-virus"></i> Одиночные реагенты</h3>
+                    <button class="reagent-btn-select" data-reagent="recombiplastin" data-allowed="r3,r4,r5,r6">
+                        Recombiplastin
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="trombintime" data-allowed="r3,r4,r5,r6">
+                        Trombin Time
+                    </button>
+                    <button class="reagent-btn-select" data-reagent="fibrinogen" data-allowed="r3,r4,r5,r6">
+                        O.F.A Fibrinogen
+                    </button>
+                </div>
 
-            <!-- Одиночные реагенты -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-vial-virus"></i> Одиночные реагенты</h3>
-                <button class="reagent-btn-select" data-reagent="recombiplastin" data-allowed="r3,r4,r5,r6">
-                    Recombiplastin
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="trombintime" data-allowed="r3,r4,r5,r6">
-                    Trombin Time
-                    
-                </button>
-                <button class="reagent-btn-select" data-reagent="fibrinogen" data-allowed="r3,r4,r5,r6">
-                    O.F.A Fibrinogen
-                    
-                </button>
-            </div>
+                <!-- Быстрые действия -->
+                <!-- <div class="reagents-group">
+                    <h3><i class="fas fa-bolt"></i> Быстрые действия</h3>
+                    <button class="action-btn" onclick="clearSelection()">
+                        <i class="fas fa-times"></i>
+                        Снять выделение
+                    </button>
+                    <button class="action-btn danger" onclick="clearAllRacks()">
+                        <i class="fas fa-trash"></i>
+                        Очистить все
+                    </button>
+                    <button class="action-btn success" onclick="fillRandom()">
+                        <i class="fas fa-random"></i>
+                        Заполнить случайно
+                    </button>
+                    <button class="action-btn warning" onclick="generateReport()">
+                        <i class="fas fa-file-export"></i>
+                        Сформировать отчет
+                    </button>
+                </div> -->
+            </div> 
 
-            <!-- Быстрые действия -->
-            <div class="reagents-group">
-                <h3><i class="fas fa-bolt"></i> Быстрые действия</h3>
-                <button class="action-btn" onclick="clearSelection()">
-                    <i class="fas fa-times"></i>
-                    Снять выделение
-                </button>
-                <button class="action-btn danger" onclick="clearAllRacks()">
-                    <i class="fas fa-trash"></i>
-                    Очистить все
-                </button>
-                <button class="action-btn success" onclick="fillRandom()">
-                    <i class="fas fa-random"></i>
-                    Заполнить случайно
-                </button>
-                <button class="action-btn warning" onclick="generateReport()">
-                    <i class="fas fa-file-export"></i>
-                    Сформировать отчет
-                </button>
-            </div>
-        </div> 
+            <!-- Правая панель - реки -->
+            <div class="racks-panel">
+                <!-- Текущий выбор -->
+                <div class="current-selection">
+                    Выбранный реагент: <strong id="selectedReagentDisplay">Ничего не выбрано</strong>
+                </div>
 
-        <!-- Правая панель - реки -->
-        <div class="racks-panel">
-            <!-- Текущий выбор -->
-            <div class="current-selection">
-                Выбранный реагент: <strong id="selectedReagentDisplay">Ничего не выбрано</strong>
-            </div>
+                <!-- 6 реков -->
+                <div class="rack-container" id="rack-d1">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            D1
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('d1', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_d1_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('d1', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_d1_2"></div>
+                        </div>
+                        <div class="small_hole" data-hole="3" onclick="setHole('d1', 3)">
+                            <div class="small_hole-number">3</div>
+                            <div class="hole-content" id="hole_d1_3"></div>
+                        </div>
+                        <div class="small_hole" data-hole="4" onclick="setHole('d1', 4)">
+                            <div class="small_hole-number">4</div>
+                            <div class="hole-content" id="hole_d1_4"></div>
+                        </div>
+                        <div class="small_hole" data-hole="5" onclick="setHole('d1', 5)">
+                            <div class="small_hole-number">5</div>
+                            <div class="hole-content" id="hole_d1_5"></div>
+                        </div>
+                        <div class="small_hole" data-hole="6" onclick="setHole('d1', 6)">
+                            <div class="small_hole-number">6</div>
+                            <div class="hole-content" id="hole_d1_6"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rack-container" id="rack-d2">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            D2
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('d2', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_d2_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('d2', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_d2_2"></div>
+                        </div>
+                        <div class="small_hole" data-hole="3" onclick="setHole('d2', 3)">
+                            <div class="small_hole-number">3</div>
+                            <div class="hole-content" id="hole_d2_3"></div>
+                        </div>
+                        <div class="small_hole" data-hole="4" onclick="setHole('d2', 4)">
+                            <div class="small_hole-number">4</div>
+                            <div class="hole-content" id="hole_d2_4"></div>
+                        </div>
+                        <div class="small_hole" data-hole="5" onclick="setHole('d2', 5)">
+                            <div class="small_hole-number">5</div>
+                            <div class="hole-content" id="hole_d2_5"></div>
+                        </div>
+                        <div class="small_hole" data-hole="6" onclick="setHole('d2', 6)">
+                            <div class="small_hole-number">6</div>
+                            <div class="hole-content" id="hole_d2_6"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rack-container" id="rack-d3">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            D3
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('d3', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_d3_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('d3', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_d3_2"></div>
+                        </div>
+                        <div class="small_hole" data-hole="3" onclick="setHole('d3', 3)">
+                            <div class="small_hole-number">3</div>
+                            <div class="hole-content" id="hole_d3_3"></div>
+                        </div>
+                        <div class="small_hole" data-hole="4" onclick="setHole('d3', 4)">
+                            <div class="small_hole-number">4</div>
+                            <div class="hole-content" id="hole_d3_4"></div>
+                        </div>
+                        <div class="small_hole" data-hole="5" onclick="setHole('d3', 5)">
+                            <div class="small_hole-number">5</div>
+                            <div class="hole-content" id="hole_d3_5"></div>
+                        </div>
+                        <div class="small_hole" data-hole="6" onclick="setHole('d3', 6)">
+                            <div class="small_hole-number">6</div>
+                            <div class="hole-content" id="hole_d3_6"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rack-container" id="rack-r1">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R1
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r1', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r1_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r1', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r1_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r1', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r1_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r1', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r1_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r1', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r1_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r1', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r1_6"></div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- 6 реков -->
-             <div class="rack-container" id="rack-d1">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        D1
+                <div class="rack-container" id="rack-r2">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R2
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r2', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r2_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r2', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r2_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r2', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r2_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r2', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r2_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r2', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r2_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r2', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r2_6"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('d1', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_d1_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('d1', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_d1_2"></div>
-                    </div>
-                    <div class="small_hole" data-hole="3" onclick="setHole('d1', 3)">
-                        <div class="small_hole-number">3</div>
-                        <div class="hole-content" id="hole_d1_3"></div>
-                    </div>
-                    <div class="small_hole" data-hole="4" onclick="setHole('d1', 4)">
-                        <div class="small_hole-number">4</div>
-                        <div class="hole-content" id="hole_d1_4"></div>
-                    </div>
-                    <div class="small_hole" data-hole="5" onclick="setHole('d1', 5)">
-                        <div class="small_hole-number">5</div>
-                        <div class="hole-content" id="hole_d1_5"></div>
-                    </div>
-                    <div class="small_hole" data-hole="6" onclick="setHole('d1', 6)">
-                        <div class="small_hole-number">6</div>
-                        <div class="hole-content" id="hole_d1_6"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="rack-container" id="rack-d2">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        D2
-                    </div>
-                </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('d2', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_d2_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('d2', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_d2_2"></div>
-                    </div>
-                    <div class="small_hole" data-hole="3" onclick="setHole('d2', 3)">
-                        <div class="small_hole-number">3</div>
-                        <div class="hole-content" id="hole_d2_3"></div>
-                    </div>
-                    <div class="small_hole" data-hole="4" onclick="setHole('d2', 4)">
-                        <div class="small_hole-number">4</div>
-                        <div class="hole-content" id="hole_d2_4"></div>
-                    </div>
-                    <div class="small_hole" data-hole="5" onclick="setHole('d2', 5)">
-                        <div class="small_hole-number">5</div>
-                        <div class="hole-content" id="hole_d2_5"></div>
-                    </div>
-                    <div class="small_hole" data-hole="6" onclick="setHole('d2', 6)">
-                        <div class="small_hole-number">6</div>
-                        <div class="hole-content" id="hole_d2_6"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="rack-container" id="rack-d3">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        D3
-                    </div>
-                </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('d3', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_d3_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('d3', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_d3_2"></div>
-                    </div>
-                    <div class="small_hole" data-hole="3" onclick="setHole('d3', 3)">
-                        <div class="small_hole-number">3</div>
-                        <div class="hole-content" id="hole_d3_3"></div>
-                    </div>
-                    <div class="small_hole" data-hole="4" onclick="setHole('d3', 4)">
-                        <div class="small_hole-number">4</div>
-                        <div class="hole-content" id="hole_d3_4"></div>
-                    </div>
-                    <div class="small_hole" data-hole="5" onclick="setHole('d3', 5)">
-                        <div class="small_hole-number">5</div>
-                        <div class="hole-content" id="hole_d3_5"></div>
-                    </div>
-                    <div class="small_hole" data-hole="6" onclick="setHole('d3', 6)">
-                        <div class="small_hole-number">6</div>
-                        <div class="hole-content" id="hole_d3_6"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="rack-container" id="rack-r1">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R1
-                    </div>
-                </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r1', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r1_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r1', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r1_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r1', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r1_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r1', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r1_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r1', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r1_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r1', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r1_6"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="rack-container" id="rack-r2">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R2
+                <div class="rack-container" id="rack-r3">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R3
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r3', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r3_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r3', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r3_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r3', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r3_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r3', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r3_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r3', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r3_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r3', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r3_6"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r2', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r2_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r2', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r2_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r2', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r2_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r2', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r2_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r2', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r2_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r2', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r2_6"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="rack-container" id="rack-r3">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R3
+                <div class="rack-container" id="rack-r4">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R4
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r4', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r4_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r4', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r4_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r4', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r4_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r4', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r4_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r4', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r4_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r4', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r4_6"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r3', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r3_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r3', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r3_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r3', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r3_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r3', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r3_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r3', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r3_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r3', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r3_6"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="rack-container" id="rack-r4">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R4
+                <div class="rack-container" id="rack-r5">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R5
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r5', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r5_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r5', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r5_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r5', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r5_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r5', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r5_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r5', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r5_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r5', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r5_6"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r4', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r4_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r4', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r4_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r4', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r4_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r4', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r4_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r4', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r4_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r4', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r4_6"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="rack-container" id="rack-r5">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R5
+                <div class="rack-container" id="rack-r6">
+                    <div class="rack-header">
+                        <div class="rack-title">
+                            <i class="fas fa-vial"></i>
+                            R6
+                        </div>
                     </div>
-                </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r5', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r5_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r5', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r5_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r5', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r5_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r5', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r5_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r5', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r5_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r5', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r5_6"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rack-container" id="rack-r6">
-                <div class="rack-header">
-                    <div class="rack-title">
-                        <i class="fas fa-vial"></i>
-                        R6
-                    </div>
-                </div>
-                <div class="rack-holes">
-                    <div class="hole" data-hole="1" onclick="setHole('r6', 1)">
-                        <div class="hole-number">1</div>
-                        <div class="hole-content" id="hole_r6_1"></div>
-                    </div>
-                    <div class="hole" data-hole="2" onclick="setHole('r6', 2)">
-                        <div class="hole-number">2</div>
-                        <div class="hole-content" id="hole_r6_2"></div>
-                    </div>
-                    <div class="hole" data-hole="3" onclick="setHole('r6', 3)">
-                        <div class="hole-number">3</div>
-                        <div class="hole-content" id="hole_r6_3"></div>
-                    </div>
-                    <div class="hole" data-hole="4" onclick="setHole('r6', 4)">
-                        <div class="hole-number">4</div>
-                        <div class="hole-content" id="hole_r6_4"></div>
-                    </div>
-                    <div class="hole" data-hole="5" onclick="setHole('r6', 5)">
-                        <div class="hole-number">5</div>
-                        <div class="hole-content" id="hole_r6_5"></div>
-                    </div>
-                    <div class="hole" data-hole="6" onclick="setHole('r6', 6)">
-                        <div class="hole-number">6</div>
-                        <div class="hole-content" id="hole_r6_6"></div>
+                    <div class="rack-holes">
+                        <div class="hole" data-hole="1" onclick="setHole('r6', 1)">
+                            <div class="hole-number">1</div>
+                            <div class="hole-content" id="hole_r6_1"></div>
+                        </div>
+                        <div class="hole" data-hole="2" onclick="setHole('r6', 2)">
+                            <div class="hole-number">2</div>
+                            <div class="hole-content" id="hole_r6_2"></div>
+                        </div>
+                        <div class="hole" data-hole="3" onclick="setHole('r6', 3)">
+                            <div class="hole-number">3</div>
+                            <div class="hole-content" id="hole_r6_3"></div>
+                        </div>
+                        <div class="hole" data-hole="4" onclick="setHole('r6', 4)">
+                            <div class="hole-number">4</div>
+                            <div class="hole-content" id="hole_r6_4"></div>
+                        </div>
+                        <div class="hole" data-hole="5" onclick="setHole('r6', 5)">
+                            <div class="hole-number">5</div>
+                            <div class="hole-content" id="hole_r6_5"></div>
+                        </div>
+                        <div class="hole" data-hole="6" onclick="setHole('r6', 6)">
+                            <div class="hole-number">6</div>
+                            <div class="hole-content" id="hole_r6_6"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Кнопки навигации -->
+        <div class="container-nav">
+            <button class="nav-btn prev-btn" onclick="showContainer(2)">
+                <i class="fas fa-arrow-left"></i>
+                Вернуться назад
+            </button>
+        </div>
     </div>
-    
-    <!-- Кнопки навигации -->
-    <div class="container-nav">
-        <button class="nav-btn prev-btn" onclick="showContainer(2)">
-            <i class="fas fa-arrow-left"></i>
-            Вернуться назад
-        </button>
-    </div>
-</div>
 
     <div class="message" id="message"></div>
 

@@ -2,6 +2,7 @@
 let savedNumbers = [];
 let currentMode = "default";
 let currentModeDisplay = "По умолчанию";
+let userLogin = "";
 
 // === ПЕРЕМЕННЫЕ ДЛЯ ГЕМОСТАЗА ===
 let selectedReagent = null;
@@ -22,19 +23,19 @@ const reagentsData = {
 
 // Названия реагентов для отображения
 const reagentDisplayNames = {
-  clean_b: "Clb",
+  clean_b: "Clean B",
   clean_b_dil: "ClbDil",
-  aptt_reagent: "APTT-R",
-  aptt_cacl2: "APTT-Ca",
-  at_liquid_reagent: "AT-R",
-  at_liquid_substrat: "AT-S",
+  aptt_reagent: "APTT-Reagent",
+  aptt_cacl2: "APTT-CaCl",
+  at_liquid_reagent: "AT-Reagent",
+  at_liquid_substrat: "AT-Substrat",
   recombiplastin: "PT",
   trombintime: "TT",
   fibrinogen: "O.F.A",
   ps_C4PV: "C4PV",
   ps_anti_ps: "PS Latex",
-  f_diluent: "F_D",
-  pc_dil: "PC_D",
+  f_diluent: "Factor_Dil",
+  pc_dil: "PC_Dil",
   d_dimer_b: "D-dim B",
   d_dimer_l: "D-dim L",
 };
@@ -58,6 +59,9 @@ const reagentFullNames = {
   d_dimer_l: "D-dimer Latex",
 };
 
+// Текущий активный контейнер
+let currentContainer = 1;
+
 // === ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ===
 document.addEventListener("DOMContentLoaded", () => {
   loadSavedNumbers();
@@ -66,19 +70,144 @@ document.addEventListener("DOMContentLoaded", () => {
   setMode("default", "По умолчанию");
   initReagentSelector();
   updateHemostasisStatistics();
-  document.getElementById("numberInput").focus();
 
-  // Инициализация индикаторов переключения контейнеров
-  const indicators = document.querySelectorAll(".indicator");
-  indicators.forEach((indicator) => {
-    indicator.addEventListener("click", function () {
-      const containerNum = this.dataset.container;
-      showContainer(parseInt(containerNum));
-    });
+  // Инициализация шапки
+  updateHeaderNavigation(1);
+
+  // Инициализация мобильного меню
+  if (window.innerWidth <= 1100) {
+    initMobileMenu();
+  }
+});
+
+// === ФУНКЦИИ ДЛЯ ШАПКИ И НАВИГАЦИИ ===
+// Показать контейнер
+function showContainer(containerNumber) {
+  // Скрыть все контейнеры
+  document.querySelectorAll(".container").forEach((container) => {
+    container.classList.remove("active");
   });
+
+  // Показать выбранный контейнер
+  document
+    .getElementById(`container${containerNumber}`)
+    .classList.add("active");
+
+  // Обновить навигацию в шапке
+  updateHeaderNavigation(containerNumber);
+
+  currentContainer = containerNumber;
+}
+
+// Обновить навигацию в шапке
+function updateHeaderNavigation(containerNumber) {
+  // Обновить активную вкладку
+  document.querySelectorAll(".nav-tab").forEach((tab) => {
+    tab.classList.remove("active");
+  });
+
+  const activeTab = document.querySelector(
+    `.nav-tab[onclick="showContainer(${containerNumber})"]`
+  );
+  if (activeTab) {
+    activeTab.classList.add("active");
+  }
+
+  // Обновить индикаторы
+  document.querySelectorAll(".tab-indicator").forEach((indicator) => {
+    indicator.classList.remove("active");
+  });
+
+  const activeIndicator = document.querySelector(
+    `.tab-indicator[data-tab="${containerNumber}"]`
+  );
+  if (activeIndicator) {
+    activeIndicator.classList.add("active");
+  }
+}
+
+// Инициализация мобильного меню
+function initMobileMenu() {
+  const mainNav = document.getElementById("mainNav");
+  mainNav.style.display = "none";
+
+  // Создать мобильное меню
+  const mobileMenu = document.createElement("div");
+  mobileMenu.className = "mobile-menu";
+  mobileMenu.style.display = "none";
+  mobileMenu.style.position = "absolute";
+  mobileMenu.style.top = "70px";
+  mobileMenu.style.left = "0";
+  mobileMenu.style.right = "0";
+  mobileMenu.style.background = "#2c3e50";
+  mobileMenu.style.padding = "20px";
+  mobileMenu.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
+  mobileMenu.style.zIndex = "1001";
+
+  // Добавить кнопки меню
+  const buttons = [
+    { id: 1, icon: "fa-hashtag", text: "Номера проб" },
+    { id: 2, icon: "fa-cogs", text: "Дополнительно" },
+    { id: 3, icon: "fa-tint", text: "Гемостаз" },
+  ];
+
+  buttons.forEach((btn) => {
+    const button = document.createElement("button");
+    button.className = "nav-tab";
+    button.style.width = "100%";
+    button.style.marginBottom = "10px";
+    button.style.justifyContent = "flex-start";
+    button.innerHTML = `<i class="fas ${btn.icon}"></i> <span>${btn.text}</span>`;
+    button.onclick = () => {
+      showContainer(btn.id);
+      mobileMenu.style.display = "none";
+    };
+    mobileMenu.appendChild(button);
+  });
+
+  document.body.appendChild(mobileMenu);
+
+  // Переключение мобильного меню
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  if (mobileMenuBtn) {
+    mobileMenuBtn.onclick = function () {
+      if (mobileMenu.style.display === "none") {
+        mobileMenu.style.display = "block";
+      } else {
+        mobileMenu.style.display = "none";
+      }
+    };
+  }
+
+  // Закрытие меню при клике вне его
+  document.addEventListener("click", function (event) {
+    if (
+      !event.target.closest(".mobile-menu-btn") &&
+      !event.target.closest(".mobile-menu")
+    ) {
+      mobileMenu.style.display = "none";
+    }
+  });
+}
+
+// Адаптация к изменению размера окна
+window.addEventListener("resize", function () {
+  const mainNav = document.getElementById("mainNav");
+  if (window.innerWidth > 1100) {
+    if (mainNav) mainNav.style.display = "flex";
+    const mobileMenu = document.querySelector(".mobile-menu");
+    if (mobileMenu) mobileMenu.style.display = "none";
+  } else if (mainNav && !document.querySelector(".mobile-menu")) {
+    mainNav.style.display = "none";
+  }
 });
 
 // === ОСНОВНЫЕ ФУНКЦИИ СИСТЕМЫ ===
+function signUser() {
+  if (!userLogin) {
+  }
+}
+
 function setupEventListeners() {
   const numberInput = document.getElementById("numberInput");
 
@@ -414,25 +543,6 @@ function copyDoubleInfo() {
     });
 }
 
-// === ФУНКЦИИ ДЛЯ ПЕРЕКЛЮЧЕНИЯ КОНТЕЙНЕРОВ ===
-function showContainer(containerNumber) {
-  document.querySelectorAll(".container").forEach((container) => {
-    container.classList.remove("active");
-  });
-
-  document
-    .getElementById(`container${containerNumber}`)
-    .classList.add("active");
-
-  document.querySelectorAll(".indicator").forEach((indicator) => {
-    indicator.classList.remove("active");
-  });
-
-  document
-    .querySelector(`.indicator[data-container="${containerNumber}"]`)
-    .classList.add("active");
-}
-
 // === ФУНКЦИИ ДЛЯ АЛИКВОТ ===
 function showAlictotContent() {
   const container = document.getElementById("right-panel2");
@@ -598,14 +708,6 @@ function setHole(rack, hole) {
     return;
   }
 
-  if (["d1", "d2", "d3"].includes(rack) && [3, 4, 4, 5, 6].includes(hole)) {
-    showMessage(
-      `Реагент "${reagentFullNames[selectedReagent]}" не может быть размещен в R${rack}!`,
-      "error"
-    );
-    return;
-  }
-
   if (!selectedReagentAllowedRacks.includes(rack)) {
     // Проверить, доступен ли этот реагент для данного река
     showMessage(
@@ -639,8 +741,6 @@ function setHole(rack, hole) {
     showMessage(`Лунка ${hole} в R${rack} очищена`, "info");
   } else {
     // Установить реагент
-
-    console.log(reagentsData, selectedReagent);
     reagentsData[rack][hole - 1] = selectedReagent;
     if (holeEl) holeEl.textContent = reagentDisplayNames[selectedReagent];
     if (holeContainer)
@@ -657,7 +757,7 @@ function setHole(rack, hole) {
 function clearAllRacks() {
   if (confirm("Очистить все реки?")) {
     ["d1", "d2", "d3", "r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
-      for (let i = 1; i <= 9; i++) {
+      for (let i = 1; i <= 6; i++) {
         reagentsData[rack][i - 1] = null;
         const holeEl = document.getElementById(`hole_${rack}_${i}`);
         if (holeEl) holeEl.textContent = "";
@@ -817,3 +917,31 @@ function updateHemostasisStatistics() {
   if (emptyEl) emptyEl.textContent = emptyHoles;
   if (percentEl) percentEl.textContent = `${completionPercent}%`;
 }
+
+// Добавить стили для сообщений
+const style = document.createElement("style");
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .message.info { background: #17a2b8; color: white; }
+    .message.success { background: #28a745; color: white; }
+    .message.error { background: #dc3545; color: white; }
+    .message.warning { background: #ffc107; color: #212529; }
+    
+    .mobile-open {
+        display: flex !important;
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: #2c3e50;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+`;
+document.head.appendChild(style);
