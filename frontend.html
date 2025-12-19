@@ -43,6 +43,10 @@
                     <i class="fas fa-tint"></i>
                     <span>Гемостаз</span>
                 </button>
+                <button class="nav-tab" onclick="showContainer(4)">
+                    <i class="fas fa-cogs"></i>
+                    <span>Циклы</span>
+                </button>
             </nav>
             
             <!-- Правая часть -->
@@ -311,25 +315,14 @@
                 </div>
 
                 <!-- Быстрые действия -->
-                <!-- <div class="reagents-group">
+                <div class="reagents-group">
                     <h3><i class="fas fa-bolt"></i> Быстрые действия</h3>
-                    <button class="action-btn" onclick="clearSelection()">
-                        <i class="fas fa-times"></i>
-                        Снять выделение
-                    </button>
                     <button class="action-btn danger" onclick="clearAllRacks()">
                         <i class="fas fa-trash"></i>
                         Очистить все
                     </button>
-                    <button class="action-btn success" onclick="fillRandom()">
-                        <i class="fas fa-random"></i>
-                        Заполнить случайно
-                    </button>
-                    <button class="action-btn warning" onclick="generateReport()">
-                        <i class="fas fa-file-export"></i>
-                        Сформировать отчет
-                    </button>
-                </div> -->
+
+                </div>
             </div> 
 
             <!-- Правая панель - реки -->
@@ -661,6 +654,64 @@
                 <i class="fas fa-arrow-left"></i>
                 Вернуться назад
             </button>
+            <button class="nav-btn prev-btn" onclick="showContainer(4)">
+                <i class="fas fa-arrow-right"></i>
+                Roche island
+            </button>
+        </div>
+    </div>
+
+    <div class="container" id="container4">
+        <header>
+            <h2><i class="fas fa-flask"></i>Циклы и  их влияние на работу</h2>
+        </header>
+        <div class="content">
+            <div class="left-panel">
+                <div class="button-group">
+                    <button id="half-mode-one" onclick="modeCicles('one')">
+                        CEE+EEEE1+CC
+                    </button>
+                    <button id="half-mode-two" onclick="modeCicles('two')">
+                        EEEE2+CCC
+                    </button>
+                    <button id="mode-all" onclick="modeCicles('all')">
+                        Routine-AUE
+                    </button>
+                </div>
+            </div>
+            <!-- <div class="right-panel"> -->
+                <div class="visual">
+                    <div class="one-line-plus-sorters">
+                    <div class="analyze" id="c2">
+                        <h5>cc</h5>
+                    </div>
+                    <div class="sorter">
+                        <h6>p612</h6>
+                    </div>
+                    <div class="sorter">
+                        <h6>p612</h6>
+                    </div>
+                    <div class="sorter">
+                        <h6>p612</h6>
+                    </div>
+                </div>
+                <div class="four-lines">
+                    <div class="analyze" id="e1">
+                        <h5>eeee1</h5>
+                    </div>
+                    <div class="analyze" id="e2">
+                        <h5>eeee2</h5>
+                    </div>
+                    <div class="analyze" id="ce">
+                        <h5>ceee</h5>
+                    </div>
+                    <div class="analyze" id="c1">
+                        <h5>ccc</h5>
+                    </div>  
+                </div>
+                </div>                             
+            <!-- </div> -->
+            
         </div>
     </div>
 
@@ -671,6 +722,7 @@
         <span class="indicator active" data-container="1"></span>
         <span class="indicator" data-container="2"></span>
         <span class="indicator" data-container="3"></span>
+        <span class="indicator" data-container="4"></span>
     </div>
 
     <script src="script.js"></script>

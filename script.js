@@ -69,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDisplay();
   setMode("default", "По умолчанию");
   initReagentSelector();
-  updateHemostasisStatistics();
 
   // Инициализация шапки
   updateHeaderNavigation(1);
@@ -375,7 +374,9 @@ function updateDisplay() {
 
     itemElement.innerHTML = `
             <div class="number-header">
-                <div class="number-value">${escapeHtml(item.number)}</div>
+                <div class="number-value">Номер: ${escapeHtml(
+                  item.number
+                )}</div>
                 <div>
                     <span class="number-mode ${modeClass}">${escapeHtml(
       item.modeDisplay
@@ -385,10 +386,10 @@ function updateDisplay() {
             </div>
             <div class="number-id">ID: ${item.id}</div>
             <div class="number-actions">
-                <button onclick="copyNumber('${item.id}')" class="copy-btn">
-                    <i class="fas fa-copy"></i> Копировать JSON
+                <button onclick="copyNumber('${item.id}')" class="btn-success">
+                    <i class="fas fa-copy"></i> Повторная печать
                 </button>
-                <button onclick="deleteNumber('${item.id}')" class="delete-btn">
+                <button onclick="deleteNumber('${item.id}')" class="btn-danger">
                     <i class="fas fa-trash"></i> Удалить
                 </button>
             </div>
@@ -675,6 +676,18 @@ function clearAlicvotsForm() {
 }
 
 // === ФУНКЦИИ ДЛЯ ГЕМОСТАЗА ===
+
+const colorHoles = {
+  clean_b: "maintenance",
+  aptt_reagent: "paired_one",
+  at_liquid_reagent: "paired_one",
+  ps_C4PV: "paired_one",
+  aptt_cacl2: "paired_two",
+  at_liquid_substrat: "paired_two",
+  ps_anti_ps: "paired_two",
+  f_diluent: "diluent",
+};
+
 function initReagentSelector() {
   const reagentButtons = document.querySelectorAll(".reagent-btn-select");
 
@@ -721,16 +734,6 @@ function setHole(rack, hole) {
   const holeContainer = document.querySelector(
     `#rack-${rack} .hole[data-hole="${hole}"]`
   );
-  const colorHoles = {
-    clean_b: "maintenance",
-    aptt_reagent: "paired_one",
-    at_liquid_reagent: "paired_one",
-    ps_C4PV: "paired_one",
-    aptt_cacl2: "paired_two",
-    at_liquid_substrat: "paired_two",
-    ps_anti_ps: "paired_two",
-    f_diluent: "diluent",
-  };
 
   if (reagentsData[rack][hole - 1] === selectedReagent) {
     // Очистить лунку, если там уже этот реагент
@@ -750,27 +753,27 @@ function setHole(rack, hole) {
       "success"
     );
   }
-
-  updateHemostasisStatistics();
 }
 
 function clearAllRacks() {
   if (confirm("Очистить все реки?")) {
     ["d1", "d2", "d3", "r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
       for (let i = 1; i <= 6; i++) {
-        reagentsData[rack][i - 1] = null;
         const holeEl = document.getElementById(`hole_${rack}_${i}`);
         if (holeEl) holeEl.textContent = "";
         const holeContainer = document.querySelector(
           `#rack-${rack} .hole[data-hole="${i}"]`
         );
+
         if (holeContainer) {
-          holeContainer.classList.remove("filled");
+          holeContainer.classList.remove(
+            colorHoles[reagentsData[rack][i - 1]] || "filled"
+          );
         }
+        reagentsData[rack][i - 1] = null;
       }
     });
     showMessage("Все реки очищены", "success");
-    updateHemostasisStatistics();
   }
 }
 
@@ -793,129 +796,6 @@ function clearSelection() {
   });
 
   showMessage("Выбор реагента снят", "info");
-}
-
-function fillRandom() {
-  if (
-    confirm("Заполнить все реки случайными реагентами с учетом ограничений?")
-  ) {
-    const reagentOptions = {
-      r1: ["aptt_reagent", "at_liquid_reagent"],
-      r2: ["aptt_reagent", "at_liquid_reagent"],
-      r3: [
-        "aptt_cacl2",
-        "at_liquid_substrat",
-        "recombiplastin",
-        "trombintime",
-        "fibrinogen",
-      ],
-      r4: [
-        "aptt_cacl2",
-        "at_liquid_substrat",
-        "recombiplastin",
-        "trombintime",
-        "fibrinogen",
-      ],
-      r5: [
-        "aptt_cacl2",
-        "at_liquid_substrat",
-        "recombiplastin",
-        "trombintime",
-        "fibrinogen",
-      ],
-      r6: [
-        "aptt_cacl2",
-        "at_liquid_substrat",
-        "recombiplastin",
-        "trombintime",
-        "fibrinogen",
-      ],
-    };
-
-    ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
-      const allowedReagents = reagentOptions[rack];
-      for (let i = 1; i <= 6; i++) {
-        const randomReagent =
-          allowedReagents[Math.floor(Math.random() * allowedReagents.length)];
-        reagentsData[rack][i - 1] = randomReagent;
-        const holeEl = document.getElementById(`hole_${rack}_${i}`);
-        if (holeEl) {
-          holeEl.textContent = reagentDisplayNames[randomReagent];
-        }
-        const holeContainer = document.querySelector(
-          `#rack-${rack} .hole[data-hole="${i}"]`
-        );
-        if (holeContainer) {
-          holeContainer.classList.add("filled");
-        }
-      }
-    });
-
-    showMessage(
-      "Все реки заполнены случайными реагентами с учетом ограничений",
-      "success"
-    );
-    updateHemostasisStatistics();
-  }
-}
-
-function generateReport() {
-  let report = "=== ОТЧЕТ ПО РЕАГЕНТАМ ГЕМОСТАЗА ===\n\n";
-
-  ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
-    report += `Рек ${rack}:\n`;
-
-    let filledCount = 0;
-    reagentsData[rack].forEach((reagent, index) => {
-      const reagentName = reagent ? reagentFullNames[reagent] : "пусто";
-      report += `  Лунка ${index + 1}: ${reagentName}\n`;
-      if (reagent) filledCount++;
-    });
-
-    report += `  Заполнено: ${filledCount}/6\n\n`;
-  });
-
-  // Подсчет по типам реагентов
-  const reagentCounts = {};
-  Object.values(reagentsData).forEach((rack) => {
-    rack.forEach((reagent) => {
-      if (reagent) {
-        reagentCounts[reagent] = (reagentCounts[reagent] || 0) + 1;
-      }
-    });
-  });
-
-  report += "=== СТАТИСТИКА ===\n";
-  Object.entries(reagentCounts).forEach(([reagent, count]) => {
-    report += `${reagentFullNames[reagent]}: ${count}\n`;
-  });
-
-  alert(report);
-  showMessage("Отчет сформирован", "success");
-}
-
-function updateHemostasisStatistics() {
-  const totalHoles = 36; // 6 реков * 6 лунок
-  let filledHoles = 0;
-
-  ["r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
-    reagentsData[rack].forEach((hole) => {
-      if (hole) filledHoles++;
-    });
-  });
-
-  const emptyHoles = totalHoles - filledHoles;
-  const completionPercent = Math.round((filledHoles / totalHoles) * 100);
-
-  const totalEl = document.getElementById("totalHoles");
-  const filledEl = document.getElementById("filledHoles");
-  const emptyEl = document.getElementById("emptyHoles");
-  const percentEl = document.getElementById("completionPercent");
-
-  if (totalEl) totalEl.textContent = totalHoles;
-  if (filledEl) filledEl.textContent = filledHoles;
-  if (emptyEl) emptyEl.textContent = emptyHoles;
-  if (percentEl) percentEl.textContent = `${completionPercent}%`;
 }
 
 // Добавить стили для сообщений
@@ -945,3 +825,30 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Функции для циклов
+
+function modeCicles(mode) {
+  const typeMode = {
+    one: ["e1", "ce", "c2"],
+    two: ["e2", "c1"],
+    all: ["e1", "e2", "ce", "c1", "c2"],
+  };
+
+  // Получаем массив активных элементов для режима
+  const activeElements = typeMode[mode] || [];
+
+  // Все возможные элементы
+  const allIds = ["e1", "e2", "ce", "c1", "c2"];
+
+  allIds.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      if (activeElements.includes(id)) {
+        element.classList.add("active");
+      } else {
+        element.classList.remove("active");
+      }
+    }
+  });
+}

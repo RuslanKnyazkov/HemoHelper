@@ -512,6 +512,7 @@ button {
     padding: 18px;
     margin-bottom: 12px;
     transition: all 0.3s;
+    box-shadow: 4px 4px 1px 1px rgb(216 251 242 / 87%);
 }
 
 .number-item:hover {
@@ -559,6 +560,11 @@ button {
     font-size: 11px;
     color: #adb5bd;
     font-family: monospace;
+}
+
+.number-actions {
+    display:flex;
+    justify-content: space-between;
 }
 
 .empty-state {
@@ -1242,4 +1248,52 @@ button {
 * {
     scrollbar-width: thin;
     scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Стили для циклов */
+.visual {
+    width: 75%;
+    display:flex;
+    justify-content: flex-start;
+}
+.four-lines{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.one-line-plus-sorters {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.analyze {
+    width: 90%;
+    border-width: medium;
+    border-color: bisque;
+    height: 30%;
+    border-radius: 10px;
+    border-style: solid;
+    margin-bottom:20px;
+    margin-top:1px;
+    padding: 20px;
+}
+
+.analyze.active {
+    border-color:#da6aee;
+
+}
+
+.sorter {
+    width: 45%;
+    border-width: medium;
+    border-color: rgb(96, 221, 227);
+    height: 30%;
+    border-radius: 5px;
+    border-style: dashed;
+    margin-bottom:20px;
+    padding: 20px;
 }
