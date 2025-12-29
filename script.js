@@ -3,6 +3,8 @@ let savedNumbers = [];
 let currentMode = "default";
 let currentModeDisplay = "По умолчанию";
 let userLogin = "";
+zpl =
+  "^PW456 ^LL200 ^LS0 ^FO150,50 ^BY1.5 ^B2N,80,Y,Y,N ^FD1096379226^FS ^FO50,135 ^A0N,20,20 ^FD1096379226^FS ^XZ";
 
 // === ПЕРЕМЕННЫЕ ДЛЯ ГЕМОСТАЗА ===
 let selectedReagent = null;
@@ -69,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDisplay();
   setMode("default", "По умолчанию");
   initReagentSelector();
+  modeCicles("all", "Routine-AUE");
 
   // Инициализация шапки
   updateHeaderNavigation(1);
@@ -80,12 +83,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // === ФУНКЦИИ ДЛЯ ШАПКИ И НАВИГАЦИИ ===
+
 // Показать контейнер
 function showContainer(containerNumber) {
+  document.querySelector(".main-container").classList.remove("active");
   // Скрыть все контейнеры
   document.querySelectorAll(".container").forEach((container) => {
     container.classList.remove("active");
   });
+  console.log(currentContainer);
 
   // Показать выбранный контейнер
   document
@@ -96,6 +102,41 @@ function showContainer(containerNumber) {
   updateHeaderNavigation(containerNumber);
 
   currentContainer = containerNumber;
+}
+
+function showToggleMenu(id) {
+  const toggle = document.getElementById(id);
+
+  if (!toggle) {
+    console.error("Элемент не найден");
+    return;
+  }
+
+  // Если элемент уже активен - закрываем его
+  if (toggle.classList.contains("active")) {
+    toggle.classList.remove("active");
+    document.removeEventListener("click", closeOnClickOutside);
+  } else {
+    // Открываем элемент
+    toggle.classList.add("active");
+
+    // Добавляем обработчик для закрытия при клике вне элемента
+    setTimeout(() => {
+      document.addEventListener("click", closeOnClickOutside);
+    }, 0);
+  }
+
+  // Функция для закрытия при клике вне элемента
+  function closeOnClickOutside(event) {
+    // Проверяем, был ли клик на самом toggle или внутри него
+    if (
+      !toggle.contains(event.target) &&
+      !event.target.matches(`#${id}, #${id} *`)
+    ) {
+      toggle.classList.remove("active");
+      document.removeEventListener("click", closeOnClickOutside);
+    }
+  }
 }
 
 // Обновить навигацию в шапке
@@ -332,6 +373,7 @@ function saveToLocalStorage() {
   try {
     localStorage.setItem("labNumbersData", JSON.stringify(savedNumbers));
     localStorage.setItem("lastSaveTime", new Date().toISOString());
+    localStorage.setItem("lastContainer", currentContainer);
     return true;
   } catch (e) {
     console.error("Ошибка сохранения:", e);
@@ -828,27 +870,125 @@ document.head.appendChild(style);
 
 // Функции для циклов
 
-function modeCicles(mode) {
+function modeCicles(mode, buttonElement) {
+  const buttonText = buttonElement?.textContent?.trim() || "Routine-AUE";
+
   const typeMode = {
     one: ["e1", "ce", "c2"],
     two: ["e2", "c1"],
     all: ["e1", "e2", "ce", "c1", "c2"],
   };
 
-  // Получаем массив активных элементов для режима
-  const activeElements = typeMode[mode] || [];
+  const testMode = {
+    one: ["Zinc", "Lpa", "Cu", "CHE", "LIP", "CK-Total"],
+    two: [
+      "C-peptid",
+      "AFP",
+      "A-CCP",
+      "IGF",
+      "PAAP-P",
+      "GH",
+      "TP1NP",
+      "Cyfra",
+      "PTH",
+      "PCT",
+      "FBC",
+      "HAV",
+      "HAV-IgM",
+      "HBE-AG",
+    ],
+    all: ["Все тесты доступны для закрытия"],
+  };
 
-  // Все возможные элементы
+  const modeNames = {
+    one: "Режим 1",
+    two: "Режим 2",
+    all: "Все режимы",
+  };
+
+  // Валидация режима
+  if (!typeMode[mode]) {
+    console.error(`Неизвестный режим: ${mode}`);
+    return;
+  }
+
+  const activeElements = typeMode[mode];
+  const currentTests = testMode[mode] || [];
+
+  // Очистка предыдущего описания
+  const oldDescriptions = document.querySelectorAll(".description");
+  oldDescriptions.forEach((desc) => desc.remove());
+
+  // Управление видимостью элементов
   const allIds = ["e1", "e2", "ce", "c1", "c2"];
 
   allIds.forEach((id) => {
     const element = document.getElementById(id);
     if (element) {
-      if (activeElements.includes(id)) {
-        element.classList.add("active");
-      } else {
-        element.classList.remove("active");
-      }
+      element.classList.toggle("active-analyze", activeElements.includes(id));
     }
   });
+
+  // Обновление информации в сортировщиках
+  const allSorter = ["s2", "s3"];
+
+  allSorter.forEach((id) => {
+    const sorter = document.getElementById(id);
+    if (sorter) {
+      sorter.innerHTML = `<div class="sorter-title">
+                            <h6>p612 (${buttonText})</h6>
+                        </div>
+                        <div class="work-group">
+                          <div class="input-area"></div>
+                          <div class="alicvote-zone"></div>
+                           <div class="output-zone">
+                                <div class="roche-container" id="roche-${id}">
+                           </div>
+                          
+                        </div>
+                        </div>`;
+    }
+    const block = document.getElementById(`roche-${id}`);
+    for (let i = 0; i < 9; i++) {
+      const row = document.createElement("div");
+      row.className = "row";
+      for (let j = 0; j < 5; j++) {
+        const circle = document.createElement("div");
+        circle.className = "circle";
+        row.appendChild(circle);
+      }
+      block.appendChild(row);
+    }
+  });
+
+  // Создание информационного блока
+  const visualElements = document.getElementsByClassName("visual");
+
+  if (visualElements.length > 0) {
+    const visualWindow = visualElements[0];
+
+    const description = document.createElement("div");
+    description.className = "description";
+    description.innerHTML = `
+      <h4>${modeNames[mode] || mode}</h4>
+      <p><strong>Активные блоки:</strong> ${activeElements.join(", ")}</p>
+      <p><strong>Аналиты сортирующиеся в зону Roche:</strong></p>
+      <div class="description-not-avaliable">
+        <div class="button-group">
+            ${(testMode[mode] || [])
+              .map((test) => `<button class="test-button">${test}</button>`)
+              .join("")}
+        </div>
+      </div>
+      </div>
+      <p><strong>Всего элементов:</strong> ${activeElements.length} из ${
+      allIds.length
+    }</p>
+    `;
+
+    visualWindow.appendChild(description);
+  }
+
+  // Логирование
+  console.log(`Режим ${mode} активирован. Активные элементы:`, activeElements);
 }
