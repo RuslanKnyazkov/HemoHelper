@@ -3,8 +3,6 @@ let savedNumbers = [];
 let currentMode = "default";
 let currentModeDisplay = "По умолчанию";
 let userLogin = "";
-zpl =
-  "^PW456 ^LL200 ^LS0 ^FO150,50 ^BY1.5 ^B2N,80,Y,Y,N ^FD1096379226^FS ^FO50,135 ^A0N,20,20 ^FD1096379226^FS ^XZ";
 
 // === ПЕРЕМЕННЫЕ ДЛЯ ГЕМОСТАЗА ===
 let selectedReagent = null;
@@ -42,7 +40,7 @@ const reagentDisplayNames = {
   d_dimer_l: "D-dim L",
 };
 
-// Полные названия
+// Полные названия реагентов
 const reagentFullNames = {
   clean_b: "Clean B",
   clean_b_dil: "Clean B Diluled",
@@ -61,8 +59,21 @@ const reagentFullNames = {
   d_dimer_l: "D-dimer Latex",
 };
 
+// Список меню для элементов t1 и t2
+const listMenu = {
+  t1: [
+    { name: "Баркоды", container: 1 },
+    { name: "Аликвоты", container: 2 },
+  ],
+  t2: [
+    { name: "Реагенты", container: 3 },
+    { name: "Циклы Roche", container: 4 },
+  ],
+};
+
 // Текущий активный контейнер
 let currentContainer = 1;
+let isMenuInitialized = false;
 
 // === ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ===
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDisplay();
   setMode("default", "По умолчанию");
   initReagentSelector();
+  initToggleMenu();
   modeCicles("all", "Routine-AUE");
 
   // Инициализация шапки
@@ -86,17 +98,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Показать контейнер
 function showContainer(containerNumber) {
-  document.querySelector(".main-container").classList.remove("active");
+  // Скрыть все активные контейнеры и меню
+  document
+    .querySelectorAll(
+      ".main-container.active, .into-toggle.active, .toggle.active"
+    )
+    .forEach((element) => {
+      element.classList.remove("active");
+    });
+
   // Скрыть все контейнеры
   document.querySelectorAll(".container").forEach((container) => {
     container.classList.remove("active");
   });
-  console.log(currentContainer);
 
   // Показать выбранный контейнер
-  document
-    .getElementById(`container${containerNumber}`)
-    .classList.add("active");
+  const targetContainer = document.getElementById(
+    `container${containerNumber}`
+  );
+  if (targetContainer) {
+    targetContainer.classList.add("active");
+  }
 
   // Обновить навигацию в шапке
   updateHeaderNavigation(containerNumber);
@@ -104,10 +126,138 @@ function showContainer(containerNumber) {
   currentContainer = containerNumber;
 }
 
+// Функция для инициализации выпадающего меню
+function initToggleMenu() {
+  const toggleMenu = document.querySelector(".toggle, .toggle.active");
+
+  if (!toggleMenu) {
+    console.warn("Элемент .toggle не найден");
+    return;
+  }
+
+  const toggleItem = ["t1", "t2"];
+  const showListContainers = document.querySelector(".into-toggle");
+
+  if (!showListContainers) {
+    console.warn("Элемент .into-toggle не найден");
+    return;
+  }
+
+  // Функция для закрытия меню
+  function closeMenu() {
+    showListContainers.classList.remove("active");
+    showListContainers.innerHTML = "";
+    toggleItem.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) element.classList.remove("active");
+    });
+  }
+
+  // Функция для открытия меню
+  function openMenu(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    // Закрываем предыдущее меню если открыто
+    if (showListContainers.classList.contains("active")) {
+      closeMenu();
+      // Если кликнули на тот же элемент, просто закрываем
+      if (element.classList.contains("active")) {
+        return;
+      }
+    }
+
+    // Показываем меню и подсвечиваем элемент
+    showListContainers.classList.add("active");
+    element.classList.add("active");
+
+    // Получаем пункты меню для этого элемента
+    const items = listMenu[elementId] || [];
+    const itemMenu = items
+      .map(
+        (item) => `
+      <li>
+        <div class="animated-icon">
+          <i class="fas fa-barcode"></i>
+        </div>
+        <a href="#" onclick="
+          showContainer(${item.container});
+          document.getElementById('${elementId}').classList.remove('active');
+          document.querySelector('.into-toggle').classList.remove('active');
+          return false;
+        ">
+          <span>${item.name}</span>
+          <i class="fas fa-chevron-right arrow"></i>
+        </a>
+      </li>
+    `
+      )
+      .join("");
+
+    showListContainers.innerHTML = `<ul class="animated-list">${itemMenu}</ul>`;
+  }
+
+  // Добавляем обработчики для элементов t1 и t2
+  toggleItem.forEach((elemId) => {
+    const element = document.getElementById(elemId);
+    if (element) {
+      // Удаляем старые обработчики если они есть
+      element.removeEventListener("click", element.clickHandler);
+
+      // Создаем новый обработчик
+      element.clickHandler = function (e) {
+        e.stopPropagation();
+        openMenu(elemId);
+      };
+
+      // Добавляем обработчик
+      element.addEventListener("click", element.clickHandler);
+    }
+  });
+
+  // Закрытие меню при клике вне элемента
+  function handleClickOutside(event) {
+    const isClickOnToggleItem = toggleItem.some((id) => {
+      const el = document.getElementById(id);
+      return el && el.contains(event.target);
+    });
+
+    const isClickOnMenu = showListContainers.contains(event.target);
+
+    if (
+      !isClickOnToggleItem &&
+      !isClickOnMenu &&
+      showListContainers.classList.contains("active")
+    ) {
+      closeMenu();
+    }
+  }
+
+  // Закрытие при нажатии Escape
+  function handleEscapeKey(event) {
+    if (
+      event.key === "Escape" &&
+      showListContainers.classList.contains("active")
+    ) {
+      closeMenu();
+    }
+  }
+
+  // Добавляем глобальные обработчики
+  document.addEventListener("click", handleClickOutside);
+  document.addEventListener("keydown", handleEscapeKey);
+
+  // Сохраняем ссылки для возможного удаления
+  toggleMenu.handleClickOutside = handleClickOutside;
+  toggleMenu.handleEscapeKey = handleEscapeKey;
+}
+
+// Показать/скрыть toggle меню (старая функция, оставляем для совместимости)
 function showToggleMenu(id) {
   const toggle = document.getElementById(id);
+  const showListContainers = document.querySelector(".into-toggle");
 
-  if (!toggle) {
+  if (!toggle || !showListContainers) {
     console.error("Элемент не найден");
     return;
   }
@@ -115,27 +265,11 @@ function showToggleMenu(id) {
   // Если элемент уже активен - закрываем его
   if (toggle.classList.contains("active")) {
     toggle.classList.remove("active");
-    document.removeEventListener("click", closeOnClickOutside);
+    showListContainers.classList.remove("active");
   } else {
     // Открываем элемент
     toggle.classList.add("active");
-
-    // Добавляем обработчик для закрытия при клике вне элемента
-    setTimeout(() => {
-      document.addEventListener("click", closeOnClickOutside);
-    }, 0);
-  }
-
-  // Функция для закрытия при клике вне элемента
-  function closeOnClickOutside(event) {
-    // Проверяем, был ли клик на самом toggle или внутри него
-    if (
-      !toggle.contains(event.target) &&
-      !event.target.matches(`#${id}, #${id} *`)
-    ) {
-      toggle.classList.remove("active");
-      document.removeEventListener("click", closeOnClickOutside);
-    }
+    showListContainers.classList.add("active");
   }
 }
 
@@ -169,20 +303,24 @@ function updateHeaderNavigation(containerNumber) {
 // Инициализация мобильного меню
 function initMobileMenu() {
   const mainNav = document.getElementById("mainNav");
+  if (!mainNav) return;
+
   mainNav.style.display = "none";
 
   // Создать мобильное меню
   const mobileMenu = document.createElement("div");
   mobileMenu.className = "mobile-menu";
-  mobileMenu.style.display = "none";
-  mobileMenu.style.position = "absolute";
-  mobileMenu.style.top = "70px";
-  mobileMenu.style.left = "0";
-  mobileMenu.style.right = "0";
-  mobileMenu.style.background = "#2c3e50";
-  mobileMenu.style.padding = "20px";
-  mobileMenu.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
-  mobileMenu.style.zIndex = "1001";
+  mobileMenu.style.cssText = `
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: #2c3e50;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+  `;
 
   // Добавить кнопки меню
   const buttons = [
@@ -194,9 +332,11 @@ function initMobileMenu() {
   buttons.forEach((btn) => {
     const button = document.createElement("button");
     button.className = "nav-tab";
-    button.style.width = "100%";
-    button.style.marginBottom = "10px";
-    button.style.justifyContent = "flex-start";
+    button.style.cssText = `
+      width: 100%;
+      margin-bottom: 10px;
+      justify-content: flex-start;
+    `;
     button.innerHTML = `<i class="fas ${btn.icon}"></i> <span>${btn.text}</span>`;
     button.onclick = () => {
       showContainer(btn.id);
@@ -211,11 +351,8 @@ function initMobileMenu() {
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   if (mobileMenuBtn) {
     mobileMenuBtn.onclick = function () {
-      if (mobileMenu.style.display === "none") {
-        mobileMenu.style.display = "block";
-      } else {
-        mobileMenu.style.display = "none";
-      }
+      mobileMenu.style.display =
+        mobileMenu.style.display === "none" ? "block" : "none";
     };
   }
 
@@ -243,19 +380,15 @@ window.addEventListener("resize", function () {
 });
 
 // === ОСНОВНЫЕ ФУНКЦИИ СИСТЕМЫ ===
-function signUser() {
-  if (!userLogin) {
-  }
-}
-
 function setupEventListeners() {
   const numberInput = document.getElementById("numberInput");
-
-  numberInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      saveNumber();
-    }
-  });
+  if (numberInput) {
+    numberInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        saveNumber();
+      }
+    });
+  }
 
   document.querySelectorAll(".mode-btn[data-mode]").forEach((btn) => {
     btn.addEventListener("click", function () {
@@ -266,7 +399,9 @@ function setupEventListeners() {
   });
 
   document.addEventListener("click", (e) => {
+    const numberInput = document.getElementById("numberInput");
     if (
+      numberInput &&
       !e.target.closest(".right-panel") &&
       !e.target.closest(".mode-btn") &&
       !e.target.closest("button")
@@ -280,7 +415,10 @@ function setMode(mode, display) {
   currentMode = mode;
   currentModeDisplay = display;
 
-  document.getElementById("currentModeDisplay").textContent = display;
+  const displayElement = document.getElementById("currentModeDisplay");
+  if (displayElement) {
+    displayElement.textContent = display;
+  }
 
   document.querySelectorAll(".mode-btn").forEach((btn) => {
     btn.classList.remove("active");
@@ -308,8 +446,21 @@ function loadSavedNumbers() {
   }
 }
 
+// Функция для копирования в буфер обмена
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    console.log(`JSON object : ${text}`);
+    return navigator.clipboard.writeText(text);
+  }
+}
+
 function saveNumber() {
   const numberInput = document.getElementById("numberInput");
+  if (!numberInput) {
+    showMessage("Поле ввода не найдено", "error");
+    return;
+  }
+
   const number = numberInput.value.trim();
 
   if (!number) {
@@ -345,16 +496,16 @@ function saveNumber() {
     timestamp: new Date().toISOString(),
   };
 
-  navigator.clipboard
-    .writeText(JSON.stringify(clipboardObject, null, 2))
+  copyToClipboard(JSON.stringify(clipboardObject, null, 2))
     .then(() => {
       showMessage(
         `✅ Проба "${number}" (${currentModeDisplay}) сохранена и скопирована!`,
         "success"
       );
-      document.getElementById(
-        "clipboardStatus"
-      ).textContent = `${number} (${currentModeDisplay})`;
+      const clipboardStatus = document.getElementById("clipboardStatus");
+      if (clipboardStatus) {
+        clipboardStatus.textContent = `${number} (${currentModeDisplay})`;
+      }
     })
     .catch((err) => {
       console.error("Ошибка копирования:", err);
@@ -386,63 +537,71 @@ function updateDisplay() {
   const count = savedNumbers.length;
   const listElement = document.getElementById("numbersList");
 
-  document.getElementById("countDisplay").textContent = count;
+  const countDisplay = document.getElementById("countDisplay");
+  if (countDisplay) {
+    countDisplay.textContent = count;
+  }
 
   const lastTime = localStorage.getItem("lastSaveTime");
   if (lastTime) {
     const date = new Date(lastTime);
-    document.getElementById("lastSaveTime").textContent =
-      date.toLocaleString("ru-RU");
+    const lastSaveTime = document.getElementById("lastSaveTime");
+    if (lastSaveTime) {
+      lastSaveTime.textContent = date.toLocaleString("ru-RU");
+    }
   }
 
-  listElement.innerHTML = "";
+  if (listElement) {
+    listElement.innerHTML = "";
 
-  if (count === 0) {
-    const emptyState = document.createElement("div");
-    emptyState.className = "empty-state";
-    emptyState.innerHTML = `
-            <i class="fas fa-inbox"></i>
-            <h3>Нет сохраненных проб</h3>
-            <p>Добавьте первую пробу через форму слева</p>
-        `;
-    listElement.appendChild(emptyState);
-    return;
+    if (count === 0) {
+      const emptyState = document.createElement("div");
+      emptyState.className = "empty-state";
+      emptyState.innerHTML = `
+        <i class="fas fa-inbox"></i>
+        <h3>Нет сохраненных проб</h3>
+        <p>Добавьте первую пробу через форму слева</p>
+      `;
+      listElement.appendChild(emptyState);
+      return;
+    }
+
+    savedNumbers.forEach((item, index) => {
+      const itemElement = document.createElement("div");
+      itemElement.className = `number-item ${index === 0 ? "active" : ""}`;
+      const modeClass = `mode-${item.mode}`;
+
+      itemElement.innerHTML = `
+        <div class="number-header">
+          <div class="number-value">Номер: ${escapeHtml(item.number)}</div>
+          <div>
+            <span class="number-mode ${modeClass}">${escapeHtml(
+        item.modeDisplay
+      )}</span>
+            <span class="number-time">${item.date}</span>
+          </div>
+        </div>
+        <div class="number-id">ID: ${item.id}</div>
+        <div class="number-actions">
+          <button onclick="copyNumber('${item.id}')" class="btn-success">
+            <i class="fas fa-copy"></i> Повторная печать
+          </button>
+          <button onclick="deleteNumber('${item.id}')" class="btn-danger">
+            <i class="fas fa-trash"></i> Удалить
+          </button>
+        </div>
+      `;
+      listElement.appendChild(itemElement);
+    });
   }
-
-  savedNumbers.forEach((item, index) => {
-    const itemElement = document.createElement("div");
-    itemElement.className = `number-item ${index === 0 ? "active" : ""}`;
-    const modeClass = `mode-${item.mode}`;
-
-    itemElement.innerHTML = `
-            <div class="number-header">
-                <div class="number-value">Номер: ${escapeHtml(
-                  item.number
-                )}</div>
-                <div>
-                    <span class="number-mode ${modeClass}">${escapeHtml(
-      item.modeDisplay
-    )}</span>
-                    <span class="number-time">${item.date}</span>
-                </div>
-            </div>
-            <div class="number-id">ID: ${item.id}</div>
-            <div class="number-actions">
-                <button onclick="copyNumber('${item.id}')" class="btn-success">
-                    <i class="fas fa-copy"></i> Повторная печать
-                </button>
-                <button onclick="deleteNumber('${item.id}')" class="btn-danger">
-                    <i class="fas fa-trash"></i> Удалить
-                </button>
-            </div>
-        `;
-    listElement.appendChild(itemElement);
-  });
 }
 
 function clearInput() {
-  document.getElementById("numberInput").value = "";
-  document.getElementById("numberInput").focus();
+  const numberInput = document.getElementById("numberInput");
+  if (numberInput) {
+    numberInput.value = "";
+    numberInput.focus();
+  }
   showMessage("Форма очищена", "info");
 }
 
@@ -471,8 +630,7 @@ function copyNumber(id) {
       timestamp: numberObj.timestamp,
     };
 
-    navigator.clipboard
-      .writeText(JSON.stringify(clipboardObject, null, 2))
+    copyToClipboard(JSON.stringify(clipboardObject, null, 2))
       .then(() => showMessage("JSON объект скопирован в буфер", "success"))
       .catch(() => showMessage("Ошибка копирования", "error"));
   }
@@ -491,8 +649,7 @@ function copyAllToClipboard() {
     date: item.date,
   }));
 
-  navigator.clipboard
-    .writeText(JSON.stringify(allData, null, 2))
+  copyToClipboard(JSON.stringify(allData, null, 2))
     .then(() =>
       showMessage(
         `Все ${savedNumbers.length} проб скопированы в буфер`,
@@ -511,12 +668,14 @@ function deleteNumber(id) {
 
 function showMessage(text, type) {
   const messageDiv = document.getElementById("message");
-  messageDiv.textContent = text;
-  messageDiv.className = `message ${type} show`;
+  if (messageDiv) {
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type} show`;
 
-  setTimeout(() => {
-    messageDiv.classList.remove("show");
-  }, 4000);
+    setTimeout(() => {
+      messageDiv.classList.remove("show");
+    }, 4000);
+  }
 }
 
 function escapeHtml(text) {
@@ -525,15 +684,23 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function sendModeLabel() {
+  const userModeLabel = {
+    salvia: "",
+    dublicat: "",
+    virtual: "",
+    infinity: "",
+  };
+}
+
 function copySalivaInfo() {
   const salivaInfo = {
     material: "Слюна",
   };
 
-  const jsonString = JSON.stringify(salivaInfo, 0, 2);
+  const jsonString = JSON.stringify(salivaInfo, null, 2);
 
-  navigator.clipboard
-    .writeText(jsonString)
+  copyToClipboard(jsonString)
     .then(() => {
       showMessage("✅ Информация о слюне скопирована в буфер", "success");
     })
@@ -545,29 +712,33 @@ function copySalivaInfo() {
 
 function copyArhiveInfo() {
   const input = document.getElementById("numberInput");
-
-  if (!input.value) {
-    showMessage("Вам необходимо ввести номер виртуального штатива", "error");
-  } else {
-    const archiveInfo = {
-      material: "Архив",
-      number: input.value,
-      original_mode: input.mode,
-    };
-
-    navigator.clipboard
-      .writeText(JSON.stringify(archiveInfo, null, 2))
-      .then(() => {
-        showMessage(
-          `✅ JSON виртуального архива "${input.value}" скопирован в буфер`,
-          "success"
-        );
-      })
-      .catch((err) => {
-        console.error("Ошибка копирования:", err);
-        showMessage("Ошибка копирования информации", "error");
-      });
+  if (!input) {
+    showMessage("Поле ввода не найдено", "error");
+    return;
   }
+
+  if (!input.value.trim()) {
+    showMessage("Вам необходимо ввести номер виртуального штатива", "error");
+    return;
+  }
+
+  const archiveInfo = {
+    material: "Архив",
+    number: input.value.trim(),
+    original_mode: currentMode,
+  };
+
+  copyToClipboard(JSON.stringify(archiveInfo, null, 2))
+    .then(() => {
+      showMessage(
+        `✅ JSON виртуального архива "${input.value.trim()}" скопирован в буфер`,
+        "success"
+      );
+    })
+    .catch((err) => {
+      console.error("Ошибка копирования:", err);
+      showMessage("Ошибка копирования информации", "error");
+    });
 }
 
 function copyDoubleInfo() {
@@ -575,8 +746,9 @@ function copyDoubleInfo() {
     material: "Дубли",
   };
 
-  navigator.clipboard
-    .writeText(JSON.stringify(duplicateInfo, 0, 2))
+  const jsonString = JSON.stringify(duplicateInfo, null, 2);
+
+  copyToClipboard(jsonString)
     .then(() => {
       showMessage("✅ Информация о дубликате скопирована в буфер", "success");
     })
@@ -589,74 +761,76 @@ function copyDoubleInfo() {
 // === ФУНКЦИИ ДЛЯ АЛИКВОТ ===
 function showAlictotContent() {
   const container = document.getElementById("right-panel2");
+  if (!container) return;
+
   const alicvotsContainer = document.createElement("div");
   alicvotsContainer.className = "alicvots-container";
   alicvotsContainer.id = "alicvotsContent";
 
   alicvotsContainer.innerHTML = `
-        <div class="alicvots-header">
-            <h2><i class="fas fa-table"></i> Введите данные для аликвот</h2>
+    <div class="alicvots-header">
+      <h2><i class="fas fa-table"></i> Введите данные для аликвот</h2>
+    </div>
+    
+    <div class="alicvots-content">
+      <div class="input-section">
+        <div class="input-group">
+          <label for="alicvotsName">
+            <i class="fas fa-tag"></i>
+            Название:
+          </label>
+          <div class="input-with-icon">
+            <i class="fas fa-font"></i>
+            <input type="text" id="alicvotsName" placeholder="Введите название" maxlength="50">
+          </div>
         </div>
         
-        <div class="alicvots-content">
-            <div class="input-section">
-                <div class="input-group">
-                    <label for="alicvotsName">
-                        <i class="fas fa-tag"></i>
-                        Название:
-                    </label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-font"></i>
-                        <input type="text" id="alicvotsName" placeholder="Введите название" maxlength="50">
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label for="alicvotsValue">
-                        <i class="fas fa-hashtag"></i>
-                        Лот:
-                    </label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-calculator"></i>
-                        <input type="number" id="alicvotsValue" placeholder="0" step="0.01">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="alicvotsCount">
-                        <i class="fas fa-hashtag"></i>
-                        Количество экземпляров:
-                    </label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-calculator"></i>
-                        <input type="number" id="alicvotsCount" placeholder="0" step="1">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="alicvotsVolume">
-                        <i class="fas fa-hashtag"></i>
-                        Объём в [мкл , мл]:
-                    </label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-calculator"></i>
-                        <input type="number" id="alicvotsVolume" placeholder="0 мкл">
-                    </div>
-                </div>
-                
-                <div class="button-group">
-                    <button class="btn-primary" onclick="addAlicvotsItem()">
-                        <i class="fas fa-plus"></i>
-                        Распечатать
-                    </button>
-                    <button class="btn-secondary" onclick="clearAlicvotsForm()">
-                        <i class="fas fa-eraser"></i>
-                        Очистить
-                    </button>
-                </div>
-            </div>
+        <div class="input-group">
+          <label for="alicvotsValue">
+            <i class="fas fa-hashtag"></i>
+            Лот:
+          </label>
+          <div class="input-with-icon">
+            <i class="fas fa-calculator"></i>
+            <input type="number" id="alicvotsValue" placeholder="0" step="0.01">
+          </div>
         </div>
-    `;
+
+        <div class="input-group">
+          <label for="alicvotsCount">
+            <i class="fas fa-hashtag"></i>
+            Количество экземпляров:
+          </label>
+          <div class="input-with-icon">
+            <i class="fas fa-calculator"></i>
+            <input type="number" id="alicvotsCount" placeholder="0" step="1">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="alicvotsVolume">
+            <i class="fas fa-hashtag"></i>
+            Объём в [мкл , мл]:
+          </label>
+          <div class="input-with-icon">
+            <i class="fas fa-calculator"></i>
+            <input type="number" id="alicvotsVolume" placeholder="0 мкл">
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button class="btn-primary" onclick="addAlicvotsItem()">
+            <i class="fas fa-plus"></i>
+            Распечатать
+          </button>
+          <button class="btn-secondary" onclick="clearAlicvotsForm()">
+            <i class="fas fa-eraser"></i>
+            Очистить
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 
   checkContainer(container, alicvotsContainer);
 }
@@ -671,49 +845,63 @@ function checkContainer(parent, child) {
 }
 
 function addAlicvotsItem() {
-  const name = document.getElementById("alicvotsName");
-  const lot = document.getElementById("alicvotsValue");
-  const count = document.getElementById("alicvotsCount");
-  const volume = document.getElementById("alicvotsVolume");
+  const nameInput = document.getElementById("alicvotsName");
+  const lotInput = document.getElementById("alicvotsValue");
+  const countInput = document.getElementById("alicvotsCount");
+  const volumeInput = document.getElementById("alicvotsVolume");
 
-  if (!name.value || !lot.value || !count.value || !volume.value) {
+  if (!nameInput || !lotInput || !countInput || !volumeInput) {
+    showMessage("Не удалось найти поля формы", "error");
+    return;
+  }
+
+  const name = nameInput.value.trim();
+  const lot = lotInput.value.trim();
+  const count = countInput.value.trim();
+  const volume = volumeInput.value.trim();
+
+  if (!name || !lot || !count || !volume) {
     showMessage("Заполните все поля!", "error");
     return;
   }
 
-  if (count.value > 10) {
+  const countNum = parseInt(count, 10);
+  if (isNaN(countNum) || countNum > 10) {
     showMessage(
       "Слишком большое количество наклеек. Нельзя распечатать больше 10 наклеек",
       "error"
     );
-  } else {
-    const newObject = {
-      material: "Аликвоты",
-      name: name.value,
-      lot: lot.value,
-      count: count.value,
-      volume: volume.value,
-    };
-
-    navigator.clipboard
-      .writeText(JSON.stringify(newObject, 0, 2))
-      .then(() => {
-        showMessage(
-          `Успешная передача на печать ${count.value} этикеток`,
-          "success"
-        );
-      })
-      .catch((error) => {
-        showMessage(`Ошибка копирования: ${error}`, "error");
-      });
+    return;
   }
+
+  const newObject = {
+    material: "Аликвоты",
+    name: name,
+    lot: lot,
+    count: count,
+    volume: volume,
+  };
+
+  copyToClipboard(JSON.stringify(newObject, null, 2))
+    .then(() => {
+      showMessage(`Успешная передача на печать ${count} этикеток`, "success");
+    })
+    .catch((error) => {
+      showMessage(`Ошибка копирования: ${error}`, "error");
+    });
 }
 
 function clearAlicvotsForm() {
-  document.getElementById("alicvotsName").value = "";
-  document.getElementById("alicvotsValue").value = "";
-  document.getElementById("alicvotsCount").value = "";
-  document.getElementById("alicvotsVolume").value = "";
+  const nameInput = document.getElementById("alicvotsName");
+  const lotInput = document.getElementById("alicvotsValue");
+  const countInput = document.getElementById("alicvotsCount");
+  const volumeInput = document.getElementById("alicvotsVolume");
+
+  if (nameInput) nameInput.value = "";
+  if (lotInput) lotInput.value = "";
+  if (countInput) countInput.value = "";
+  if (volumeInput) volumeInput.value = "";
+
   showMessage("Форма очищена", "info");
 }
 
@@ -840,35 +1028,7 @@ function clearSelection() {
   showMessage("Выбор реагента снят", "info");
 }
 
-// Добавить стили для сообщений
-const style = document.createElement("style");
-style.textContent = `
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-    
-    .message.info { background: #17a2b8; color: white; }
-    .message.success { background: #28a745; color: white; }
-    .message.error { background: #dc3545; color: white; }
-    .message.warning { background: #ffc107; color: #212529; }
-    
-    .mobile-open {
-        display: flex !important;
-        flex-direction: column;
-        position: absolute;
-        top: 70px;
-        left: 0;
-        right: 0;
-        background: #2c3e50;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-`;
-document.head.appendChild(style);
-
-// Функции для циклов
+// === ФУНКЦИИ ДЛЯ ЦИКЛОВ ROCHE ===
 
 function modeCicles(mode, buttonElement) {
   const buttonText = buttonElement?.textContent?.trim() || "Routine-AUE";
@@ -949,15 +1109,17 @@ function modeCicles(mode, buttonElement) {
                         </div>`;
     }
     const block = document.getElementById(`roche-${id}`);
-    for (let i = 0; i < 9; i++) {
-      const row = document.createElement("div");
-      row.className = "row";
-      for (let j = 0; j < 5; j++) {
-        const circle = document.createElement("div");
-        circle.className = "circle";
-        row.appendChild(circle);
+    if (block) {
+      for (let i = 0; i < 9; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+        for (let j = 0; j < 5; j++) {
+          const circle = document.createElement("div");
+          circle.className = "circle";
+          row.appendChild(circle);
+        }
+        block.appendChild(row);
       }
-      block.appendChild(row);
     }
   });
 

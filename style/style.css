@@ -530,18 +530,37 @@ body {
 .toggle {
   position: fixed;
   top: 0;
-  right: -300px; /* Начальная позиция за экраном справа */
+  left: -300px; /* Начальная позиция за экраном справа */
   width: 300px;
   height: 100%; /* Вся высота экрана */
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   overflow-y: auto;
+  padding: 0.5rem;
 }
 
 .toggle.active {
-  right: 0; /* Конечная позиция */
+  left: 0; /* Конечная позиция */
+}
+
+.into-toggle {
+  position: fixed;
+  top: 0;
+  left: -300px; /* Начальная позиция за экраном справа */
+  width: 300px;
+  height: 100%; /* Вся высота экрана */
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 0.5em;
+}
+
+.into-toggle.active {
+  left: 300px;
 }
 
 .animated-list {
@@ -566,7 +585,7 @@ body {
 }
 
 .animated-list li:hover {
-  transform: translateX(10px);
+  transform: translateX(5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   border-color: #3b82f6;
 }

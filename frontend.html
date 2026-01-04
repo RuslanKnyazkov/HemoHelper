@@ -36,40 +36,43 @@
             <i class="fas fa-flask"></i>
             <span>Главная</span>
           </button>
-          <div class="dropdown">
-            <button class="nav-tab">
-              <li class="fas fa-hashtag"></li>
-              <span>Этикетки</span>
-            </button>
-            <ul class="dropdown-menu">
-              <li><a href="#" onclick="showContainer(1)">Баркоды</a></li>
-              <li><a href="#" onclick="showContainer(2)">Аликвоты</a></li>
-            </ul>
-          </div>
-          <div class="dropdown">
-            <button class="nav-tab">
-              <i class="fas fa-tint"></i>
-              <span>Гемостаз</span>
-            </button>
-            <ul class="dropdown-menu">
-              <li><a href="#" onclick="showContainer(3)">Реагенты</a></li>
-            </ul>
-          </div>
-
-          <button class="nav-tab" onclick="showContainer(4)">
+          <button class="nav-tab" onclick="showToggleMenu('toggle-main')">
             <i class="fas fa-cogs"></i>
-            <span>Циклы</span>
+            <span>Меню</span>
           </button>
         </nav>
 
-        <!-- Правая часть -->
-        <div class="header-right">
-          <!-- Индикаторы вкладок -->
-          <div class="tab-indicators">
-            <span class="tab-indicator active" data-tab="1"></span>
-            <span class="tab-indicator" data-tab="2"></span>
-            <span class="tab-indicator" data-tab="3"></span>
-          </div>
+        <div class="into-toggle"></div>
+
+        <div class="toggle" id="toggle-main">
+           <ul class="animated-list">
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-barcode"></i>
+                </div>
+                <a href="#" id='t1'
+                  ><span>Баркоды</span>
+                  <i class="fas fa-chevron-right arrow"></i>
+                </a>
+              </li>
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-vial"></i>
+                </div>
+                <a href="#" id="t2"
+                  ><span>Гемостаз</span>
+                  <i class="fas fa-chevron-right arrow"></i
+                ></a>
+              </li>
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-hashtag"></i>
+                </div>
+                <a href="#">
+                  <span>Roche</span></a>
+              </li>
+            </ul>
+        </div>
 
           <!-- Информация о пользователе -->
           <div class="user-info" onclick="toggleUserMenu()">
@@ -136,37 +139,9 @@
 
     <!-- Первый контейнер (основной) -->
     <div class="container" id="container1">
-      <header>
-        <button onclick="showToggleMenu('toggle-barcode')">
-          <i class="fas fa-bars"></i>
-        </button>
-        <h1><i class="fas fa-flask"></i> Наклейки</h1>
-      </header>
-
       <div class="content">
         <div class="left-panel">
-          <div class="toggle" id="toggle-barcode">
-            <ul class="animated-list">
-              <li>
-                <div class="animated-icon">
-                  <i class="fas fa-barcode"></i>
-                </div>
-                <a href="#" onclick="showContainer(1)"
-                  ><span>Печать баркодов</span>
-                  <i class="fas fa-chevron-right arrow"></i>
-                </a>
-              </li>
-              <li>
-                <div class="animated-icon">
-                  <i class="fas fa-vial"></i>
-                </div>
-                <a href="#" onclick="showContainer(2)"
-                  ><span>Печать аликвот</span>
-                  <i class="fas fa-chevron-right arrow"></i
-                ></a>
-              </li>
-            </ul>
-          </div>
+         
           <div class="input-section">
             <div class="input-group">
               <label for="numberInput">
@@ -310,36 +285,9 @@
 
     <!-- Второй контейнер -->
     <div class="container" id="container2">
-      <header>
-        <button onclick="showToggleMenu('toggle-alicvot')">
-          <i class="fas fa-bars"></i>
-        </button>
-        <h1><i class="fas fa-cogs"></i> Вспомогательные функции</h1>
-      </header>
 
       <div class="content">
-        <div class="toggle" id="toggle-alicvot">
-          <ul class="animated-list">
-            <li>
-              <div class="animated-icon">
-                <i class="fas fa-barcode"></i>
-              </div>
-              <a href="#" onclick="showContainer(1)"
-                ><span>Печать баркодов</span>
-                <i class="fas fa-chevron-right arrow"></i>
-              </a>
-            </li>
-            <li>
-              <div class="animated-icon">
-                <i class="fas fa-vial"></i>
-              </div>
-              <a href="#" onclick="showContainer(2)"
-                ><span>Печать аликвот</span>
-                <i class="fas fa-chevron-right arrow"></i
-              ></a>
-            </li>
-          </ul>
-        </div>
+        
         <div class="left-panel">
           <div class="button-group">
             <button
@@ -356,12 +304,6 @@
 
     <!-- Третий контейнер - Практика гемостаза -->
     <div class="container" id="container3">
-      <header>
-        <h1><i class="fas fa-tint"></i> Практика гемостаза</h1>
-        <div class="subtitle">
-          Система с ограничениями по размещению реагентов
-        </div>
-      </header>
 
       <div class="content coagulation-practice">
         <!-- Левая панель - выбор реагентов -->
@@ -849,7 +791,36 @@
       </header>
       <div class="content">
         <div class="left-panel">
-          <div class="toggle" id="toggle-roche"></div>
+          <div class="toggle" id="toggle-roche">
+            <ul class="animated-list">
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-barcode"></i>
+                </div>
+                <a href="#" onclick=""
+                  ><span>Режимы работы</span>
+                  <i class="fas fa-chevron-right arrow"></i>
+                </a>
+              </li>
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-vial"></i>
+                </div>
+                <a href="#" onclick=""
+                  ><span>Маршруты ССМ</span>
+                  <i class="fas fa-chevron-right arrow"></i
+                ></a>
+              </li>
+              <li>
+                <div class="animated-icon">
+                  <i class="fas fa-hashtag"></i>
+                </div>
+                <a href="#">
+                  <span>В разработке</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
           <div class="cycle-mode">
             <div><h3>Режимы сортеров</h3></div>
