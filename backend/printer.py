@@ -36,8 +36,6 @@ class PrintManager():
                 break
 
     def create_text_zpl(self, text: str) -> str:
-        map_text = {"Дубли": "Dubli", "Слюна": "Sluna"}
-        value = map_text.get(text, "Пусто")
         zpl = f"""^XA
             ^CI28
             ^PW406
@@ -47,7 +45,7 @@ class PrintManager():
             ^FO30,80
             ^ADN,30,30  # Шрифт D - более широкий
             ^FB388,1,0,C
-            ^FD{value}^FS
+            ^FD{text}^FS
 
             ^FO30,150
             ^ADN,20,20  # Шрифт D
@@ -143,3 +141,35 @@ class PrintManager():
 
             ^XZ"""
         return zpl
+
+
+class ZplGenerator:
+
+    @staticmethod
+    def create_simple_zpl(*args, **kwargs) -> str:
+        """
+        Docstring for create_simple_zpl
+        Warning args need strong step by step
+
+        :param args: Fields for insert into zpl code
+        :param kwargs: Optional
+        :return: Description
+        :rtype: str
+        """
+        if len(args) < 1:
+            raise "Value error neded one or more argument`s"
+
+        zpl = """^XA
+                ^PW406
+                ^LL360
+                ^LS0"""
+
+        for arg in args:
+            zpl += f"""
+            ^FO30,30
+            ^ADN,30,30  # Шрифт D - более широкий
+            ^FB388,1,0,C
+            ^FD{arg}^FS
+            """
+
+        zpl += "^XZ"

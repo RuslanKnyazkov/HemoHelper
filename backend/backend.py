@@ -20,29 +20,11 @@ class PrintMonitor:
                 print(f"⚠️ Получен не словарь: {type(data)}")
                 return False
 
-            # Проверяем наличие ключа 'material'
-            if 'material' in data:
-                material = data['material']
-
-                if material in ["Слюна", "Дубли"]:
-                    zpl = self.print_manager.create_text_zpl(text=material)
-                    self.print_manager.print_barcode(zpl)
-                    print(f"✅ Напечатана метка {material}")
-                    return True
-
-                elif material == "Архив" and 'number' in data:
-                    archive_number = data['number']
-                    zpl = self.print_manager.create_virtual_arhive(
-                        archive_number)
-                    self.print_manager.print_barcode(zpl)
-                    print(f"✅ Напечатан архив: {archive_number}")
-                    return True
-                elif material == "Аликвоты":
-                    zpl = self.print_manager.create_alicvot(name=data['name'],
-                                                            lot=data['lot'],
-                                                            volume=data['volume'])
-                    self.print_manager.print_barcode(
-                        zpl=zpl, retry=int(data['count']))
+            if 'type' in data:
+                zpl = self.print_manager.create_text_zpl(text=data['key'])
+                self.print_manager.print_barcode(zpl)
+                print(f"✅ Напечатана метка {data['key']}")
+                return True
 
             # Обработка обычных номеров с режимами
             elif 'number' in data and len(data['number']) == 10:
@@ -67,19 +49,6 @@ class PrintMonitor:
 
         except Exception as e:
             print(f"❌ Ошибка обработки JSON: {e}")
-            return False
-
-    def process_text_data(self, text):
-        """Обработка текстовых данных"""
-        if text == "Очистить очередь":
-            self.print_manager.clear_print_queue()
-            print("✅ Очередь очищена")
-            return True
-        elif text == "Статус":
-            self.print_manager.check_printer_status()
-            return True
-        else:
-            print(f"⚠️ Неизвестная текстовая команда: {text}")
             return False
 
     def run(self):

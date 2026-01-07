@@ -684,30 +684,14 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function sendModeLabel() {
+function sendModeLabel(name) {
   const userModeLabel = {
-    salvia: "",
-    dublicat: "",
-    virtual: "",
-    infinity: "",
-  };
-}
-
-function copySalivaInfo() {
-  const salivaInfo = {
-    material: "Слюна",
+    salvia: { type: "text", key: "Слюна" },
+    dublicat: { type: "text", key: "Дубль" },
+    infinity: { type: "text", key: "infinity" },
   };
 
-  const jsonString = JSON.stringify(salivaInfo, null, 2);
-
-  copyToClipboard(jsonString)
-    .then(() => {
-      showMessage("✅ Информация о слюне скопирована в буфер", "success");
-    })
-    .catch((err) => {
-      console.error("Ошибка копирования:", err);
-      showMessage("Ошибка копирования информации", "error");
-    });
+  copyToClipboard(JSON.stringify(userModeLabel[name], 0, 2));
 }
 
 function copyArhiveInfo() {
@@ -734,23 +718,6 @@ function copyArhiveInfo() {
         `✅ JSON виртуального архива "${input.value.trim()}" скопирован в буфер`,
         "success"
       );
-    })
-    .catch((err) => {
-      console.error("Ошибка копирования:", err);
-      showMessage("Ошибка копирования информации", "error");
-    });
-}
-
-function copyDoubleInfo() {
-  const duplicateInfo = {
-    material: "Дубли",
-  };
-
-  const jsonString = JSON.stringify(duplicateInfo, null, 2);
-
-  copyToClipboard(jsonString)
-    .then(() => {
-      showMessage("✅ Информация о дубликате скопирована в буфер", "success");
     })
     .catch((err) => {
       console.error("Ошибка копирования:", err);
