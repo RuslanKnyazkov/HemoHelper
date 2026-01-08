@@ -16,11 +16,19 @@ class PrintMonitor:
     def process_json_data(self, data):
         """Обработка JSON данных"""
         try:
+            type_label = data.pop("type")
 
-            if data.pop("type"):
+            if type_label == "text":
                 self.print_manager.print_barcode(
                     ZplGenerator.create_simple_text_zpl(**data))
-                return True
+
+            elif type_label == "barcode":
+                count_retryies, mode = data.get(
+                    "retry", None), data.get("mode", None)
+                self.print_manager.print_barcode(
+                    ZplGenerator.create_simple_text_zpl(**data),
+                    mode=mode, retry=count_retryies
+                )
 
         except Exception as e:
             print(f"❌ Ошибка обработки JSON: {e}")

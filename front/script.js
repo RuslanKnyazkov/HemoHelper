@@ -687,14 +687,15 @@ function escapeHtml(text) {
 
 function sendModeLabel(name) {
   const userModeLabel = {
-    salvia: { type: "custom", text: "Sluna", anchor: "c", size: "l" },
-    dublicat: { type: "custom", text: "Dubli", anchor: "c", size: "l" },
+    salvia: { type: "text", text: "Sluna", anchor: "c", size: "l" },
+    dublicat: { type: "text", text: "Dubli", anchor: "c", size: "l" },
     infinity: {
-      type: "custom",
+      type: "barcode",
       code: "BCN",
       text: "As123456",
       barcode: "As123456",
       anchor: "h",
+      retry: 1,
     },
   };
 
@@ -714,7 +715,7 @@ function copyArhiveInfo() {
   }
 
   const archiveInfo = {
-    type: "custom",
+    type: "text",
     text: `LAMI\n${input.value.trim()}`,
     size: "l",
   };
