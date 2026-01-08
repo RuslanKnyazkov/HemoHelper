@@ -3,7 +3,7 @@ import time
 import pyperclip
 import json
 import sys
-from printer import PrintManager
+from printer import PrintManager, ZplGenerator
 
 
 class PrintMonitor:
@@ -16,36 +16,11 @@ class PrintMonitor:
     def process_json_data(self, data):
         """Обработка JSON данных"""
         try:
-            if not isinstance(data, dict):
-                print(f"⚠️ Получен не словарь: {type(data)}")
-                return False
 
-            if 'type' in data:
-                zpl = self.print_manager.create_text_zpl(text=data['key'])
-                self.print_manager.print_barcode(zpl)
-                print(f"✅ Напечатана метка {data['key']}")
+            if data.pop("type"):
+                self.print_manager.print_barcode(
+                    ZplGenerator.create_simple_text_zpl(**data))
                 return True
-
-            # Обработка обычных номеров с режимами
-            elif 'number' in data and len(data['number']) == 10:
-                number = data.get('number')
-                mode = data.get('mode', 'default')
-
-                zpl = self.print_manager.create_barcode(number, mode)
-
-                # Печатаем
-                success = self.print_manager.print_barcode(zpl, mode)
-
-                if success:
-                    print(f"✅ Напечатано: {number} ({mode})")
-                else:
-                    print(f"❌ Ошибка печати: {number}")
-
-                return success
-
-            else:
-                print(f"⚠️ Неизвестный формат JSON: {data}")
-                return False
 
         except Exception as e:
             print(f"❌ Ошибка обработки JSON: {e}")
@@ -60,16 +35,12 @@ class PrintMonitor:
 
                     if current_text and current_text != self.last_text:
                         print(
-                            f"\n📋 Получено из буфера: {current_text[:100]}...")
+                            f"\n📋 Получено из буфера: {current_text}")
 
                         # Пробуем распарсить как JSON
                         try:
                             data = json.loads(current_text)
                             self.process_json_data(data)
-
-                        except json.JSONDecodeError:
-                            # Если не JSON, обрабатываем как текст
-                            self.process_text_data(current_text)
 
                         except Exception as e:
                             print(f"❌ Ошибка парсинга: {e}")

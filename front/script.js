@@ -65,10 +65,9 @@ const listMenu = {
     { name: "Баркоды", container: 1 },
     { name: "Аликвоты", container: 2 },
   ],
-  t2: [
-    { name: "Реагенты", container: 3 },
-    { name: "Циклы Roche", container: 4 },
-  ],
+  t2: [{ name: "Реагенты", container: 3 }],
+  t3: [{ name: "Циклы Roche", container: 4 }],
+  t4: [{ name: "Расчет 0.1M NaON", container: 5 }],
 };
 
 // Текущий активный контейнер
@@ -84,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initReagentSelector();
   initToggleMenu();
   modeCicles("all", "Routine-AUE");
+  new Carousel();
 
   // Инициализация шапки
   updateHeaderNavigation(1);
@@ -135,7 +135,7 @@ function initToggleMenu() {
     return;
   }
 
-  const toggleItem = ["t1", "t2"];
+  const toggleItem = ["t1", "t2", "t3", "t4"];
   const showListContainers = document.querySelector(".into-toggle");
 
   if (!showListContainers) {
@@ -480,7 +480,6 @@ function saveNumber() {
     id: Date.now() + "-" + Math.random().toString(36).substr(2, 9),
     number: number,
     mode: currentMode,
-    modeDisplay: currentModeDisplay,
     timestamp: new Date().toISOString(),
     date: new Date().toLocaleString("ru-RU"),
     status: "active",
@@ -490,10 +489,12 @@ function saveNumber() {
   saveToLocalStorage();
 
   const clipboardObject = {
+    type: "barcode",
     number: number,
     mode: currentMode,
-    modeDisplay: currentModeDisplay,
-    timestamp: new Date().toISOString(),
+    barcode: number,
+    anchor: "h",
+    size: "s",
   };
 
   copyToClipboard(JSON.stringify(clipboardObject, null, 2))
@@ -686,9 +687,15 @@ function escapeHtml(text) {
 
 function sendModeLabel(name) {
   const userModeLabel = {
-    salvia: { type: "text", key: "Слюна" },
-    dublicat: { type: "text", key: "Дубль" },
-    infinity: { type: "text", key: "infinity" },
+    salvia: { type: "custom", text: "Sluna", anchor: "c", size: "l" },
+    dublicat: { type: "custom", text: "Dubli", anchor: "c", size: "l" },
+    infinity: {
+      type: "custom",
+      code: "BCN",
+      text: "As123456",
+      barcode: "As123456",
+      anchor: "h",
+    },
   };
 
   copyToClipboard(JSON.stringify(userModeLabel[name], 0, 2));
@@ -707,9 +714,9 @@ function copyArhiveInfo() {
   }
 
   const archiveInfo = {
-    material: "Архив",
-    number: input.value.trim(),
-    original_mode: currentMode,
+    type: "custom",
+    text: `LAMI\n${input.value.trim()}`,
+    size: "l",
   };
 
   copyToClipboard(JSON.stringify(archiveInfo, null, 2))
@@ -723,92 +730,6 @@ function copyArhiveInfo() {
       console.error("Ошибка копирования:", err);
       showMessage("Ошибка копирования информации", "error");
     });
-}
-
-// === ФУНКЦИИ ДЛЯ АЛИКВОТ ===
-function showAlictotContent() {
-  const container = document.getElementById("right-panel2");
-  if (!container) return;
-
-  const alicvotsContainer = document.createElement("div");
-  alicvotsContainer.className = "alicvots-container";
-  alicvotsContainer.id = "alicvotsContent";
-
-  alicvotsContainer.innerHTML = `
-    <div class="alicvots-header">
-      <h2><i class="fas fa-table"></i> Введите данные для аликвот</h2>
-    </div>
-    
-    <div class="alicvots-content">
-      <div class="input-section">
-        <div class="input-group">
-          <label for="alicvotsName">
-            <i class="fas fa-tag"></i>
-            Название:
-          </label>
-          <div class="input-with-icon">
-            <i class="fas fa-font"></i>
-            <input type="text" id="alicvotsName" placeholder="Введите название" maxlength="50">
-          </div>
-        </div>
-        
-        <div class="input-group">
-          <label for="alicvotsValue">
-            <i class="fas fa-hashtag"></i>
-            Лот:
-          </label>
-          <div class="input-with-icon">
-            <i class="fas fa-calculator"></i>
-            <input type="number" id="alicvotsValue" placeholder="0" step="0.01">
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label for="alicvotsCount">
-            <i class="fas fa-hashtag"></i>
-            Количество экземпляров:
-          </label>
-          <div class="input-with-icon">
-            <i class="fas fa-calculator"></i>
-            <input type="number" id="alicvotsCount" placeholder="0" step="1">
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label for="alicvotsVolume">
-            <i class="fas fa-hashtag"></i>
-            Объём в [мкл , мл]:
-          </label>
-          <div class="input-with-icon">
-            <i class="fas fa-calculator"></i>
-            <input type="number" id="alicvotsVolume" placeholder="0 мкл">
-          </div>
-        </div>
-        
-        <div class="button-group">
-          <button class="btn-primary" onclick="addAlicvotsItem()">
-            <i class="fas fa-plus"></i>
-            Распечатать
-          </button>
-          <button class="btn-secondary" onclick="clearAlicvotsForm()">
-            <i class="fas fa-eraser"></i>
-            Очистить
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  checkContainer(container, alicvotsContainer);
-}
-
-function checkContainer(parent, child) {
-  if (parent.hasChildNodes()) {
-    while (parent.firstChild) {
-      parent.removeChild(parent.firstChild);
-    }
-  }
-  parent.appendChild(child);
 }
 
 function addAlicvotsItem() {
@@ -842,10 +763,10 @@ function addAlicvotsItem() {
   }
 
   const newObject = {
-    material: "Аликвоты",
-    name: name,
+    type: "custom",
+    text: name,
     lot: lot,
-    count: count,
+    retry: count,
     volume: volume,
   };
 
@@ -1120,4 +1041,188 @@ function modeCicles(mode, buttonElement) {
 
   // Логирование
   console.log(`Режим ${mode} активирован. Активные элементы:`, activeElements);
+}
+
+function getMolarSum() {
+  // 1. Получаем элементы
+  const volumeInput = document.getElementById("con");
+  const molarInput = document.getElementById("molar");
+
+  // 2. Проверяем, что элементы существуют
+  if (!volumeInput || !molarInput) {
+    console.error("Не найдены необходимые элементы");
+    return;
+  }
+
+  // 3. Получаем значения и преобразуем в числа
+  const volume = parseFloat(volumeInput.value);
+  const molar = parseFloat(molarInput.value);
+  const naohMolar = 40;
+
+  // 4. Проверяем корректность введенных данных
+  if (isNaN(volume) || isNaN(molar)) {
+    alert("Пожалуйста, введите корректные числовые значения");
+    return;
+  }
+
+  // 5. Выполняем расчет
+  const result = molar * naohMolar * (volume / 1000);
+
+  // 6. Форматируем результат
+  const formattedResult = result.toFixed(1);
+
+  // 7. Находим или создаем контейнер для результатов
+  let resultContainer = document.getElementById("result-container");
+
+  // 8. Отображаем результат
+  if (resultContainer) {
+    resultContainer.innerHTML = `
+            <div style="margin-top: 20px; padding: 15px; background: #e7f5ff; border-radius: 8px; border-left: 4px solid #339af0;">
+                <h4 style="margin: 0 0 10px 0; color: #1864ab;">
+                    <i class="fas fa-calculator"></i> Результаты расчета:
+                </h4>
+                <div style="font-size: 14px;">
+                    <p><strong>Введенные данные:</strong></p>
+                    <ul style="margin: 5px 0 10px 0;">
+                        <li>Молярность: ${molar} M</li>
+                        <li>Объем: ${volume} мл</li>
+                        <li>Молярная масса NaOH: ${naohMolar} г/моль</li>
+                    </ul>
+                    <p><strong>Результат:</strong></p>
+                    <p style="font-size: 18px; font-weight: bold; color: #2b8a3e;">
+                        ${formattedResult} г NaOH
+                    </p>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                        Для приготовления ${volume} мл ${molar}M раствора NaOH
+                    </p>
+                </div>
+            </div>
+        `;
+  } else {
+    console.error("Контейнер для результатов не найден");
+  }
+
+  return result;
+}
+
+class Carousel {
+  constructor() {
+    this.track = document.getElementById("carouselTrack");
+    this.container = document.getElementById("carouselContainer");
+    this.prevBtn = document.getElementById("carouselPrev");
+    this.nextBtn = document.getElementById("carouselNext");
+    this.indicatorsContainer = document.getElementById("carouselIndicators");
+
+    this.cards = Array.from(this.track.children);
+    this.currentIndex = 0;
+    this.cardWidth = this.cards[0].offsetWidth + 25; // width + gap
+    this.visibleCards = Math.floor(this.container.offsetWidth / this.cardWidth);
+
+    this.init();
+  }
+
+  init() {
+    // Создаем индикаторы
+    this.cards.forEach((_, index) => {
+      const indicator = document.createElement("button");
+      indicator.className = "indicator";
+      indicator.setAttribute("aria-label", `Перейти к слайду ${index + 1}`);
+      indicator.addEventListener("click", () => this.goToSlide(index));
+      this.indicatorsContainer.appendChild(indicator);
+    });
+
+    // Назначаем обработчики
+    this.prevBtn.addEventListener("click", () => this.prev());
+    this.nextBtn.addEventListener("click", () => this.next());
+
+    // Инициализируем состояние
+    this.updateIndicators();
+    this.updateNavButtons();
+    this.updateGradients();
+
+    // Обработчик ресайза
+    window.addEventListener("resize", () => {
+      this.cardWidth = this.cards[0].offsetWidth + 25;
+      this.visibleCards = Math.floor(
+        this.container.offsetWidth / this.cardWidth
+      );
+      this.goToSlide(this.currentIndex);
+    });
+
+    // Swipe для мобильных
+    this.setupSwipe();
+  }
+
+  goToSlide(index) {
+    this.currentIndex = Math.max(
+      0,
+      Math.min(index, this.cards.length - this.visibleCards)
+    );
+    const translateX = -this.currentIndex * this.cardWidth;
+    this.track.style.transform = `translateX(${translateX}px)`;
+
+    this.updateIndicators();
+    this.updateNavButtons();
+    this.updateGradients();
+  }
+
+  prev() {
+    if (this.currentIndex > 0) {
+      this.goToSlide(this.currentIndex - 1);
+    }
+  }
+
+  next() {
+    if (this.currentIndex < this.cards.length - this.visibleCards) {
+      this.goToSlide(this.currentIndex + 1);
+    }
+  }
+
+  updateIndicators() {
+    const indicators = this.indicatorsContainer.children;
+    Array.from(indicators).forEach((indicator, index) => {
+      indicator.classList.toggle(
+        "active",
+        index >= this.currentIndex &&
+          index < this.currentIndex + this.visibleCards
+      );
+    });
+  }
+
+  updateNavButtons() {
+    this.prevBtn.disabled = this.currentIndex === 0;
+    this.nextBtn.disabled =
+      this.currentIndex >= this.cards.length - this.visibleCards;
+  }
+
+  updateGradients() {
+    this.container.classList.toggle("start", this.currentIndex === 0);
+    this.container.classList.toggle(
+      "end",
+      this.currentIndex >= this.cards.length - this.visibleCards
+    );
+  }
+
+  setupSwipe() {
+    let startX = 0;
+    let isDragging = false;
+
+    this.track.addEventListener("mousedown", (e) => {
+      startX = e.clientX;
+      isDragging = true;
+    });
+
+    this.track.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const diff = startX - e.clientX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) this.next();
+        else this.prev();
+        isDragging = false;
+      }
+    });
+
+    this.track.addEventListener("mouseup", () => (isDragging = false));
+    this.track.addEventListener("mouseleave", () => (isDragging = false));
+  }
 }

@@ -31,145 +31,106 @@ class PrintManager():
                 win32print.ClosePrinter(hPrinter)
                 retry -= 1
             except Exception as e:
-                print(f"{self.default_printer} не отвечает. Добавляем литерал")
-                self.default_printer = self.default_printer + " (копия 1)"
+                print(f"{self.default_printer} не отвечает.")
                 break
 
-    def create_text_zpl(self, text: str) -> str:
-        zpl = f"""^XA
-            ^CI28
-            ^PW406
-            ^LL360
-            ^LS0
 
-            ^FO30,80
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{text}^FS
+class ZPL:
+    def __init__(self, mode=False, text=False,
+                 lot=False, size='m', anchor="c", volume=False,
+                 barcode=False, number=False, data=False, **kwargs):
 
-            ^FO30,150
-            ^ADN,20,20  # Шрифт D
-            ^FB388,1,0,C
-            ^FD{dt.now().strftime("%D")}^FS
+        if "code" in kwargs:
+            self.code = kwargs["code"] or "B2N"
 
-            ^XZ"""
-        return zpl
+        self.start = "^XA^PW406^LL360^LS0"
+        self.mode = mode
+        self.text = text
+        self.lot = lot
+        self.barcode = barcode
+        self.number = number
+        self.data = data
+        self.volume = volume
+        self.end = "^XZ"
+        self.font = {"s": 10, 'm': 15, "l": 30}
+        self.geometry_item = {"h": 10, "c": 50, "b": 10}
+        self.size = size
+        self.anchor = anchor
 
-    def create_virtual_arhive(self, number: str) -> None:
-        zpl = f"""^XA
-            ^CI28
-            ^PW406
-            ^LL360
-            ^LS0
+        self.build = []
 
-            ^FO30,50
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FDLAMI^FS
+    def add_mode(self, mode):
+        self.build.append(
+            f"^FO30,{self.geometry_item[self.anchor]}^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FD{mode}^FS")
 
-            ^FO30,90
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{number}^FS
+    def add_text(self, text):
+        self.build.append(
+            f"^FO30,{self.geometry_item[self.anchor]}^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FD{text}^FS")
 
-            ^FO30,150
-            ^ADN,20,20  # Шрифт D
-            ^FB388,1,0,C
-            ^FD{dt.now().strftime("%D")}^FS
+    def add_lot(self, lot):
+        self.build.append(
+            f"^FO30,40^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FDlot: {lot}^FS")
 
-            ^XZ"""
-        return zpl
+    def add_barcode(self, number_barcode):
+        self.build.append(
+            f"^FO110,60^BY1.5^{self.code},80,N,N,N^FD{number_barcode}^FS")
 
-    def create_barcode(self, number, mode: str = None) -> str:
+    def add_number(self, number):
+        self.build.append(
+            f"^FO30,150^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FD{number}^FS")
 
-        zpl = f"""
-                ^XA
-                ^PW406
-                ^LL360
-                ^LS0
+    def add_volume(self, volume):
+        self.build.append(
+            f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{volume + "mkl" if len(volume) > 1 else "ml"}^FS")
 
-                ^FO30,10
-                ^A0N,20,20
-                ^FB388,1,0,C
-                ^FD{mode}^FS
+    def add_data(self):
+        self.build.append(
+            f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{dt.now().strftime("%D")}^FS")
 
-                ^FO20,30
-                ^BY1,2,50
-                ^BCN,50,Y,N,N
-                ^FD{number}^FS
-
-                ^FO50,155
-                ^A0N,30,30
-                ^FB348,1,0,C
-                ^FD{number}^FS
-
-                ^FO30,180
-                ^A0N,20,20
-                ^FB388,1,0,C
-                ^FD{dt.now().strftime("%D")}^FS
-
-                ^XZ
-                """
-        return zpl
-
-    def create_alicvot(self, name, lot, volume: str) -> None:
-        zpl = f"""^XA
-            ^CI28
-            ^PW406
-            ^LL360
-            ^LS0
-
-            ^FO30,30
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{name}^FS
-
-            ^FO30,50
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{lot}^FS
-            
-            ^FO30,90
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{volume}^FS
-
-            ^FO30,150
-            ^ADN,20,20  # Шрифт D
-            ^FB388,1,0,C
-            ^FD{dt.now().strftime("%D")}^FS
-
-            ^XZ"""
-        return zpl
+    def build_zpl(self) -> str:
+        """
+        Docstring for build_zpl
+        Bilder function insert block zpl in list and return ready code.
+        :return: Description
+        :rtype: str
+        """
+        self.build.append(self.start)
+        if self.mode:
+            self.add_mode(self.mode)
+        if self.text:
+            self.add_text(self.text)
+        if self.lot:
+            self.add_lot(self.lot)
+        if self.volume:
+            self.add_volume(self.volume)
+        if self.barcode:
+            self.add_barcode(self.barcode)
+        if self.number:
+            self.add_number(self.number)
+        if self.data:
+            self.add_data()
+        self.build.append(self.end)
+        print("\n".join(self.build))
+        return "\n".join(self.build)
 
 
 class ZplGenerator:
 
     @staticmethod
-    def create_simple_zpl(*args, **kwargs) -> str:
+    def create_simple_text_zpl(**kwargs) -> str:
         """
         Docstring for create_simple_zpl
-        Warning args need strong step by step
+        Function building zpl code with argument step by step -->
+        [mode or text | barcode , number | lot , volume | data]
 
-        :param args: Fields for insert into zpl code
-        :param kwargs: Optional
-        :return: Description
+        :param kwargs: Dict[int, str] differents params for building zpl code
+        :return: ZPL object
         :rtype: str
         """
-        if len(args) < 1:
-            raise "Value error neded one or more argument`s"
+        return ZPL(**kwargs, data=True).build_zpl()
 
-        zpl = """^XA
-                ^PW406
-                ^LL360
-                ^LS0"""
 
-        for arg in args:
-            zpl += f"""
-            ^FO30,30
-            ^ADN,30,30  # Шрифт D - более широкий
-            ^FB388,1,0,C
-            ^FD{arg}^FS
-            """
-
-        zpl += "^XZ"
+if __name__ == "__main__":
+    zpl = ZplGenerator()
+    printer = PrintManager()
+    printer.print_barcode(zpl.create_simple_text_zpl())

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Гемотест Хелпер - Лабораторная система</title>
-    <link rel="stylesheet" href="./style/style.css" />
+    <link rel="stylesheet" href="../style/style.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -45,45 +45,42 @@
         <div class="into-toggle"></div>
 
         <div class="toggle" id="toggle-main">
-           <ul class="animated-list">
-              <li>
-                <div class="animated-icon">
-                  <i class="fas fa-barcode"></i>
-                </div>
-                <a href="#" id='t1'
-                  ><span>Баркоды</span>
-                  <i class="fas fa-chevron-right arrow"></i>
-                </a>
-              </li>
-              <li>
-                <div class="animated-icon">
-                  <i class="fas fa-vial"></i>
-                </div>
-                <a href="#" id="t2"
-                  ><span>Гемостаз</span>
-                  <i class="fas fa-chevron-right arrow"></i
-                ></a>
-              </li>
-              <li>
-                <div class="animated-icon">
-                  <i class="fas fa-hashtag"></i>
-                </div>
-                <a href="#">
-                  <span>Roche</span></a>
-              </li>
-            </ul>
-        </div>
-
-          <!-- Информация о пользователе -->
-          <div class="user-info" onclick="toggleUserMenu()">
-            <div class="user-avatar">
-              <i class="fas fa-user-md"></i>
-            </div>
-            <div class="user-details">
-              <div class="user-name">Лаборант</div>
-              <div class="user-role">Авторизован</div>
-            </div>
-          </div>
+          <ul class="animated-list">
+            <li>
+              <div class="animated-icon">
+                <i class="fas fa-barcode"></i>
+              </div>
+              <a href="#" id="t1">
+                <span>Баркоды</span>
+                <i class="fas fa-chevron-right arrow"></i>
+              </a>
+            </li>
+            <li>
+              <div class="animated-icon">
+                <i class="fas fa-vial"></i>
+              </div>
+              <a href="#" id="t2">
+                <span>Гемостаз</span>
+                <i class="fas fa-chevron-right arrow"></i>
+              </a>
+            </li>
+            <li>
+              <div class="animated-icon">
+                <i class="fas fa-hashtag"></i>
+              </div>
+              <a href="#" id="t3">
+                <span>Roche</span>
+              </a>
+            </li>
+            <li>
+              <div class="animated-icon">
+                <i class="fas fa-hashtag"></i>
+              </div>
+              <a href="#" id="t4">
+                <span>Вспомогательные функции</span>
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </header>
@@ -91,49 +88,189 @@
     <!-- Главный блок -->
     <div class="main-container active" id="container0">
       <div class="image-block"></div>
-      <div class="block-group">
-        <div class="container-info">
-          <div class="title-info">
-            <h5>Распечатай этикетку</h5>
-          </div>
-          <div class="content-info">
-            <p>
-              Здесь вы можете распечатать баркоды, а также этикетки необходимые
-              вам в работе. Просто выберите тип этикетки, укажите данные и
-              нажмите кнопку печати.
-            </p>
-          </div>
-          <div class="footer-info">
-            <button onclick="showContainer(1)">Перейти</button>
-          </div>
-        </div>
-        <div class="container-info">
-          <div class="title-info">
-            <h5>Гемостаз</h5>
-          </div>
-          <div class="content-info">
-            <p>
-              Раздел для тренировки по установки реагентов , на приборе ACL top
-              700 и многое другое.
-            </p>
-          </div>
-          <div class="footer-info">
-            <button onclick="showContainer(3)">Перейти</button>
+      <div class="carousel-section">
+        <div class="carousel-header">
+          <div class="carousel-nav">
+            <button
+              class="nav-btn prev"
+              id="carouselPrev"
+              aria-label="Предыдущий"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button
+              class="nav-btn next"
+              id="carouselNext"
+              aria-label="Следующий"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
           </div>
         </div>
-        <div class="container-info">
-          <div class="title-info">
-            <h5>Roche</h5>
-          </div>
-          <div class="content-info">
-            <p>
-              Раздел для обучения и лучшего понимания работы на линиях Roche.
-            </p>
-          </div>
-          <div class="footer-info">
-            <button onclick="showContainer(4)">Перейти</button>
+
+        <div class="carousel-container" id="carouselContainer">
+          <div class="carousel-track" id="carouselTrack">
+            <!-- Карточка 1 -->
+            <div class="carousel-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-barcode"></i>
+                </div>
+                <h3 class="card-title">Этикетки и баркоды</h3>
+              </div>
+              <div class="card-content">
+                <p class="card-description">
+                  Быстрая печать этикеток и баркодов для образцов. Поддержка
+                  различных форматов и типов анализа.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap">
+                  <span class="tag">Testosterone</span>
+                  <span class="tag">A-TPO</span>
+                  <span class="tag">Progesterone</span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="action-btn" onclick="showContainer(1)">
+                  <i class="fas fa-arrow-right"></i>
+                  Открыть
+                </button>
+              </div>
+            </div>
+
+            <!-- Карточка 2 -->
+            <div class="carousel-card">
+              <div
+                class="card-header"
+                style="background: linear-gradient(135deg, #e74c3c, #c0392b)"
+              >
+                <div class="card-icon">
+                  <i class="fas fa-vial"></i>
+                </div>
+                <h3 class="card-title">Гемостаз</h3>
+              </div>
+              <div class="card-content">
+                <p class="card-description">
+                  Тренажер для работы с ACL top 700. Практика установки
+                  реагентов, настройка параметров анализа.
+                </p>
+                <div style="color: #666; font-size: 0.9rem; margin-top: 15px">
+                  <div>
+                    <i class="fas fa-check-circle" style="color: #2ecc71"></i>
+                    APTT, D-Dimer
+                  </div>
+                  <div>
+                    <i class="fas fa-check-circle" style="color: #2ecc71"></i>
+                    AT-Liquid, Free-PS
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="action-btn" onclick="showContainer(3)">
+                  <i class="fas fa-flask"></i>
+                  Тренироваться
+                </button>
+              </div>
+            </div>
+
+            <!-- Карточка 3 -->
+            <div class="carousel-card">
+              <div
+                class="card-header"
+                style="background: linear-gradient(135deg, #2ecc71, #27ae60)"
+              >
+                <div class="card-icon">
+                  <i class="fas fa-microscope"></i>
+                </div>
+                <h3 class="card-title">Roche анализаторы</h3>
+              </div>
+              <div class="card-content">
+                <p class="card-description">
+                  Интерактивное обучение работе на линиях Roche. Маршруты CCM,
+                  режимы сортеров, визуализация процессов.
+                </p>
+                <div style="display: flex; gap: 5px; margin-top: 15px">
+                  <div class="small-tag">CEE+EEEE1+CC</div>
+                  <div class="small-tag">Routine-AUE</div>
+                  <div class="small-tag">CCM-2</div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="action-btn" onclick="showContainer(4)">
+                  <i class="fas fa-play-circle"></i>
+                  Изучить
+                </button>
+              </div>
+            </div>
+
+            <!-- Карточка 4 -->
+            <div class="carousel-card">
+              <div
+                class="card-header"
+                style="background: linear-gradient(135deg, #9b59b6, #8e44ad)"
+              >
+                <div class="card-icon">
+                  <i class="fas fa-calculator"></i>
+                </div>
+                <h3 class="card-title">Расчеты</h3>
+              </div>
+              <div class="card-content">
+                <p class="card-description">
+                  Вспомогательные инструменты для лабораторных расчетов.
+                  Приготовление растворов, конвертация единиц измерения.
+                </p>
+                <div
+                  style="
+                    background: #f8f9fa;
+                    padding: 10px;
+                    border-radius: 6px;
+                    margin-top: 15px;
+                  "
+                >
+                  <small>Молярность растворов, разведения, нормализация</small>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="action-btn" onclick="showContainer(5)">
+                  <i class="fas fa-calculator"></i>
+                  Рассчитать
+                </button>
+              </div>
+            </div>
+
+            <!-- Карточка 5 -->
+            <div class="carousel-card">
+              <div
+                class="card-header"
+                style="background: linear-gradient(135deg, #f39c12, #d35400)"
+              >
+                <div class="card-icon">
+                  <i class="fas fa-vial-virus"></i>
+                </div>
+                <h3 class="card-title">Аликвоты</h3>
+              </div>
+              <div class="card-content">
+                <p class="card-description">
+                  Управление аликвотами, печать этикеток для образцов. Настройка
+                  параметров, серийная печать.
+                </p>
+                <div
+                  style="color: #e74c3c; font-size: 0.9rem; margin-top: 15px"
+                >
+                  <i class="fas fa-exclamation-circle"></i>
+                  Требует настройки параметров
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="action-btn" onclick="showContainer(2)">
+                  <i class="fas fa-vial"></i>
+                  Настроить
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div class="carousel-indicators" id="carouselIndicators"></div>
       </div>
     </div>
 
@@ -141,7 +278,6 @@
     <div class="container" id="container1">
       <div class="content">
         <div class="left-panel">
-         
           <div class="input-section">
             <div class="input-group">
               <label for="numberInput">
@@ -169,7 +305,6 @@
                 <i class="fas fa-vial"></i>
                 Выберите режим анализа:
               </label>
-
               <div class="mode-selector">
                 <button
                   class="mode-btn mode-testosterone"
@@ -204,8 +339,17 @@
                   data-mode="default"
                   data-display="По умолчанию"
                 >
-                  По умолчанию
+                  Macro prl
                 </button>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>
+                <i class="fas fa-vial"></i>
+                Специальные наклейки:
+              </label>
+              <div class="mode-selector">
                 <button
                   class="mode-btn mode-saliva"
                   onclick="sendModeLabel('salvia')"
@@ -229,6 +373,14 @@
                   data-display="Дубликат"
                 >
                   Дубликат
+                </button>
+                <button
+                  class="mode-btn mode-tpo"
+                  onclick="sendModeLabel('infinity')"
+                  data-mode="infinity"
+                  data-display="Infinity"
+                >
+                  Инфинити
                 </button>
               </div>
             </div>
@@ -285,26 +437,95 @@
 
     <!-- Второй контейнер -->
     <div class="container" id="container2">
-
       <div class="content">
-        
-        <div class="left-panel">
-          <div class="button-group">
-            <button
-              class="mode-btn mode-alicvots"
-              onclick="showAlictotContent()"
-            >
-              Аликвоты
-            </button>
+        <div class="right-panel" id="right-panel2">
+          <div class="alicvots-header">
+            <h2><i class="fas fa-table"></i> Введите данные для аликвот</h2>
+          </div>
+
+          <div class="alicvots-content">
+            <div class="input-section">
+              <div class="input-group">
+                <label for="alicvotsName">
+                  <i class="fas fa-tag"></i>
+                  Название:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-font"></i>
+                  <input
+                    type="text"
+                    id="alicvotsName"
+                    placeholder="Введите название"
+                    maxlength="50"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="alicvotsValue">
+                  <i class="fas fa-hashtag"></i>
+                  Лот:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-calculator"></i>
+                  <input
+                    type="number"
+                    id="alicvotsValue"
+                    placeholder="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="alicvotsCount">
+                  <i class="fas fa-hashtag"></i>
+                  Количество экземпляров:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-calculator"></i>
+                  <input
+                    type="number"
+                    id="alicvotsCount"
+                    placeholder="0"
+                    step="1"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="alicvotsVolume">
+                  <i class="fas fa-hashtag"></i>
+                  Объём в [мкл , мл]:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-calculator"></i>
+                  <input
+                    type="number"
+                    id="alicvotsVolume"
+                    placeholder="0 мкл"
+                  />
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button class="btn-primary" onclick="addAlicvotsItem()">
+                  <i class="fas fa-plus"></i>
+                  Распечатать
+                </button>
+                <button class="btn-secondary" onclick="clearAlicvotsForm()">
+                  <i class="fas fa-eraser"></i>
+                  Очистить
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="right-panel" id="right-panel2"></div>
       </div>
     </div>
 
     <!-- Третий контейнер - Практика гемостаза -->
     <div class="container" id="container3">
-
       <div class="content coagulation-practice">
         <!-- Левая панель - выбор реагентов -->
         <div class="reagents-panel">
@@ -783,12 +1004,6 @@
     </div>
 
     <div class="container" id="container4">
-      <header>
-        <button onclick="showToggleMenu('toggle-roche')">
-          <i class="fas fa-bars"></i>
-        </button>
-        <h1><i>Roche</i></h1>
-      </header>
       <div class="content">
         <div class="left-panel">
           <div class="toggle" id="toggle-roche">
@@ -939,6 +1154,66 @@
           </div>
         </div>
         <!-- </div> -->
+      </div>
+    </div>
+
+    <div class="container" id="container5">
+      <div class="content">
+        <div class="right-panel">
+          <div class="alicvots-header">
+            <h2><i class="fas fa-table"></i> Обработка параметров</h2>
+          </div>
+
+          <div class="alicvots-content">
+            <div class="input-section">
+              <div class="input-group">
+                <label for="con">
+                  <i class="fas fa-tint"></i>
+                  Количество дистиллированной воды:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-flask"></i>
+                  <input
+                    type="number"
+                    id="con"
+                    placeholder="Введите объем воды от 1 мл до 1000мл"
+                    step="1"
+                    min="1"
+                    max="1000"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="molar">
+                  <i class="fas fa-percentage"></i>
+                  Необходимая молярность:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fas fa-font"></i>
+                  <input
+                    type="number"
+                    id="molar"
+                    placeholder="Например: 0.1"
+                    step="0.1"
+                    min="0.1"
+                    max="10"
+                  />
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button class="btn-primary" onclick="getMolarSum()">
+                  <i class="fas fa-calculator"></i>
+                  Рассчитать
+                </button>
+              </div>
+
+              <!-- Контейнер для результатов -->
+              <div id="result-container"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
