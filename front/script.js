@@ -1,694 +1,404 @@
-// === ПЕРЕМЕННЫЕ ДЛЯ ОСНОВНОЙ СИСТЕМЫ ===
-let savedNumbers = [];
-let currentMode = "default";
-let currentModeDisplay = "По умолчанию";
-let userLogin = "";
-
-// === ПЕРЕМЕННЫЕ ДЛЯ ГЕМОСТАЗА ===
-let selectedReagent = null;
-let selectedReagentAllowedRacks = [];
-
-// Данные о реагентах и их ограничениях
-const reagentsData = {
-  d1: [null, null, null, null, null, null],
-  d2: [null, null, null, null, null, null],
-  d3: [null, null, null, null, null, null],
-  r1: [null, null, null, null, null, null],
-  r2: [null, null, null, null, null, null],
-  r3: [null, null, null, null, null, null],
-  r4: [null, null, null, null, null, null],
-  r5: [null, null, null, null, null, null],
-  r6: [null, null, null, null, null, null],
+// ===== Глобальные переменные и состояние =====
+const state = {
+  currentModule: "home",
+  barcodeMode: "default",
+  barcodeHistory: JSON.parse(localStorage.getItem("barcodeHistory") || "[]"),
+  selectedReagent: null,
+  reagentData: {},
+  rocheMode: "routine",
+  aliquotHistory: JSON.parse(localStorage.getItem("aliquotHistory") || "[]"),
+  isContainerOpen: false,
 };
 
-// Названия реагентов для отображения
-const reagentDisplayNames = {
-  clean_b: "Clean B",
-  clean_b_dil: "ClbDil",
-  aptt_reagent: "APTT-Reagent",
-  aptt_cacl2: "APTT-CaCl",
-  at_liquid_reagent: "AT-Reagent",
-  at_liquid_substrat: "AT-Substrat",
-  recombiplastin: "PT",
-  trombintime: "TT",
-  fibrinogen: "O.F.A",
-  ps_C4PV: "C4PV",
-  ps_anti_ps: "PS Latex",
-  f_diluent: "Factor_Dil",
-  pc_dil: "PC_Dil",
-  d_dimer_b: "D-dim B",
-  d_dimer_l: "D-dim L",
-};
-
-// Полные названия реагентов
-const reagentFullNames = {
-  clean_b: "Clean B",
-  clean_b_dil: "Clean B Diluled",
-  aptt_reagent: "APTT reagent",
-  aptt_cacl2: "APTT CaCl2",
-  at_liquid_reagent: "AT liquid reagent",
-  at_liquid_substrat: "AT liquid substrat",
-  recombiplastin: "Recombiplastin",
-  trombintime: "Trombin Time",
-  fibrinogen: "O.F.A Fibrinogen",
-  ps_C4PV: "C4BV Latex",
-  ps_anti_ps: "Anti pb latex",
-  f_diluent: "Factor_Diluent",
-  pc_dil: "PC_Diluent",
-  d_dimer_b: "D-dimer Buffer",
-  d_dimer_l: "D-dimer Latex",
-};
-
-// Список меню для элементов t1 и t2
-const listMenu = {
-  t1: [
-    { name: "Баркоды", container: 1 },
-    { name: "Аликвоты", container: 2 },
-  ],
-  t2: [{ name: "Реагенты", container: 3 }],
-  t3: [{ name: "Циклы Roche", container: 4 }],
-  t4: [{ name: "Расчет 0.1M NaON", container: 5 }],
-};
-
-// Текущий активный контейнер
-let currentContainer = 1;
-let isMenuInitialized = false;
-
-// === ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ===
+// ===== Инициализация приложения =====
 document.addEventListener("DOMContentLoaded", () => {
-  loadSavedNumbers();
+  initializeApp();
   setupEventListeners();
-  updateDisplay();
-  setMode("default", "По умолчанию");
-  initReagentSelector();
-  initToggleMenu();
-  modeCicles("all", "Routine-AUE");
-  new Carousel();
-
-  // Инициализация шапки
-  updateHeaderNavigation(1);
-
-  // Инициализация мобильного меню
-  if (window.innerWidth <= 1100) {
-    initMobileMenu();
-  }
+  generateRacks();
+  updateBarcodeDisplay();
+  updateAliquotHistory();
+  carousel = new Carousel();
 });
 
-// === ФУНКЦИИ ДЛЯ ШАПКИ И НАВИГАЦИИ ===
+function initializeApp() {
+  // Инициализация данных реагентов
+  const racks = ["D1", "D2", "D3", "R1", "R2", "R3", "R4", "R5", "R6"];
+  racks.forEach((rack) => {
+    state.reagentData[rack] = Array(6).fill(null);
+  });
+}
 
-// Показать контейнер
-function showContainer(containerNumber) {
-  // Скрыть все активные контейнеры и меню
-  document
-    .querySelectorAll(
-      ".main-container.active, .into-toggle.active, .toggle.active"
-    )
-    .forEach((element) => {
-      element.classList.remove("active");
+function setupEventListeners() {
+  // Обработчик ввода баркодов
+  const barcodeInput = document.getElementById("barcode-input");
+  if (barcodeInput) {
+    barcodeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        saveBarcode();
+      }
     });
+  }
+
+  // Мобильное меню
+  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", toggleMobileMenu);
+  }
+
+  // Обновление при изменении размера окна
+  window.addEventListener("resize", handleResize);
+
+  // Закрытие контейнеров по ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.isContainerOpen) {
+      closeAllContainers();
+    }
+  });
+
+  // Закрытие по клику на фон
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal-backdrop")) {
+      closeAllContainers();
+    }
+  });
+}
+
+// ===== Навигация по модулям с выезжающими контейнерами =====
+function showModule(moduleId) {
+  // Если это главная страница
+  if (moduleId === "home") {
+    closeAllContainers();
+    document.getElementById("home-module")?.classList.add("active");
+    state.currentModule = "home";
+    state.isContainerOpen = false;
+
+    // Обновить навигацию
+    updateNavigation(moduleId);
+    return;
+  }
+
+  // Определяем, какие модули должны выезжать справа
+  const slideModules = [
+    "barcode",
+    "reagent",
+    "roche",
+    "calculations",
+    "aliquots",
+  ];
+
+  if (slideModules.includes(moduleId)) {
+    // Открываем выезжающий контейнер
+    openSlideContainer(moduleId);
+  } else {
+    // Для обычных модулей
+    closeAllContainers();
+    document.getElementById(`${moduleId}-module`)?.classList.add("active");
+    state.currentModule = moduleId;
+    state.isContainerOpen = false;
+  }
+
+  // Обновить навигацию
+  updateNavigation(moduleId);
+
+  // Обновить отображение для текущего модуля
+  if (moduleId === "barcode") {
+    updateBarcodeDisplay();
+  } else if (moduleId === "aliquots") {
+    updateAliquotHistory();
+  } else if (moduleId === "roche") {
+    initRocheModule();
+  }
+}
+
+function updateNavigation(moduleId) {
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  const activeBtn = document.querySelector(
+    `.nav-btn[onclick="showModule('${moduleId}')"]`
+  );
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+}
+
+// ===== Функции для выезжающих контейнеров =====
+function openSlideContainer(moduleId) {
+  // Скрыть главную страницу
+  document.getElementById("home-module")?.classList.remove("active");
 
   // Скрыть все контейнеры
-  document.querySelectorAll(".container").forEach((container) => {
+  document.querySelectorAll(".container-modern.active").forEach((container) => {
     container.classList.remove("active");
   });
 
   // Показать выбранный контейнер
-  const targetContainer = document.getElementById(
-    `container${containerNumber}`
-  );
+  const targetContainer = document.getElementById(`${moduleId}-module`);
   if (targetContainer) {
     targetContainer.classList.add("active");
+
+    // Добавить затемнение фона
+    document.body.classList.add("container-open");
+
+    // Обновить состояние
+    state.currentModule = moduleId;
+    state.isContainerOpen = true;
+
+    // Фокус на первый интерактивный элемент
+    setTimeout(() => {
+      const firstInput = targetContainer.querySelector(
+        "input, button, select, textarea"
+      );
+      if (firstInput) firstInput.focus();
+    }, 150);
   }
-
-  // Обновить навигацию в шапке
-  updateHeaderNavigation(containerNumber);
-
-  currentContainer = containerNumber;
 }
 
-// Функция для инициализации выпадающего меню
-function initToggleMenu() {
-  const toggleMenu = document.querySelector(".toggle, .toggle.active");
-
-  if (!toggleMenu) {
-    console.warn("Элемент .toggle не найден");
-    return;
-  }
-
-  const toggleItem = ["t1", "t2", "t3", "t4"];
-  const showListContainers = document.querySelector(".into-toggle");
-
-  if (!showListContainers) {
-    console.warn("Элемент .into-toggle не найден");
-    return;
-  }
-
-  // Функция для закрытия меню
-  function closeMenu() {
-    showListContainers.classList.remove("active");
-    showListContainers.innerHTML = "";
-    toggleItem.forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) element.classList.remove("active");
-    });
-  }
-
-  // Функция для открытия меню
-  function openMenu(elementId) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-
-    // Закрываем предыдущее меню если открыто
-    if (showListContainers.classList.contains("active")) {
-      closeMenu();
-      // Если кликнули на тот же элемент, просто закрываем
-      if (element.classList.contains("active")) {
-        return;
-      }
-    }
-
-    // Показываем меню и подсвечиваем элемент
-    showListContainers.classList.add("active");
-    element.classList.add("active");
-
-    // Получаем пункты меню для этого элемента
-    const items = listMenu[elementId] || [];
-    const itemMenu = items
-      .map(
-        (item) => `
-      <li>
-        <div class="animated-icon">
-          <i class="fas fa-barcode"></i>
-        </div>
-        <a href="#" onclick="
-          showContainer(${item.container});
-          document.getElementById('${elementId}').classList.remove('active');
-          document.querySelector('.into-toggle').classList.remove('active');
-          return false;
-        ">
-          <span>${item.name}</span>
-          <i class="fas fa-chevron-right arrow"></i>
-        </a>
-      </li>
-    `
-      )
-      .join("");
-
-    showListContainers.innerHTML = `<ul class="animated-list">${itemMenu}</ul>`;
-  }
-
-  // Добавляем обработчики для элементов t1 и t2
-  toggleItem.forEach((elemId) => {
-    const element = document.getElementById(elemId);
-    if (element) {
-      // Удаляем старые обработчики если они есть
-      element.removeEventListener("click", element.clickHandler);
-
-      // Создаем новый обработчик
-      element.clickHandler = function (e) {
-        e.stopPropagation();
-        openMenu(elemId);
-      };
-
-      // Добавляем обработчик
-      element.addEventListener("click", element.clickHandler);
-    }
+function closeAllContainers() {
+  // Скрыть все контейнеры
+  document.querySelectorAll(".container-modern.active").forEach((container) => {
+    container.classList.remove("active");
   });
 
-  // Закрытие меню при клике вне элемента
-  function handleClickOutside(event) {
-    const isClickOnToggleItem = toggleItem.some((id) => {
-      const el = document.getElementById(id);
-      return el && el.contains(event.target);
-    });
+  // Убрать затемнение фона
+  document.body.classList.remove("container-open");
 
-    const isClickOnMenu = showListContainers.contains(event.target);
+  // Показать главную страницу
+  document.getElementById("home-module")?.classList.add("active");
 
-    if (
-      !isClickOnToggleItem &&
-      !isClickOnMenu &&
-      showListContainers.classList.contains("active")
-    ) {
-      closeMenu();
-    }
-  }
+  // Обновить состояние
+  state.currentModule = "home";
+  state.isContainerOpen = false;
 
-  // Закрытие при нажатии Escape
-  function handleEscapeKey(event) {
-    if (
-      event.key === "Escape" &&
-      showListContainers.classList.contains("active")
-    ) {
-      closeMenu();
-    }
-  }
-
-  // Добавляем глобальные обработчики
-  document.addEventListener("click", handleClickOutside);
-  document.addEventListener("keydown", handleEscapeKey);
-
-  // Сохраняем ссылки для возможного удаления
-  toggleMenu.handleClickOutside = handleClickOutside;
-  toggleMenu.handleEscapeKey = handleEscapeKey;
+  // Обновить навигацию
+  updateNavigation("home");
 }
 
-// Показать/скрыть toggle меню (старая функция, оставляем для совместимости)
-function showToggleMenu(id) {
-  const toggle = document.getElementById(id);
-  const showListContainers = document.querySelector(".into-toggle");
+// ===== Модуль баркодов =====
+function selectMode(mode) {
+  state.barcodeMode = mode;
 
-  if (!toggle || !showListContainers) {
-    console.error("Элемент не найден");
+  // Обновить отображение выбранного режима
+  document.querySelectorAll(".mode-card").forEach((card) => {
+    card.classList.remove("active");
+  });
+
+  const modeCards = document.querySelectorAll(".mode-card");
+  switch (mode) {
+    case "testosterone":
+      modeCards[0]?.classList.add("active");
+      break;
+    case "default":
+      modeCards[1]?.classList.add("active");
+      break;
+    case "a-tpo":
+      modeCards[2]?.classList.add("active");
+      break;
+    case "prog":
+      modeCards[3]?.classList.add("active");
+      break;
+  }
+}
+
+function saveBarcode() {
+  const input = document.getElementById("barcode-input");
+  if (!input) return;
+
+  const barcode = input.value.trim();
+  if (!barcode) {
+    showNotification("Введите номер пробы!", "error");
+    input.focus();
     return;
   }
 
-  // Если элемент уже активен - закрываем его
-  if (toggle.classList.contains("active")) {
-    toggle.classList.remove("active");
-    showListContainers.classList.remove("active");
-  } else {
-    // Открываем элемент
-    toggle.classList.add("active");
-    showListContainers.classList.add("active");
-  }
-}
-
-// Обновить навигацию в шапке
-function updateHeaderNavigation(containerNumber) {
-  // Обновить активную вкладку
-  document.querySelectorAll(".nav-tab").forEach((tab) => {
-    tab.classList.remove("active");
-  });
-
-  const activeTab = document.querySelector(
-    `.nav-tab[onclick="showContainer(${containerNumber})"]`
+  // Проверка на дубликат
+  const isDuplicate = state.barcodeHistory.some(
+    (item) => item.number === barcode
   );
-  if (activeTab) {
-    activeTab.classList.add("active");
-  }
-
-  // Обновить индикаторы
-  document.querySelectorAll(".tab-indicator").forEach((indicator) => {
-    indicator.classList.remove("active");
-  });
-
-  const activeIndicator = document.querySelector(
-    `.tab-indicator[data-tab="${containerNumber}"]`
-  );
-  if (activeIndicator) {
-    activeIndicator.classList.add("active");
-  }
-}
-
-// Инициализация мобильного меню
-function initMobileMenu() {
-  const mainNav = document.getElementById("mainNav");
-  if (!mainNav) return;
-
-  mainNav.style.display = "none";
-
-  // Создать мобильное меню
-  const mobileMenu = document.createElement("div");
-  mobileMenu.className = "mobile-menu";
-  mobileMenu.style.cssText = `
-    display: none;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: #2c3e50;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1001;
-  `;
-
-  // Добавить кнопки меню
-  const buttons = [
-    { id: 1, icon: "fa-hashtag", text: "Номера проб" },
-    { id: 2, icon: "fa-cogs", text: "Дополнительно" },
-    { id: 3, icon: "fa-tint", text: "Гемостаз" },
-  ];
-
-  buttons.forEach((btn) => {
-    const button = document.createElement("button");
-    button.className = "nav-tab";
-    button.style.cssText = `
-      width: 100%;
-      margin-bottom: 10px;
-      justify-content: flex-start;
-    `;
-    button.innerHTML = `<i class="fas ${btn.icon}"></i> <span>${btn.text}</span>`;
-    button.onclick = () => {
-      showContainer(btn.id);
-      mobileMenu.style.display = "none";
-    };
-    mobileMenu.appendChild(button);
-  });
-
-  document.body.appendChild(mobileMenu);
-
-  // Переключение мобильного меню
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  if (mobileMenuBtn) {
-    mobileMenuBtn.onclick = function () {
-      mobileMenu.style.display =
-        mobileMenu.style.display === "none" ? "block" : "none";
-    };
-  }
-
-  // Закрытие меню при клике вне его
-  document.addEventListener("click", function (event) {
-    if (
-      !event.target.closest(".mobile-menu-btn") &&
-      !event.target.closest(".mobile-menu")
-    ) {
-      mobileMenu.style.display = "none";
-    }
-  });
-}
-
-// Адаптация к изменению размера окна
-window.addEventListener("resize", function () {
-  const mainNav = document.getElementById("mainNav");
-  if (window.innerWidth > 1100) {
-    if (mainNav) mainNav.style.display = "flex";
-    const mobileMenu = document.querySelector(".mobile-menu");
-    if (mobileMenu) mobileMenu.style.display = "none";
-  } else if (mainNav && !document.querySelector(".mobile-menu")) {
-    mainNav.style.display = "none";
-  }
-});
-
-// === ОСНОВНЫЕ ФУНКЦИИ СИСТЕМЫ ===
-function setupEventListeners() {
-  const numberInput = document.getElementById("numberInput");
-  if (numberInput) {
-    numberInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        saveNumber();
-      }
-    });
-  }
-
-  document.querySelectorAll(".mode-btn[data-mode]").forEach((btn) => {
-    btn.addEventListener("click", function () {
-      const mode = this.dataset.mode;
-      const display = this.dataset.display;
-      setMode(mode, display);
-    });
-  });
-
-  document.addEventListener("click", (e) => {
-    const numberInput = document.getElementById("numberInput");
-    if (
-      numberInput &&
-      !e.target.closest(".right-panel") &&
-      !e.target.closest(".mode-btn") &&
-      !e.target.closest("button")
-    ) {
-      numberInput.focus();
-    }
-  });
-}
-
-function setMode(mode, display) {
-  currentMode = mode;
-  currentModeDisplay = display;
-
-  const displayElement = document.getElementById("currentModeDisplay");
-  if (displayElement) {
-    displayElement.textContent = display;
-  }
-
-  document.querySelectorAll(".mode-btn").forEach((btn) => {
-    btn.classList.remove("active");
-    if (btn.dataset.mode === mode) {
-      btn.classList.add("active");
-    }
-  });
-
-  if (display === "Виртуальный") {
-    // Ничего не делаем, чтобы не показывать сообщение
-  } else {
-    showMessage(`Режим установлен: ${display}`, "info");
-  }
-}
-
-function loadSavedNumbers() {
-  try {
-    const storedData = localStorage.getItem("labNumbersData");
-    if (storedData) {
-      savedNumbers = JSON.parse(storedData);
-    }
-  } catch (e) {
-    console.error("Ошибка загрузки данных:", e);
-    showMessage("Ошибка загрузки данных", "error");
-  }
-}
-
-// Функция для копирования в буфер обмена
-function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    console.log(`JSON object : ${text}`);
-    return navigator.clipboard.writeText(text);
-  }
-}
-
-function saveNumber() {
-  const numberInput = document.getElementById("numberInput");
-  if (!numberInput) {
-    showMessage("Поле ввода не найдено", "error");
+  if (
+    isDuplicate &&
+    !confirm("Такой номер уже существует. Добавить дубликат?")
+  ) {
     return;
   }
 
-  const number = numberInput.value.trim();
-
-  if (!number) {
-    showMessage("Введите номер пробы!", "error");
-    numberInput.focus();
-    return;
-  }
-
-  const isDuplicate = savedNumbers.some((item) => item.number === number);
-  if (isDuplicate) {
-    if (!confirm("Такой номер уже существует. Добавить дубликат?")) {
-      return;
-    }
-  }
-
-  const numberObject = {
-    id: Date.now() + "-" + Math.random().toString(36).substr(2, 9),
-    number: number,
-    mode: currentMode,
+  const barcodeObject = {
+    id: Date.now(),
+    number: barcode,
+    mode: state.barcodeMode,
     timestamp: new Date().toISOString(),
     date: new Date().toLocaleString("ru-RU"),
-    status: "active",
   };
 
-  savedNumbers.unshift(numberObject);
-  saveToLocalStorage();
+  state.barcodeHistory.unshift(barcodeObject);
+  localStorage.setItem("barcodeHistory", JSON.stringify(state.barcodeHistory));
 
+  // Копирование в буфер обмена
   const clipboardObject = {
     type: "barcode",
-    number: number,
-    mode: currentMode,
-    barcode: number,
+    number: barcode,
+    mode: state.barcodeMode,
+    barcode: barcode,
     anchor: "h",
     size: "s",
   };
 
   copyToClipboard(JSON.stringify(clipboardObject, null, 2))
     .then(() => {
-      showMessage(
-        `✅ Проба "${number}" (${currentModeDisplay}) сохранена и скопирована!`,
+      showNotification(
+        `✅ Проба "${barcode}" сохранена и скопирована!`,
         "success"
       );
-      const clipboardStatus = document.getElementById("clipboardStatus");
-      if (clipboardStatus) {
-        clipboardStatus.textContent = `${number} (${currentModeDisplay})`;
-      }
+      updateBarcodeDisplay();
+      input.value = "";
+      input.focus();
     })
     .catch((err) => {
       console.error("Ошибка копирования:", err);
-      showMessage(
-        `✅ Проба "${number}" сохранена! (Не удалось скопировать)`,
+      showNotification(
+        "✅ Проба сохранена! (Не удалось скопировать)",
         "success"
       );
     });
-
-  updateDisplay();
-  numberInput.value = "";
-  numberInput.focus();
 }
 
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem("labNumbersData", JSON.stringify(savedNumbers));
-    localStorage.setItem("lastSaveTime", new Date().toISOString());
-    localStorage.setItem("lastContainer", currentContainer);
-    return true;
-  } catch (e) {
-    console.error("Ошибка сохранения:", e);
-    showMessage("Ошибка сохранения в localStorage", "error");
-    return false;
+function clearBarcodeInput() {
+  const input = document.getElementById("barcode-input");
+  if (input) {
+    input.value = "";
+    input.focus();
   }
+  showNotification("Форма очищена", "info");
 }
 
-function updateDisplay() {
-  const count = savedNumbers.length;
-  const listElement = document.getElementById("numbersList");
-
-  const countDisplay = document.getElementById("countDisplay");
-  if (countDisplay) {
-    countDisplay.textContent = count;
-  }
-
-  const lastTime = localStorage.getItem("lastSaveTime");
-  if (lastTime) {
-    const date = new Date(lastTime);
-    const lastSaveTime = document.getElementById("lastSaveTime");
-    if (lastSaveTime) {
-      lastSaveTime.textContent = date.toLocaleString("ru-RU");
-    }
-  }
-
-  if (listElement) {
-    listElement.innerHTML = "";
-
-    if (count === 0) {
-      const emptyState = document.createElement("div");
-      emptyState.className = "empty-state";
-      emptyState.innerHTML = `
-        <i class="fas fa-inbox"></i>
-        <h3>Нет сохраненных проб</h3>
-        <p>Добавьте первую пробу через форму слева</p>
-      `;
-      listElement.appendChild(emptyState);
-      return;
-    }
-
-    savedNumbers.forEach((item, index) => {
-      const itemElement = document.createElement("div");
-      itemElement.className = `number-item ${index === 0 ? "active" : ""}`;
-      const modeClass = `mode-${item.mode}`;
-
-      itemElement.innerHTML = `
-        <div class="number-header">
-          <div class="number-value">Номер: ${escapeHtml(item.number)}</div>
-          <div>
-            <span class="number-mode ${modeClass}">${escapeHtml(
-        item.modeDisplay
-      )}</span>
-            <span class="number-time">${item.date}</span>
-          </div>
-        </div>
-        <div class="number-id">ID: ${item.id}</div>
-        <div class="number-actions">
-          <button onclick="copyNumber('${item.id}')" class="btn-success">
-            <i class="fas fa-copy"></i> Повторная печать
-          </button>
-          <button onclick="deleteNumber('${item.id}')" class="btn-danger">
-            <i class="fas fa-trash"></i> Удалить
-          </button>
-        </div>
-      `;
-      listElement.appendChild(itemElement);
-    });
+function simulateScan() {
+  // Генерация случайного баркода для симуляции
+  const randomBarcode = Math.floor(
+    100000000 + Math.random() * 900000000
+  ).toString();
+  const input = document.getElementById("barcode-input");
+  if (input) {
+    input.value = randomBarcode;
+    showNotification(`Симуляция сканирования: ${randomBarcode}`, "info");
   }
 }
 
-function clearInput() {
-  const numberInput = document.getElementById("numberInput");
-  if (numberInput) {
-    numberInput.value = "";
-    numberInput.focus();
-  }
-  showMessage("Форма очищена", "info");
-}
+function updateBarcodeDisplay() {
+  const countElement = document.getElementById("barcode-count");
+  const historyElement = document.getElementById("barcode-history");
 
-function clearAllData() {
-  if (savedNumbers.length === 0) {
-    showMessage("Нет данных для удаления", "info");
+  if (!countElement || !historyElement) return;
+
+  const count = state.barcodeHistory.length;
+  countElement.textContent = `${count} ${getRussianPlural(
+    count,
+    "проба",
+    "пробы",
+    "проб"
+  )}`;
+
+  if (count === 0) {
+    historyElement.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <h3 style="margin-bottom: 8px;">Нет сохраненных проб</h3>
+                        <p>Добавьте первую пробу через форму слева</p>
+                    </div>
+                `;
     return;
   }
 
-  if (confirm(`Вы уверены? Будет удалено ${savedNumbers.length} проб.`)) {
-    savedNumbers = [];
-    localStorage.removeItem("labNumbersData");
-    localStorage.removeItem("lastSaveTime");
-    updateDisplay();
-    showMessage("Все данные удалены", "success");
-  }
+  historyElement.innerHTML = state.barcodeHistory
+    .map(
+      (item) => `
+                <div class="history-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-size: 18px; font-weight: 600;">${
+                          item.number
+                        }</div>
+                        <div style="display: flex; gap: 8px;">
+                            <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                                ${getModeDisplayName(item.mode)}
+                            </span>
+                            <span style="color: var(--text-secondary); font-size: 12px;">
+                                ${item.date}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="reprintBarcode('${
+                          item.id
+                        }')">
+                            <i class="fas fa-print"></i> Печать
+                        </button>
+                        <button class="btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
+                          item.id
+                        }')">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </div>
+                </div>
+            `
+    )
+    .join("");
 }
 
-function copyNumber(id) {
-  const numberObj = savedNumbers.find((item) => item.id === id);
-  if (numberObj) {
+function getModeDisplayName(mode) {
+  const modes = {
+    default: "По умолчанию",
+    testosterone: "Testosterone 1:10",
+    "a-tpo": "A-TPO",
+    prog: "Progesterone",
+  };
+  return modes[mode] || mode;
+}
+
+function reprintBarcode(id) {
+  const item = state.barcodeHistory.find((item) => item.id.toString() === id);
+  if (item) {
     const clipboardObject = {
-      number: numberObj.number,
-      mode: numberObj.mode,
-      modeDisplay: numberObj.modeDisplay,
-      timestamp: numberObj.timestamp,
+      type: "barcode",
+      number: item.number,
+      mode: item.mode,
+      barcode: item.number,
+      anchor: "h",
+      size: "s",
     };
 
     copyToClipboard(JSON.stringify(clipboardObject, null, 2))
-      .then(() => showMessage("JSON объект скопирован в буфер", "success"))
-      .catch(() => showMessage("Ошибка копирования", "error"));
+      .then(() => {
+        showNotification(
+          `✅ Проба "${item.number}" скопирована для печати`,
+          "success"
+        );
+      })
+      .catch((err) => {
+        console.error("Ошибка копирования:", err);
+        showNotification("Ошибка копирования", "error");
+      });
   }
 }
 
-function copyAllToClipboard() {
-  if (savedNumbers.length === 0) {
-    showMessage("Нет данных для копирования", "error");
-    return;
-  }
-
-  const allData = savedNumbers.map((item) => ({
-    number: item.number,
-    mode: item.mode,
-    modeDisplay: item.modeDisplay,
-    date: item.date,
-  }));
-
-  copyToClipboard(JSON.stringify(allData, null, 2))
-    .then(() =>
-      showMessage(
-        `Все ${savedNumbers.length} проб скопированы в буфер`,
-        "success"
-      )
-    )
-    .catch(() => showMessage("Ошибка копирования", "error"));
+function deleteBarcode(id) {
+  state.barcodeHistory = state.barcodeHistory.filter(
+    (item) => item.id.toString() !== id
+  );
+  localStorage.setItem("barcodeHistory", JSON.stringify(state.barcodeHistory));
+  updateBarcodeDisplay();
+  showNotification("Проба удалена", "success");
 }
 
-function deleteNumber(id) {
-  savedNumbers = savedNumbers.filter((item) => item.id !== id);
-  saveToLocalStorage();
-  updateDisplay();
-  showMessage("Проба удалена", "success");
-}
-
-function showMessage(text, type) {
-  const messageDiv = document.getElementById("message");
-  if (messageDiv) {
-    messageDiv.textContent = text;
-    messageDiv.className = `message ${type} show`;
-
-    setTimeout(() => {
-      messageDiv.classList.remove("show");
-    }, 4000);
-  }
-}
-
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function sendModeLabel(name) {
-  const userModeLabel = {
-    salvia: { type: "text", text: "Sluna", anchor: "c", size: "l" },
-    dublicat: { type: "text", text: "Dubli", anchor: "c", size: "l" },
+function specialLabel(type) {
+  const labelTemplates = {
+    saliva: { type: "text", text: "Sluna", anchor: "c", size: "l" },
+    virtual: {
+      type: "text",
+      text: "VIRTUAL ARCHIVE",
+      anchor: "c",
+      size: "l",
+    },
+    duplicate: { type: "text", text: "DUBLI", anchor: "c", size: "l" },
     infinity: {
       type: "barcode",
       code: "BCN",
@@ -699,238 +409,209 @@ function sendModeLabel(name) {
     },
   };
 
-  copyToClipboard(JSON.stringify(userModeLabel[name], 0, 2));
+  const template = labelTemplates[type];
+  if (template) {
+    copyToClipboard(JSON.stringify(template, null, 2))
+      .then(() => {
+        showNotification(`Этикетка "${type}" скопирована в буфер`, "success");
+      })
+      .catch((err) => {
+        console.error("Ошибка копирования:", err);
+        showNotification("Ошибка копирования", "error");
+      });
+  }
 }
 
-function copyArhiveInfo() {
-  const input = document.getElementById("numberInput");
-  if (!input) {
-    showMessage("Поле ввода не найдено", "error");
-    return;
-  }
+// ===== Модуль реагентов =====
+function selectReagent(reagent) {
+  state.selectedReagent = reagent;
 
-  if (!input.value.trim()) {
-    showMessage("Вам необходимо ввести номер виртуального штатива", "error");
-    return;
-  }
-
-  const archiveInfo = {
-    type: "text",
-    text: `LAMI\n${input.value.trim()}`,
-    size: "l",
-  };
-
-  copyToClipboard(JSON.stringify(archiveInfo, null, 2))
-    .then(() => {
-      showMessage(
-        `✅ JSON виртуального архива "${input.value.trim()}" скопирован в буфер`,
-        "success"
-      );
-    })
-    .catch((err) => {
-      console.error("Ошибка копирования:", err);
-      showMessage("Ошибка копирования информации", "error");
-    });
-}
-
-function addAlicvotsItem() {
-  const nameInput = document.getElementById("alicvotsName");
-  const lotInput = document.getElementById("alicvotsValue");
-  const countInput = document.getElementById("alicvotsCount");
-  const volumeInput = document.getElementById("alicvotsVolume");
-
-  if (!nameInput || !lotInput || !countInput || !volumeInput) {
-    showMessage("Не удалось найти поля формы", "error");
-    return;
-  }
-
-  const name = nameInput.value.trim();
-  const lot = lotInput.value.trim();
-  const count = countInput.value.trim();
-  const volume = volumeInput.value.trim();
-
-  if (!name || !lot || !count || !volume) {
-    showMessage("Заполните все поля!", "error");
-    return;
-  }
-
-  const countNum = parseInt(count, 10);
-  if (isNaN(countNum) || countNum > 10) {
-    showMessage(
-      "Слишком большое количество наклеек. Нельзя распечатать больше 10 наклеек",
-      "error"
-    );
-    return;
-  }
-
-  const newObject = {
-    type: "custom",
-    text: name,
-    lot: lot,
-    retry: count,
-    volume: volume,
-  };
-
-  copyToClipboard(JSON.stringify(newObject, null, 2))
-    .then(() => {
-      showMessage(`Успешная передача на печать ${count} этикеток`, "success");
-    })
-    .catch((error) => {
-      showMessage(`Ошибка копирования: ${error}`, "error");
-    });
-}
-
-function clearAlicvotsForm() {
-  const nameInput = document.getElementById("alicvotsName");
-  const lotInput = document.getElementById("alicvotsValue");
-  const countInput = document.getElementById("alicvotsCount");
-  const volumeInput = document.getElementById("alicvotsVolume");
-
-  if (nameInput) nameInput.value = "";
-  if (lotInput) lotInput.value = "";
-  if (countInput) countInput.value = "";
-  if (volumeInput) volumeInput.value = "";
-
-  showMessage("Форма очищена", "info");
-}
-
-// === ФУНКЦИИ ДЛЯ ГЕМОСТАЗА ===
-
-const colorHoles = {
-  clean_b: "maintenance",
-  aptt_reagent: "paired_one",
-  at_liquid_reagent: "paired_one",
-  ps_C4PV: "paired_one",
-  aptt_cacl2: "paired_two",
-  at_liquid_substrat: "paired_two",
-  ps_anti_ps: "paired_two",
-  f_diluent: "diluent",
-};
-
-function initReagentSelector() {
-  const reagentButtons = document.querySelectorAll(".reagent-btn-select");
-
-  reagentButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
-      if (this.classList.contains("disabled")) return;
-
-      // Убрать выделение со всех кнопок
-      reagentButtons.forEach((b) => b.classList.remove("active"));
-
-      // Выделить выбранную кнопку
-      this.classList.add("active");
-
-      // Установить выбранный реагент
-      selectedReagent = this.dataset.reagent;
-      selectedReagentAllowedRacks = this.dataset.allowed.split(",");
-
-      // Обновить отображение
-      const displayElement = document.getElementById("selectedReagentDisplay");
-      if (displayElement) {
-        displayElement.textContent =
-          reagentFullNames[selectedReagent] || selectedReagent;
-      }
-    });
+  // Обновить отображение
+  document.querySelectorAll(".reagent-btn").forEach((btn) => {
+    btn.classList.remove("active");
   });
+
+  const activeBtn = Array.from(document.querySelectorAll(".reagent-btn")).find(
+    (btn) => btn.textContent.includes(getReagentDisplayName(reagent))
+  );
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  document.getElementById("selected-reagent").textContent =
+    getReagentDisplayName(reagent);
+  showNotification(`Выбран реагент: ${getReagentDisplayName(reagent)}`, "info");
 }
 
-function setHole(rack, hole) {
-  if (!selectedReagent) {
-    showMessage("Сначала выберите реагент!", "error");
+function getReagentDisplayName(reagent) {
+  const names = {
+    f_diluent: "Factor Diluent",
+    pc_dil: "PC Diluent",
+    aptt_reagent: "APTT reagent",
+    aptt_cacl2: "APTT CaCl2",
+    recombiplastin: "Recombiplastin",
+    trombintime: "Trombin Time",
+    fibrinogen: "O.F.A Fibrinogen",
+  };
+  return names[reagent] || reagent;
+}
+
+function generateRacks() {
+  const rackContainer = document.querySelector(".rack-container");
+  if (!rackContainer) return;
+
+  const racks = ["D1", "D2", "D3", "R1", "R2", "R3", "R4", "R5", "R6"];
+
+  rackContainer.innerHTML = racks
+    .map(
+      (rack) => `
+                <div class="rack">
+                    <div class="rack-header">
+                        <div class="rack-title">${rack}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            ${rack.startsWith("D") ? "Разбавитель" : "Реагент"}
+                        </div>
+                    </div>
+                    <div class="rack-holes">
+                        ${Array.from(
+                          { length: 6 },
+                          (_, i) => `
+                            <div class="hole" 
+                                 data-rack="${rack}" 
+                                 data-hole="${i + 1}"
+                                 onclick="fillHole('${rack}', ${i + 1})">
+                                ${
+                                  state.reagentData[rack][i]
+                                    ? getReagentShortName(
+                                        state.reagentData[rack][i]
+                                      )
+                                    : ""
+                                }
+                            </div>
+                        `
+                        ).join("")}
+                    </div>
+                </div>
+            `
+    )
+    .join("");
+}
+
+function getReagentShortName(reagent) {
+  const shortNames = {
+    f_diluent: "FD",
+    pc_dil: "PD",
+    aptt_reagent: "AR",
+    aptt_cacl2: "AC",
+    recombiplastin: "RP",
+    trombintime: "TT",
+    fibrinogen: "FG",
+  };
+  return shortNames[reagent] || reagent.substring(0, 2);
+}
+
+function fillHole(rack, hole) {
+  if (!state.selectedReagent) {
+    showNotification("Сначала выберите реагент!", "error");
     return;
   }
 
-  if (!selectedReagentAllowedRacks.includes(rack)) {
-    // Проверить, доступен ли этот реагент для данного река
-    showMessage(
-      `Реагент "${reagentFullNames[selectedReagent]}" не может быть размещен в R${rack}!`,
-      "error"
-    );
+  const holeIndex = hole - 1;
+
+  // Проверка разрешенных реков для реагента
+  const allowedRacks = getAllowedRacks(state.selectedReagent);
+  if (!allowedRacks.includes(rack)) {
+    showNotification(`Этот реагент нельзя разместить в ${rack}!`, "error");
     return;
   }
 
-  const holeEl = document.getElementById(`hole_${rack}_${hole}`);
-  const holeContainer = document.querySelector(
-    `#rack-${rack} .hole[data-hole="${hole}"]`
-  );
+  const currentReagent = state.reagentData[rack][holeIndex];
 
-  if (reagentsData[rack][hole - 1] === selectedReagent) {
-    // Очистить лунку, если там уже этот реагент
-    reagentsData[rack][hole - 1] = null;
-    if (holeEl) holeEl.textContent = "";
-    if (holeContainer)
-      holeContainer.classList.remove(colorHoles[selectedReagent] || "filled");
-    showMessage(`Лунка ${hole} в R${rack} очищена`, "info");
+  if (currentReagent === state.selectedReagent) {
+    // Очистить лунку
+    state.reagentData[rack][holeIndex] = null;
+    updateHoleDisplay(rack, hole, null);
+    showNotification(`Лунка ${hole} в ${rack} очищена`, "info");
   } else {
-    // Установить реагент
-    reagentsData[rack][hole - 1] = selectedReagent;
-    if (holeEl) holeEl.textContent = reagentDisplayNames[selectedReagent];
-    if (holeContainer)
-      holeContainer.classList.add(colorHoles[selectedReagent] || "filled");
-    showMessage(
-      `${reagentFullNames[selectedReagent]} установлен в R${rack}, лунка ${hole}`,
+    // Заполнить лунку
+    state.reagentData[rack][holeIndex] = state.selectedReagent;
+    updateHoleDisplay(rack, hole, state.selectedReagent);
+    showNotification(
+      `${getReagentDisplayName(
+        state.selectedReagent
+      )} установлен в ${rack} лунка ${hole}`,
       "success"
     );
   }
 }
 
-function clearAllRacks() {
-  if (confirm("Очистить все реки?")) {
-    ["d1", "d2", "d3", "r1", "r2", "r3", "r4", "r5", "r6"].forEach((rack) => {
-      for (let i = 1; i <= 6; i++) {
-        const holeEl = document.getElementById(`hole_${rack}_${i}`);
-        if (holeEl) holeEl.textContent = "";
-        const holeContainer = document.querySelector(
-          `#rack-${rack} .hole[data-hole="${i}"]`
-        );
+function getAllowedRacks(reagent) {
+  const allowedRacks = {
+    f_diluent: ["D1", "D2"],
+    pc_dil: ["D1", "D2"],
+    aptt_reagent: ["D3", "R1", "R2"],
+    aptt_cacl2: ["R3", "R4", "R5", "R6"],
+    recombiplastin: ["R3", "R4", "R5", "R6"],
+    trombintime: ["R3", "R4", "R5", "R6"],
+    fibrinogen: ["R3", "R4", "R5", "R6"],
+  };
+  return allowedRacks[reagent] || [];
+}
 
-        if (holeContainer) {
-          holeContainer.classList.remove(
-            colorHoles[reagentsData[rack][i - 1]] || "filled"
-          );
-        }
-        reagentsData[rack][i - 1] = null;
-      }
-    });
-    showMessage("Все реки очищены", "success");
+function updateHoleDisplay(rack, hole, reagent) {
+  const holeElement = document.querySelector(
+    `.hole[data-rack="${rack}"][data-hole="${hole}"]`
+  );
+  if (holeElement) {
+    holeElement.textContent = reagent ? getReagentShortName(reagent) : "";
+    holeElement.classList.toggle("filled", !!reagent);
   }
 }
 
 function clearSelection() {
-  selectedReagent = null;
-  selectedReagentAllowedRacks = [];
+  state.selectedReagent = null;
+  document.querySelectorAll(".reagent-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  document.getElementById("selected-reagent").textContent = "Реагент не выбран";
+  showNotification("Выбор реагента снят", "info");
+}
 
-  document.querySelectorAll(".reagent-btn-select").forEach((btn) => {
+function clearAllRacks() {
+  if (!confirm("Очистить все реки?")) return;
+
+  const racks = ["D1", "D2", "D3", "R1", "R2", "R3", "R4", "R5", "R6"];
+  racks.forEach((rack) => {
+    state.reagentData[rack] = Array(6).fill(null);
+  });
+
+  generateRacks();
+  showNotification("Все реки очищены", "success");
+}
+
+// ===== Модуль Roche =====
+function setRocheMode(mode, buttonElement) {
+  state.rocheMode = mode;
+
+  // Обновляем активную кнопку
+  document.querySelectorAll(".roche-mode-btn").forEach((btn) => {
     btn.classList.remove("active");
   });
 
-  const displayElement = document.getElementById("selectedReagentDisplay");
-  if (displayElement) {
-    displayElement.textContent = "Ничего не выбрано";
+  if (buttonElement) {
+    buttonElement.classList.add("active");
   }
 
-  // Убрать подсветку с реков
-  document.querySelectorAll(".rack-container").forEach((rack) => {
-    rack.classList.remove("active");
-  });
-
-  showMessage("Выбор реагента снят", "info");
-}
-
-// === ФУНКЦИИ ДЛЯ ЦИКЛОВ ROCHE ===
-
-function modeCicles(mode, buttonElement) {
-  const buttonText = buttonElement?.textContent?.trim() || "Routine-AUE";
-
   const typeMode = {
-    one: ["e1", "ce", "c2"],
-    two: ["e2", "c1"],
-    all: ["e1", "e2", "ce", "c1", "c2"],
+    routine: ["line-e1", "line-e2", "line-c1", "line-cc", "line-ce"],
+    mode1: ["line-e1", "line-ce", "line-cc"],
+    mode2: ["line-e2", "line-c1"],
   };
 
   const testMode = {
-    one: ["Zinc", "Lpa", "Cu", "CHE", "LIP", "CK-Total"],
-    two: [
+    routine: [],
+    mode1: ["Zinc", "Lpa", "Cu", "CHE", "LIP", "CK-Total"],
+    mode2: [
       "C-peptid",
       "AFP",
       "A-CCP",
@@ -939,20 +620,13 @@ function modeCicles(mode, buttonElement) {
       "GH",
       "TP1NP",
       "Cyfra",
-      "PTH",
-      "PCT",
-      "FBC",
-      "HAV",
-      "HAV-IgM",
-      "HBE-AG",
     ],
-    all: ["Все тесты доступны для закрытия"],
   };
 
   const modeNames = {
-    one: "Режим 1",
-    two: "Режим 2",
-    all: "Все режимы",
+    routine: "Routine-AUE",
+    mode1: "CEE+EEEE1+CC",
+    mode2: "EEEE2+CCC",
   };
 
   // Валидация режима
@@ -961,269 +635,987 @@ function modeCicles(mode, buttonElement) {
     return;
   }
 
-  const activeElements = typeMode[mode];
+  const activeLines = typeMode[mode];
   const currentTests = testMode[mode] || [];
 
-  // Очистка предыдущего описания
-  const oldDescriptions = document.querySelectorAll(".description");
-  oldDescriptions.forEach((desc) => desc.remove());
+  // Обновляем визуализацию линий
+  const allLines = ["line-e1", "line-e2", "line-ce", "line-c1", "line-cc"];
 
-  // Управление видимостью элементов
-  const allIds = ["e1", "e2", "ce", "c1", "c2"];
+  allLines.forEach((lineId) => {
+    const line = document.getElementById(lineId);
+    if (line) {
+      line.classList.toggle("active-line", activeLines.includes(lineId));
 
-  allIds.forEach((id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.classList.toggle("active-analyze", activeElements.includes(id));
-    }
-  });
-
-  // Обновление информации в сортировщиках
-  const allSorter = ["s2", "s3"];
-
-  allSorter.forEach((id) => {
-    const sorter = document.getElementById(id);
-    if (sorter) {
-      sorter.innerHTML = `<div class="sorter-title">
-                            <h6>p612 (${buttonText})</h6>
-                        </div>
-                        <div class="work-group">
-                          <div class="input-area"></div>
-                          <div class="alicvote-zone"></div>
-                           <div class="output-zone">
-                                <div class="roche-container" id="roche-${id}">
-                           </div>
-                          
-                        </div>
-                        </div>`;
-    }
-    const block = document.getElementById(`roche-${id}`);
-    if (block) {
-      for (let i = 0; i < 9; i++) {
-        const row = document.createElement("div");
-        row.className = "row";
-        for (let j = 0; j < 5; j++) {
-          const circle = document.createElement("div");
-          circle.className = "circle";
-          row.appendChild(circle);
+      // Обновляем статус
+      const statusElement = line.querySelector(".analyze-status");
+      if (statusElement) {
+        if (activeLines.includes(lineId)) {
+          statusElement.textContent = "Active";
+          statusElement.className = "analyze-status active";
+        } else {
+          statusElement.textContent = "Standby";
+          statusElement.className = "analyze-status standby";
         }
-        block.appendChild(row);
+      }
+
+      // Обновляем сегменты
+      const segments = line.querySelectorAll(".segment");
+      segments.forEach((segment, index) => {
+        segment.classList.remove("active");
+        if (activeLines.includes(lineId) && Math.random() > 0.5) {
+          segment.classList.add("active");
+        }
+      });
+
+      // Обновляем счетчики
+      const sampleCount = line.querySelector(".sample-count");
+      const testCount = line.querySelector(".test-count");
+      if (sampleCount && testCount) {
+        if (activeLines.includes(lineId)) {
+          const samples = Math.floor(Math.random() * 30) + 10;
+          const tests = Math.floor(samples / 3);
+          sampleCount.textContent = `Пробы: ${samples}`;
+          testCount.textContent = `Тесты: ${tests}`;
+        } else {
+          sampleCount.textContent = "Пробы: 0";
+          testCount.textContent = "Тесты: 0";
+        }
       }
     }
   });
 
-  // Создание информационного блока
-  const visualElements = document.getElementsByClassName("visual");
+  // Обновляем визуализацию сортеров
+  updateSortersVisualization(mode);
 
-  if (visualElements.length > 0) {
-    const visualWindow = visualElements[0];
-
-    const description = document.createElement("div");
-    description.className = "description";
-    description.innerHTML = `
-      <h4>${modeNames[mode] || mode}</h4>
-      <p><strong>Активные блоки:</strong> ${activeElements.join(", ")}</p>
-      <p><strong>Аналиты сортирующиеся в зону Roche:</strong></p>
-      <div class="description-not-avaliable">
-        <div class="button-group">
-            ${(testMode[mode] || [])
-              .map((test) => `<button class="test-button">${test}</button>`)
-              .join("")}
-        </div>
-      </div>
-      </div>
-      <p><strong>Всего элементов:</strong> ${activeElements.length} из ${
-      allIds.length
-    }</p>
-    `;
-
-    visualWindow.appendChild(description);
+  // Обновляем информацию в заголовке
+  const activeLinesElement = document.getElementById("active-lines");
+  if (activeLinesElement) {
+    activeLinesElement.textContent = activeLines.length;
   }
 
-  // Логирование
-  console.log(`Режим ${mode} активирован. Активные элементы:`, activeElements);
+  // Обновляем описание
+  const descriptionElement = document.getElementById("roche-description");
+  if (descriptionElement) {
+    descriptionElement.innerHTML = `
+            <h4><i class="fas fa-info-circle"></i> Режим: ${
+              modeNames[mode] || mode
+            }</h4>
+            <p><strong>Активные линии:</strong> ${activeLines
+              .map((l) => l.replace("line-", ""))
+              .join(", ")}</p>
+            <p><strong>Аналиты сортирующиеся в зону Roche:</strong></p>
+            <div class="test-list">
+                ${currentTests
+                  .map(
+                    (test) => `
+                    <button class="test-button" onclick="selectTest('${test}')">${test}</button>
+                `
+                  )
+                  .join("")}
+            </div>
+            <p><strong>Всего активных элементов:</strong> ${
+              activeLines.length
+            } из ${allLines.length}</p>
+        `;
+  }
+
+  showNotification(
+    `Режим Roche установлен: ${modeNames[mode] || mode}`,
+    "success"
+  );
 }
 
-function getMolarSum() {
-  // 1. Получаем элементы
-  const volumeInput = document.getElementById("con");
-  const molarInput = document.getElementById("molar");
+function updateSortersVisualization(mode) {
+  const sorters = ["sorter-s2", "sorter-s3"];
 
-  // 2. Проверяем, что элементы существуют
-  if (!volumeInput || !molarInput) {
-    console.error("Не найдены необходимые элементы");
+  sorters.forEach((sorterId) => {
+    const sorter = document.getElementById(sorterId);
+    if (!sorter) return;
+
+    // Обновляем контейнер Roche
+    const rocheContainer = sorter.querySelector(".roche-container");
+    if (rocheContainer) {
+      rocheContainer.innerHTML = "";
+
+      // Создаем сетку точек
+      for (let i = 0; i < 8; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        for (let j = 0; j < 5; j++) {
+          const circle = document.createElement("div");
+          circle.className = "circle";
+
+          // Случайная активация точек в зависимости от режима
+          if (
+            Math.random() >
+            (mode === "routine" ? 0.4 : mode === "mode1" ? 0.6 : 0.7)
+          ) {
+            circle.classList.add("active");
+          }
+
+          row.appendChild(circle);
+        }
+
+        rocheContainer.appendChild(row);
+      }
+    }
+
+    // Обновляем зоны ввода/вывода
+    updateSorterZones(sorterId);
+  });
+}
+
+function updateSorterZones(sorterId) {
+  const sorter = document.getElementById(sorterId);
+  if (!sorter) return;
+
+  const zones = ["input", "aliquot"];
+
+  zones.forEach((zone) => {
+    const zoneElement = sorter.querySelector(`.${zone}-zone .zone-content`);
+    if (zoneElement) {
+      zoneElement.innerHTML = "";
+
+      // Добавляем случайное количество элементов
+      const count = Math.floor(Math.random() * 5) + 1;
+      for (let i = 0; i < count; i++) {
+        const sample = document.createElement("div");
+        sample.className = "sample-item";
+        sample.style.cssText = `
+                    width: 12px;
+                    height: 12px;
+                    background: ${zone === "input" ? "#667eea" : "#10b981"};
+                    border-radius: 2px;
+                    margin: 2px;
+                    display: inline-block;
+                `;
+        zoneElement.appendChild(sample);
+      }
+    }
+  });
+}
+
+function selectTest(testName) {
+  showNotification(`Выбран тест: ${testName}`, "info");
+
+  // Добавляем анимацию выделения
+  const testButtons = document.querySelectorAll(".test-button");
+  testButtons.forEach((btn) => {
+    if (btn.textContent === testName) {
+      btn.style.animation = "pulse 0.5s";
+      setTimeout(() => {
+        btn.style.animation = "";
+      }, 500);
+    }
+  });
+}
+
+// Инициализация Roche модуля при загрузке
+function initRocheModule() {
+  // Устанавливаем начальный режим
+  setRocheMode("routine");
+
+  // Запускаем анимацию
+  animateRocheSystem();
+
+  // Обновляем статус системы
+  updateSystemStatus();
+}
+
+function animateRocheSystem() {
+  // Анимация точек в контейнерах Roche
+  setInterval(() => {
+    document.querySelectorAll(".circle").forEach((circle) => {
+      if (Math.random() > 0.8) {
+        circle.classList.toggle("active");
+      }
+    });
+  }, 1000);
+
+  // Анимация сегментов линий
+  setInterval(() => {
+    document.querySelectorAll(".active-line .segment").forEach((segment) => {
+      if (Math.random() > 0.7) {
+        segment.classList.toggle("active");
+      }
+    });
+  }, 2000);
+}
+
+function updateSystemStatus() {
+  // Обновляем счетчики в реальном времени
+  setInterval(() => {
+    const samplesElement = document.getElementById("samples-hour");
+    if (samplesElement) {
+      const current = parseInt(samplesElement.textContent) || 120;
+      const change = Math.floor(Math.random() * 20) - 10;
+      const newValue = Math.max(80, Math.min(200, current + change));
+      samplesElement.textContent = newValue;
+    }
+
+    const loadElement = document.getElementById("system-load");
+    if (loadElement) {
+      const current = parseInt(loadElement.textContent) || 78;
+      const change = Math.floor(Math.random() * 10) - 5;
+      const newValue = Math.max(60, Math.min(95, current + change));
+      loadElement.textContent = `${newValue}%`;
+    }
+  }, 5000);
+}
+
+// ===== Модуль расчетов =====
+function calculateNaOH() {
+  const waterVolume = parseFloat(document.getElementById("water-volume").value);
+  const molarity = parseFloat(document.getElementById("molarity").value);
+
+  if (!waterVolume || !molarity || waterVolume < 1 || waterVolume > 1000) {
+    showNotification("Введите корректные значения!", "error");
     return;
   }
 
-  // 3. Получаем значения и преобразуем в числа
-  const volume = parseFloat(volumeInput.value);
-  const molar = parseFloat(molarInput.value);
-  const naohMolar = 40;
+  const molarMassNaOH = 40; // г/моль
+  const result = molarity * molarMassNaOH * (waterVolume / 1000);
 
-  // 4. Проверяем корректность введенных данных
-  if (isNaN(volume) || isNaN(molar)) {
-    alert("Пожалуйста, введите корректные числовые значения");
-    return;
-  }
-
-  // 5. Выполняем расчет
-  const result = molar * naohMolar * (volume / 1000);
-
-  // 6. Форматируем результат
-  const formattedResult = result.toFixed(1);
-
-  // 7. Находим или создаем контейнер для результатов
-  let resultContainer = document.getElementById("result-container");
-
-  // 8. Отображаем результат
-  if (resultContainer) {
-    resultContainer.innerHTML = `
-            <div style="margin-top: 20px; padding: 15px; background: #e7f5ff; border-radius: 8px; border-left: 4px solid #339af0;">
-                <h4 style="margin: 0 0 10px 0; color: #1864ab;">
-                    <i class="fas fa-calculator"></i> Результаты расчета:
-                </h4>
-                <div style="font-size: 14px;">
-                    <p><strong>Введенные данные:</strong></p>
-                    <ul style="margin: 5px 0 10px 0;">
-                        <li>Молярность: ${molar} M</li>
-                        <li>Объем: ${volume} мл</li>
-                        <li>Молярная масса NaOH: ${naohMolar} г/моль</li>
-                    </ul>
-                    <p><strong>Результат:</strong></p>
-                    <p style="font-size: 18px; font-weight: bold; color: #2b8a3e;">
-                        ${formattedResult} г NaOH
-                    </p>
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                        Для приготовления ${volume} мл ${molar}M раствора NaOH
-                    </p>
+  const resultElement = document.getElementById("calculation-result");
+  resultElement.innerHTML = `
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-lg); padding: 20px;">
+                    <h4 style="margin-bottom: 16px; color: #10b981;">
+                        <i class="fas fa-check-circle"></i> Результаты расчета
+                    </h4>
+                    <div style="margin-bottom: 12px;">
+                        <div style="color: var(--text-secondary); font-size: 14px;">Объем воды:</div>
+                        <div style="font-size: 18px; font-weight: 600;">${waterVolume} мл</div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="color: var(--text-secondary); font-size: 14px;">Молярность:</div>
+                        <div style="font-size: 18px; font-weight: 600;">${molarity} M</div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="color: var(--text-secondary); font-size: 14px;">Молярная масса NaOH:</div>
+                        <div style="font-size: 18px; font-weight: 600;">40 г/моль</div>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                        <div style="color: var(--text-secondary); font-size: 14px;">Необходимое количество NaOH:</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #10b981; margin-top: 8px;">
+                            ${result.toFixed(2)} г
+                        </div>
+                    </div>
                 </div>
+            `;
+  resultElement.style.display = "block";
+
+  showNotification("Расчет выполнен успешно", "success");
+}
+
+// ===== Модуль аликвот =====
+function printAliquots() {
+  const name = document.getElementById("aliquot-name").value.trim();
+  const lot = document.getElementById("aliquot-lot").value.trim();
+  const count = document.getElementById("aliquot-count").value;
+  const volume = document.getElementById("aliquot-volume").value.trim();
+
+  if (!name || !lot || !count || !volume) {
+    showNotification("Заполните все поля!", "error");
+    return;
+  }
+
+  const countNum = parseInt(count, 10);
+  if (isNaN(countNum) || countNum > 10) {
+    showNotification("Максимум 10 этикеток за раз!", "error");
+    return;
+  }
+
+  const aliquotData = {
+    type: "custom",
+    text: name,
+    lot: lot,
+    retry: countNum,
+    volume: volume,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Сохранить в историю
+  let history = JSON.parse(localStorage.getItem("aliquotHistory") || "[]");
+  history.unshift({
+    ...aliquotData,
+    date: new Date().toLocaleString("ru-RU"),
+  });
+  localStorage.setItem("aliquotHistory", JSON.stringify(history.slice(0, 20))); // Храним последние 20 записей
+
+  // Копировать в буфер обмена
+  copyToClipboard(JSON.stringify(aliquotData, null, 2))
+    .then(() => {
+      showNotification(
+        `✅ Этикетки "${name}" (${count} шт.) скопированы в буфер`,
+        "success"
+      );
+      updateAliquotHistory();
+    })
+    .catch((err) => {
+      console.error("Ошибка копирования:", err);
+      showNotification("Ошибка копирования в буфер", "error");
+    });
+}
+
+function clearAliquotForm() {
+  document.getElementById("aliquot-name").value = "";
+  document.getElementById("aliquot-lot").value = "";
+  document.getElementById("aliquot-count").value = "";
+  document.getElementById("aliquot-volume").value = "";
+  showNotification("Форма очищена", "info");
+}
+
+function updateAliquotHistory() {
+  const historyElement = document.getElementById("aliquot-history");
+  if (!historyElement) return;
+
+  const history = JSON.parse(localStorage.getItem("aliquotHistory") || "[]");
+
+  if (history.length === 0) {
+    historyElement.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
+                <h3>Нет данных</h3>
+                <p>Здесь появится история распечатанных этикеток</p>
             </div>
         `;
-  } else {
-    console.error("Контейнер для результатов не найден");
+    return;
   }
 
-  return result;
+  historyElement.innerHTML = history
+    .map(
+      (item) => `
+        <div style="
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: var(--text-primary);">${item.text}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${item.date}</div>
+            </div>
+            <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-secondary);">
+                <span>Лот: ${item.lot}</span>
+                <span>Кол-во: ${item.retry} шт.</span>
+                <span>Объем: ${item.volume}</span>
+            </div>
+        </div>
+    `
+    )
+    .join("");
 }
 
+// ===== Утилиты =====
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    return navigator.clipboard.writeText(text);
+  } else {
+    // Fallback для старых браузеров
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return Promise.resolve();
+  }
+}
+
+function showNotification(message, type = "info") {
+  const notification = document.getElementById("notification");
+  if (!notification) return;
+
+  // Очищаем предыдущие уведомления
+  notification.innerHTML = "";
+
+  const icon =
+    {
+      success: "fa-check-circle",
+      error: "fa-exclamation-circle",
+      info: "fa-info-circle",
+      warning: "fa-exclamation-triangle",
+    }[type] || "fa-info-circle";
+
+  const color =
+    {
+      success: "#10b981",
+      error: "#ef4444",
+      info: "#667eea",
+      warning: "#f59e0b",
+    }[type] || "#667eea";
+
+  const notificationItem = document.createElement("div");
+  notificationItem.className = "notification-item";
+  notificationItem.style.cssText = `
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid ${color}30;
+    border-left: 4px solid ${color};
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 10px;
+    animation: slideInRight 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+
+  notificationItem.innerHTML = `
+    <i class="fas ${icon}" style="color: ${color}; font-size: 20px;"></i>
+    <div style="flex: 1;">
+      <div style="font-weight: 600; color: var(--text-primary);">${message}</div>
+      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+        ${new Date().toLocaleTimeString("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </div>
+    </div>
+    <button onclick="this.parentElement.remove()" style="
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+    ">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+
+  notification.appendChild(notificationItem);
+
+  // Автоматическое удаление через 5 секунд
+  setTimeout(() => {
+    if (notificationItem.parentElement) {
+      notificationItem.style.animation = "slideOutRight 0.3s ease";
+      setTimeout(() => {
+        if (notificationItem.parentElement) {
+          notificationItem.remove();
+        }
+      }, 300);
+    }
+  }, 2000);
+}
+
+function getRussianPlural(number, one, two, five) {
+  let n = Math.abs(number);
+  n %= 100;
+  if (n >= 5 && n <= 20) {
+    return five;
+  }
+  n %= 10;
+  if (n === 1) {
+    return one;
+  }
+  if (n >= 2 && n <= 4) {
+    return two;
+  }
+  return five;
+}
+
+function toggleMobileMenu() {
+  const mobileMenu = document.getElementById("mobile-menu");
+  const hamburger = document.querySelector(".hamburger");
+
+  if (mobileMenu && hamburger) {
+    mobileMenu.classList.toggle("active");
+    hamburger.classList.toggle("active");
+
+    // Блокировка скролла
+    document.body.style.overflow = mobileMenu.classList.contains("active")
+      ? "hidden"
+      : "";
+  }
+}
+
+function handleResize() {
+  // Закрыть мобильное меню при увеличении экрана
+  if (window.innerWidth >= 1024) {
+    const mobileMenu = document.getElementById("mobile-menu");
+    const hamburger = document.querySelector(".hamburger");
+
+    if (mobileMenu && mobileMenu.classList.contains("active")) {
+      mobileMenu.classList.remove("active");
+      hamburger?.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+}
+
+// ===== Карусель для баннеров =====
 class Carousel {
   constructor() {
-    this.track = document.getElementById("carouselTrack");
-    this.container = document.getElementById("carouselContainer");
-    this.prevBtn = document.getElementById("carouselPrev");
-    this.nextBtn = document.getElementById("carouselNext");
-    this.indicatorsContainer = document.getElementById("carouselIndicators");
+    this.container = document.querySelector(".carousel-container");
+    this.track = document.querySelector(".carousel-track");
+    this.slides = document.querySelectorAll(".carousel-slide");
+    this.dotsContainer = document.querySelector(".carousel-indicators"); // Контейнер для точек
+    this.prevBtn = document.querySelector(".carousel-btn.prev"); // Обратите внимание на точку
+    this.nextBtn = document.querySelector(".carousel-btn.next"); // Обратите внимание на точку
+    this.progressBar = document.querySelector(".carousel-progress-bar");
 
-    this.cards = Array.from(this.track.children);
+    console.log("Carousel elements:", {
+      container: !!this.container,
+      track: !!this.track,
+      slides: this.slides.length,
+      dotsContainer: !!this.dotsContainer,
+      prevBtn: !!this.prevBtn,
+      nextBtn: !!this.nextBtn,
+      progressBar: !!this.progressBar,
+    });
+
+    if (!this.container || !this.track) {
+      console.error("Carousel container or track not found");
+      return;
+    }
+
     this.currentIndex = 0;
-    this.cardWidth = this.cards[0].offsetWidth + 25; // width + gap
-    this.visibleCards = Math.floor(this.container.offsetWidth / this.cardWidth);
+    this.slideCount = this.slides.length;
+    this.slidesPerView = this.calculateSlidesPerView();
+    this.maxIndex = Math.max(0, this.slideCount - this.slidesPerView);
+    this.interval = null;
+    this.isAutoPlaying = true;
+    this.dots = []; // Будем хранить элементы точек
 
     this.init();
   }
 
   init() {
-    // Создаем индикаторы
-    this.cards.forEach((_, index) => {
-      const indicator = document.createElement("button");
-      indicator.className = "indicator";
-      indicator.setAttribute("aria-label", `Перейти к слайду ${index + 1}`);
-      indicator.addEventListener("click", () => this.goToSlide(index));
-      this.indicatorsContainer.appendChild(indicator);
-    });
+    // Создаем точки навигации
+    this.generateDots();
 
-    // Назначаем обработчики
-    this.prevBtn.addEventListener("click", () => this.prev());
-    this.nextBtn.addEventListener("click", () => this.next());
+    // Начальная установка
+    this.updateCarousel();
 
-    // Инициализируем состояние
-    this.updateIndicators();
-    this.updateNavButtons();
-    this.updateGradients();
+    // Обработчики событий для кнопок
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener("click", () => this.prevSlide());
+    }
 
-    // Обработчик ресайза
-    window.addEventListener("resize", () => {
-      this.cardWidth = this.cards[0].offsetWidth + 25;
-      this.visibleCards = Math.floor(
-        this.container.offsetWidth / this.cardWidth
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener("click", () => this.nextSlide());
+    }
+
+    // Обновление при изменении размера окна
+    window.addEventListener("resize", () => this.handleResize());
+
+    // Автопрокрутка
+    this.startAutoSlide();
+
+    // Остановка при наведении
+    if (this.container) {
+      this.container.addEventListener("mouseenter", () =>
+        this.pauseAutoSlide()
       );
-      this.goToSlide(this.currentIndex);
+      this.container.addEventListener("mouseleave", () =>
+        this.resumeAutoSlide()
+      );
+    }
+
+    // Перетаскивание мышью для мобильных устройств
+    this.initDrag();
+  }
+
+  generateDots() {
+    if (!this.dotsContainer) return;
+
+    this.dotsContainer.innerHTML = "";
+    const totalDots = this.maxIndex + 1; // Количество точек = количество слайдов для показа
+
+    for (let i = 0; i < totalDots; i++) {
+      const dot = document.createElement("button");
+      dot.className = "carousel-indicator";
+      dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+
+      dot.addEventListener("click", () => {
+        this.goToSlide(i);
+      });
+
+      this.dotsContainer.appendChild(dot);
+      this.dots.push(dot);
+    }
+
+    this.updateDots();
+  }
+
+  calculateSlidesPerView() {
+    if (!this.slides[0] || !this.container) return 1;
+
+    const slideStyle = window.getComputedStyle(this.slides[0]);
+    const slideWidth =
+      this.slides[0].offsetWidth +
+      parseInt(slideStyle.marginLeft || 0) +
+      parseInt(slideStyle.marginRight || 0);
+
+    const containerWidth = this.container.offsetWidth;
+    const slidesPerView = containerWidth / slideWidth;
+
+    console.log("Slides per view:", {
+      slideWidth,
+      containerWidth,
+      slidesPerView: Math.floor(slidesPerView),
     });
 
-    // Swipe для мобильных
-    this.setupSwipe();
+    return Math.max(1, Math.floor(slidesPerView));
+  }
+
+  handleResize() {
+    console.log("Carousel resizing...");
+    this.slidesPerView = this.calculateSlidesPerView();
+    this.maxIndex = Math.max(0, this.slideCount - this.slidesPerView);
+    this.currentIndex = Math.min(this.currentIndex, this.maxIndex);
+
+    // Пересоздаем точки если их количество изменилось
+    const neededDots = this.maxIndex + 1;
+    if (neededDots !== this.dots.length) {
+      this.generateDots();
+    }
+
+    this.updateCarousel();
+  }
+
+  updateCarousel() {
+    if (!this.track || !this.slides[0]) return;
+
+    const slideWidth = this.slides[0].offsetWidth;
+    const trackStyle = window.getComputedStyle(this.track);
+    const gap = parseInt(trackStyle.gap) || 24; // Получаем gap из CSS
+    const translateX = this.currentIndex * (slideWidth + gap);
+
+    console.log("Updating carousel:", {
+      currentIndex: this.currentIndex,
+      translateX,
+      slideWidth,
+      gap,
+    });
+
+    this.track.style.transform = `translateX(-${translateX}px)`;
+    this.track.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+
+    // Обновляем точки
+    this.updateDots();
+
+    // Обновление прогресс-бара
+    if (this.progressBar) {
+      this.progressBar.classList.remove("active");
+      void this.progressBar.offsetWidth; // Trigger reflow
+      this.progressBar.classList.add("active");
+    }
+
+    // Обновление состояния кнопок
+    if (this.prevBtn) {
+      this.prevBtn.disabled = this.currentIndex === 0;
+      this.prevBtn.style.opacity = this.currentIndex === 0 ? "0.3" : "1";
+    }
+
+    if (this.nextBtn) {
+      this.nextBtn.disabled = this.currentIndex >= this.maxIndex;
+      this.nextBtn.style.opacity =
+        this.currentIndex >= this.maxIndex ? "0.3" : "1";
+    }
+  }
+
+  updateDots() {
+    this.dots.forEach((dot, index) => {
+      dot.classList.toggle("active", index === this.currentIndex);
+    });
+  }
+
+  nextSlide() {
+    if (this.currentIndex < this.maxIndex) {
+      this.currentIndex++;
+    } else {
+      this.currentIndex = 0; // Возврат к началу
+    }
+    console.log("Next slide, index:", this.currentIndex);
+    this.updateCarousel();
+    this.resetAutoSlide();
+  }
+
+  prevSlide() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+    } else {
+      this.currentIndex = this.maxIndex; // Переход к концу
+    }
+    console.log("Prev slide, index:", this.currentIndex);
+    this.updateCarousel();
+    this.resetAutoSlide();
   }
 
   goToSlide(index) {
-    this.currentIndex = Math.max(
-      0,
-      Math.min(index, this.cards.length - this.visibleCards)
-    );
-    const translateX = -this.currentIndex * this.cardWidth;
-    this.track.style.transform = `translateX(${translateX}px)`;
-
-    this.updateIndicators();
-    this.updateNavButtons();
-    this.updateGradients();
+    this.currentIndex = Math.min(index, this.maxIndex);
+    this.updateCarousel();
+    this.resetAutoSlide();
   }
 
-  prev() {
-    if (this.currentIndex > 0) {
-      this.goToSlide(this.currentIndex - 1);
-    }
-  }
+  startAutoSlide() {
+    if (this.interval) clearInterval(this.interval);
 
-  next() {
-    if (this.currentIndex < this.cards.length - this.visibleCards) {
-      this.goToSlide(this.currentIndex + 1);
-    }
-  }
-
-  updateIndicators() {
-    const indicators = this.indicatorsContainer.children;
-    Array.from(indicators).forEach((indicator, index) => {
-      indicator.classList.toggle(
-        "active",
-        index >= this.currentIndex &&
-          index < this.currentIndex + this.visibleCards
-      );
-    });
-  }
-
-  updateNavButtons() {
-    this.prevBtn.disabled = this.currentIndex === 0;
-    this.nextBtn.disabled =
-      this.currentIndex >= this.cards.length - this.visibleCards;
-  }
-
-  updateGradients() {
-    this.container.classList.toggle("start", this.currentIndex === 0);
-    this.container.classList.toggle(
-      "end",
-      this.currentIndex >= this.cards.length - this.visibleCards
-    );
-  }
-
-  setupSwipe() {
-    let startX = 0;
-    let isDragging = false;
-
-    this.track.addEventListener("mousedown", (e) => {
-      startX = e.clientX;
-      isDragging = true;
-    });
-
-    this.track.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      const diff = startX - e.clientX;
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) this.next();
-        else this.prev();
-        isDragging = false;
+    this.interval = setInterval(() => {
+      if (this.isAutoPlaying) {
+        this.nextSlide();
       }
+    }, 5000); // 5 секунд
+  }
+
+  pauseAutoSlide() {
+    this.isAutoPlaying = false;
+    if (this.progressBar) {
+      this.progressBar.style.animationPlayState = "paused";
+    }
+  }
+
+  resumeAutoSlide() {
+    this.isAutoPlaying = true;
+    if (this.progressBar) {
+      this.progressBar.style.animationPlayState = "running";
+    }
+  }
+
+  resetAutoSlide() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.startAutoSlide();
+    }
+  }
+
+  initDrag() {
+    if (!this.track) return;
+
+    let isDragging = false;
+    let startPos = 0;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
+    let animationID = 0;
+
+    const startDrag = (e) => {
+      isDragging = true;
+      startPos = this.getPositionX(e);
+      this.track.classList.add("grabbing");
+      this.pauseAutoSlide();
+
+      cancelAnimationFrame(animationID);
+
+      // Получаем текущее положение
+      const transform = window.getComputedStyle(this.track).transform;
+      if (transform !== "none") {
+        const matrix = transform.match(/matrix.*\((.+)\)/);
+        if (matrix) {
+          prevTranslate = parseFloat(matrix[1].split(", ")[4]) || 0;
+        }
+      }
+    };
+
+    const drag = (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+
+      const currentPosition = this.getPositionX(e);
+      currentTranslate = prevTranslate + currentPosition - startPos;
+
+      animationID = requestAnimationFrame(() => {
+        this.track.style.transform = `translateX(${currentTranslate}px)`;
+        this.track.style.transition = "none";
+      });
+    };
+
+    const endDrag = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      this.track.classList.remove("grabbing");
+
+      const movedBy = currentTranslate - prevTranslate;
+      const threshold = 50; // Порог для переключения слайда
+
+      if (movedBy < -threshold && this.currentIndex < this.maxIndex) {
+        this.nextSlide();
+      } else if (movedBy > threshold && this.currentIndex > 0) {
+        this.prevSlide();
+      } else {
+        this.updateCarousel(); // Возвращаемся к текущей позиции
+      }
+
+      this.resumeAutoSlide();
+    };
+
+    // Добавляем обработчики
+    this.track.addEventListener("mousedown", startDrag);
+    this.track.addEventListener("touchstart", (e) => startDrag(e.touches[0]));
+
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", (e) => {
+      if (e.touches.length === 1) drag(e.touches[0]);
     });
 
-    this.track.addEventListener("mouseup", () => (isDragging = false));
-    this.track.addEventListener("mouseleave", () => (isDragging = false));
+    document.addEventListener("mouseup", endDrag);
+    document.addEventListener("touchend", endDrag);
+
+    // Для предотвращения выделения текста при перетаскивании
+    this.track.addEventListener("dragstart", (e) => e.preventDefault());
+  }
+
+  getPositionX(event) {
+    return event.type.includes("mouse") ? event.pageX : event.clientX;
   }
 }
+
+// ===== Расширенные функции =====
+function exportData() {
+  const exportData = {
+    barcodeHistory: state.barcodeHistory,
+    aliquotHistory: JSON.parse(localStorage.getItem("aliquotHistory") || "[]"),
+    reagentData: state.reagentData,
+    exportDate: new Date().toISOString(),
+    version: "1.0.0",
+  };
+
+  const dataStr = JSON.stringify(exportData, null, 2);
+  const dataBlob = new Blob([dataStr], { type: "application/json" });
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = URL.createObjectURL(dataBlob);
+  downloadLink.download = `lab-assistant-export-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+
+  showNotification("Данные экспортированы", "success");
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+
+      if (confirm("Импортировать данные? Текущие данные будут заменены.")) {
+        if (importedData.barcodeHistory) {
+          state.barcodeHistory = importedData.barcodeHistory;
+          localStorage.setItem(
+            "barcodeHistory",
+            JSON.stringify(state.barcodeHistory)
+          );
+        }
+
+        if (importedData.aliquotHistory) {
+          localStorage.setItem(
+            "aliquotHistory",
+            JSON.stringify(importedData.aliquotHistory)
+          );
+        }
+
+        if (importedData.reagentData) {
+          Object.assign(state.reagentData, importedData.reagentData);
+          generateRacks();
+        }
+
+        updateBarcodeDisplay();
+        updateAliquotHistory();
+        showNotification("Данные импортированы", "success");
+      }
+    } catch (error) {
+      console.error("Ошибка импорта:", error);
+      showNotification("Ошибка импорта данных", "error");
+    }
+  };
+
+  reader.readAsText(file);
+
+  // Сброс input для возможности повторного выбора того же файла
+  event.target.value = "";
+}
+
+function resetApp() {
+  if (confirm("Вы уверены? Все данные будут удалены.")) {
+    localStorage.clear();
+    Object.assign(state, {
+      barcodeHistory: [],
+      aliquotHistory: [],
+      reagentData: {},
+      currentModule: "home",
+      barcodeMode: "default",
+      selectedReagent: null,
+      rocheMode: "routine",
+    });
+
+    // Инициализация данных реагентов
+    const racks = ["D1", "D2", "D3", "R1", "R2", "R3", "R4", "R5", "R6"];
+    racks.forEach((rack) => {
+      state.reagentData[rack] = Array(6).fill(null);
+    });
+
+    updateBarcodeDisplay();
+    updateAliquotHistory();
+    generateRacks();
+    closeAllContainers();
+
+    showNotification("Приложение сброшено", "info");
+  }
+}
+
+// ===== Горячие клавиши =====
+document.addEventListener("keydown", (e) => {
+  // Ctrl+B - открыть модуль баркодов
+  if (e.ctrlKey && e.key === "b") {
+    e.preventDefault();
+    showModule("barcode");
+  }
+
+  // Ctrl+R - открыть модуль реагентов
+  if (e.ctrlKey && e.key === "r") {
+    e.preventDefault();
+    showModule("reagent");
+  }
+
+  // Ctrl+A - открыть модуль аликвот
+  if (e.ctrlKey && e.key === "a") {
+    e.preventDefault();
+    showModule("aliquots");
+  }
+
+  // Ctrl+H - вернуться на главную
+  if (e.ctrlKey && e.key === "h") {
+    e.preventDefault();
+    showModule("home");
+  }
+
+  // Ctrl+Shift+R - сброс приложения
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    e.preventDefault();
+    resetApp();
+  }
+});
+
+// ===== Экспорт функций в глобальную область видимости =====
+// Нужно для обработчиков onclick в HTML
+window.showModule = showModule;
+window.selectMode = selectMode;
+window.saveBarcode = saveBarcode;
+window.clearBarcodeInput = clearBarcodeInput;
+window.simulateScan = simulateScan;
+window.reprintBarcode = reprintBarcode;
+window.deleteBarcode = deleteBarcode;
+window.specialLabel = specialLabel;
+window.selectReagent = selectReagent;
+window.fillHole = fillHole;
+window.clearSelection = clearSelection;
+window.clearAllRacks = clearAllRacks;
+window.setRocheMode = setRocheMode;
+window.selectTest = selectTest;
+window.calculateNaOH = calculateNaOH;
+window.printAliquots = printAliquots;
+window.clearAliquotForm = clearAliquotForm;
+window.exportData = exportData;
+window.importData = importData;
+window.resetApp = resetApp;
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeAllContainers = closeAllContainers;
