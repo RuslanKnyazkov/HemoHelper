@@ -9,6 +9,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="../style/style.css" />
+    <link rel="stylesheet" href="../style/widgets.css" />
   </head>
   <body>
     <!-- Header -->
@@ -105,7 +106,7 @@
           </div>
         </section>
 
-        <section class="carousel-section">
+        <section class="carousel-section" id="carousel1">
           <div class="section-header">
             <h2>
               <i class="fas fa-rocket"></i>
@@ -414,6 +415,154 @@
             Помощь
           </button>
         </div>
+      </div>
+
+      <!-- ////////////////////////////// My carousel //////////////////////////// -->
+      <section class="carousel-section" id="carousel2">
+        <div class="section-header">
+          <h2>
+            <i class="fas fa-rocket"></i>
+            Аликвоты
+          </h2>
+          <p class="section-subtitle">Выберите необходимую вариацию аликвот</p>
+
+          <!-- Контролы карусели -->
+          <div class="carousel-controls">
+            <button class="carousel-btn prev" id="carouselPrev2">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="carousel-indicators" id="carouselIndicators2">
+              <!-- Индикаторы будут добавлены через JS -->
+            </div>
+            <button class="carousel-btn next" id="carouselNext2">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Карусель контейнер -->
+        <div class="carousel-container">
+          <div class="carousel-track" id="carouselTrack2">
+            <!-- Карточка 1 - Varia -->
+            <div class="carousel-slide">
+              <div class="module-card">
+                <div class="module-card__header">
+                  <div class="module-badge">Аликвоты</div>
+                  <div class="module-icon">
+                    <i class="fas fa-flask"></i>
+                  </div>
+                  <h3 class="module-card__title">Varia</h3>
+                  <p class="module-card__description">
+                    Необходимые данные [Наименование, Лот, Объем]
+                  </p>
+                </div>
+                <div class="module-card__footer">
+                  <button
+                    class="module-btn"
+                    onclick="generateAlictoveContainer('Varia')"
+                  >
+                    <i class="fas fa-arrow-right"></i>
+                    Открыть режим
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Карточка 4 - Speciality -->
+            <div class="carousel-slide">
+              <div class="module-card">
+                <div class="module-card__header">
+                  <div class="module-badge">Аликвоты</div>
+                  <div class="module-icon">
+                    <i class="fas fa-flask"></i>
+                  </div>
+                  <h3 class="module-card__title">Speciality</h3>
+                  <p class="module-card__description">
+                    Необходимые данные [Наименование, Лот, Объем]
+                  </p>
+                </div>
+                <div class="module-card__footer">
+                  <button
+                    class="module-btn"
+                    onclick="generateAlictoveContainer('Speciality')"
+                  >
+                    <i class="fas fa-arrow-right"></i>
+                    Открыть режим
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Карточка 5 - Thyro -->
+            <div class="carousel-slide">
+              <div class="module-card">
+                <div class="module-card__header">
+                  <div class="module-badge">Аликвоты</div>
+                  <div class="module-icon">
+                    <i class="fas fa-flask"></i>
+                  </div>
+                  <h3 class="module-card__title">Thyro</h3>
+                  <p class="module-card__description">
+                    Необходимые данные [Наименование, Лот, Объем]
+                  </p>
+                </div>
+                <div class="module-card__footer">
+                  <button
+                    class="module-btn"
+                    onclick="generateAlictoveContainer('Thyro')"
+                  >
+                    <i class="fas fa-arrow-right"></i>
+                    Открыть режим
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Карточка 6 - MM -->
+            <div class="carousel-slide">
+              <div class="module-card">
+                <div class="module-card__header">
+                  <div class="module-badge">Аликвоты</div>
+                  <div class="module-icon">
+                    <i class="fas fa-flask"></i>
+                  </div>
+                  <h3 class="module-card__title">MM</h3>
+                  <p class="module-card__description">
+                    Необходимые данные [Наименование, Лот, Объем]
+                  </p>
+                </div>
+                <div class="module-card__footer">
+                  <button
+                    class="module-btn"
+                    onclick="generateAlictoveContainer('MM')"
+                  >
+                    <i class="fas fa-arrow-right"></i>
+                    Открыть режим
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="floating-tests-section">
+        <div class="floating-container">
+          <!-- Тесты будут добавлены динамически -->
+        </div>
+      </section>
+      <!-- //////////////////////////////////My carousel ////////////////////////////// -->
+
+      <!-- AlicvoteContainer -->
+
+      <div id="alicvote-container" class="container-modern">
+        <div class="container-header">
+          <div class="container-icon">
+            <i class="fas fa-barcode"></i>
+          </div>
+          <div class="container-title">Печать аликвоты.</div>
+        </div>
+        <div class="container-content" id="container-aliquote"></div>
       </div>
 
       <!-- Barcode Module -->
