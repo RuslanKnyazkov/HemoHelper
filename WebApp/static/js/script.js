@@ -1,17 +1,17 @@
-// ===== Глобальные переменные и состояние =====
 const state = {
   currentModule: "home",
   barcodeMode: "default",
-  barcodeHistory: JSON.parse(localStorage.getItem("barcodeHistory") || "[]"),
+  barcodeHistory: [],
   selectedReagent: null,
   reagentData: {},
   rocheMode: "routine",
-  aliquotHistory: JSON.parse(localStorage.getItem("aliquotHistory") || "[]"),
+  aliquotHistory: [],
   isContainerOpen: false,
 };
 
 // Массив для хранения экземпляров каруселей
 const carousels = [];
+
 // ===== Инициализация приложения =====
 document.addEventListener("DOMContentLoaded", () => {
   initializeApp();
@@ -91,6 +91,14 @@ function setupEventListeners() {
   });
 }
 
+function getCSRFToken() {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("csrftoken="))
+    ?.split("=")[1];
+  return cookieValue || "";
+}
+
 // ===== Навигация по модулям с выезжающими контейнерами =====
 function showModule(moduleId) {
   // Если это главная страница
@@ -104,7 +112,6 @@ function showModule(moduleId) {
     updateNavigation(moduleId);
     return;
   }
-  console.log(moduleId);
 
   // Определяем, какие модули должны выезжать справа
   const slideModules = [
@@ -114,6 +121,7 @@ function showModule(moduleId) {
     "calculations",
     "aliquots",
     "alicvote-container",
+    "test-module",
   ];
 
   if (slideModules.includes(moduleId)) {
@@ -169,7 +177,6 @@ function openSlideContainer(moduleId) {
     document.getElementById(moduleId);
   if (targetContainer) {
     targetContainer.classList.add("active");
-    console.log(targetContainer);
 
     // Добавить затемнение фона
     document.body.classList.add("container-open");
@@ -234,9 +241,66 @@ function selectMode(mode) {
   }
 }
 
-function saveBarcode() {
+async function sendToDjango(barcode, mode) {
+  console.log(`📤 Отправка данных: ${barcode}, ${mode}`);
+
+  // Формируем данные для отправки
+  const dataToSend = {
+    type: "barcode",
+    barcode: barcode,
+    mode: mode || "standard",
+    size: "s", // размер штрихкода
+    anchor: "h", // позиционирование
+  };
+
+  console.log("📦 Отправляемые данные:", dataToSend);
+
+  try {
+    // Отправляем POST запрос
+    const response = await fetch("/save-barcode/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCSRFToken(),
+      },
+      body: JSON.stringify(dataToSend),
+    });
+
+    console.log(`📥 Статус ответа: ${response.status}`);
+
+    if (!response.ok) {
+      // Пытаемся прочитать текст ошибки
+      let errorText = await response.text();
+      console.error(`❌ Ошибка сервера: ${response.status}`, errorText);
+
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      } catch {
+        throw new Error(`Ошибка сервера: ${response.status} - ${errorText}`);
+      }
+    }
+
+    const data = await response.json();
+    console.log("✅ Ответ сервера:", data);
+
+    if (!data.success) {
+      throw new Error(data.error || "Неизвестная ошибка сервера");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("❌ Ошибка отправки на сервер:", error);
+    throw error;
+  }
+}
+
+async function saveBarcode() {
   const input = document.getElementById("barcode-input");
-  if (!input) return;
+  if (!input) {
+    console.error("❌ Не найден элемент barcode-input");
+    return;
+  }
 
   const barcode = input.value.trim();
   if (!barcode) {
@@ -245,17 +309,18 @@ function saveBarcode() {
     return;
   }
 
-  // Проверка на дубликат
+  // Проверка на дубликат в текущей сессии
   const isDuplicate = state.barcodeHistory.some(
     (item) => item.number === barcode
   );
   if (
     isDuplicate &&
-    !confirm("Такой номер уже существует. Добавить дубликат?")
+    !confirm("Такой номер уже был добавлен. Добавить повторно?")
   ) {
     return;
   }
 
+  // Создаем объект для текущей сессии
   const barcodeObject = {
     id: Date.now(),
     number: barcode,
@@ -264,8 +329,19 @@ function saveBarcode() {
     date: new Date().toLocaleString("ru-RU"),
   };
 
+  // Добавляем в историю текущей сессии
   state.barcodeHistory.unshift(barcodeObject);
-  localStorage.setItem("barcodeHistory", JSON.stringify(state.barcodeHistory));
+
+  try {
+    console.log("🔄 Отправка на Django сервер...");
+    const serverResponse = await sendToDjango(barcode, state.barcodeMode);
+    console.log("✅ Данные успешно отправлены на сервер:", serverResponse);
+
+    showNotification(`✅ Проба "${barcode}" отправлена на печать!`, "success");
+  } catch (error) {
+    console.error("❌ Ошибка отправки на сервер:", error);
+    showNotification(`❌ Ошибка отправки: ${error.message}`, "error");
+  }
 
   // Копирование в буфер обмена
   const clipboardObject = {
@@ -277,23 +353,17 @@ function saveBarcode() {
     size: "s",
   };
 
-  copyToClipboard(JSON.stringify(clipboardObject, null, 2))
-    .then(() => {
-      showNotification(
-        `✅ Проба "${barcode}" сохранена и скопирована!`,
-        "success"
-      );
-      updateBarcodeDisplay();
-      input.value = "";
-      input.focus();
-    })
-    .catch((err) => {
-      console.error("Ошибка копирования:", err);
-      showNotification(
-        "✅ Проба сохранена! (Не удалось скопировать)",
-        "success"
-      );
-    });
+  try {
+    await copyToClipboard(JSON.stringify(clipboardObject, null, 2));
+    console.log("📋 Скопировано в буфер обмена");
+  } catch (err) {
+    console.error("❌ Ошибка копирования:", err);
+  }
+
+  // Обновляем интерфейс и очищаем поле
+  updateBarcodeDisplay();
+  input.value = "";
+  input.focus();
 }
 
 function clearBarcodeInput() {
@@ -329,50 +399,51 @@ function updateBarcodeDisplay() {
     "проба",
     "пробы",
     "проб"
-  )}`;
+  )} (текущая сессия)`;
 
   if (count === 0) {
     historyElement.innerHTML = `
-                    <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
-                        <h3 style="margin-bottom: 8px;">Нет сохраненных проб</h3>
-                        <p>Добавьте первую пробу через форму слева</p>
-                    </div>
-                `;
+      <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
+        <h3 style="margin-bottom: 8px;">Нет сохраненных проб</h3>
+        <p>Добавьте первую пробу через форму слева</p>
+        <p style="font-size: 12px; margin-top: 10px; color: #888;">
+          <i class="fas fa-info-circle"></i> Данные хранятся только в текущей сессии
+        </p>
+      </div>
+    `;
     return;
   }
 
   historyElement.innerHTML = state.barcodeHistory
     .map(
       (item) => `
-                <div class="history-item">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div style="font-size: 18px; font-weight: 600;">${
-                          item.number
-                        }</div>
-                        <div style="display: flex; gap: 8px;">
-                            <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                                ${getModeDisplayName(item.mode)}
-                            </span>
-                            <span style="color: var(--text-secondary); font-size: 12px;">
-                                ${item.date}
-                            </span>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-secondary" style="flex: 1;" onclick="reprintBarcode('${
-                          item.id
-                        }')">
-                            <i class="fas fa-print"></i> Печать
-                        </button>
-                        <button class="btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
-                          item.id
-                        }')">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                </div>
-            `
+        <div class="history-item">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 18px; font-weight: 600;">${item.number}</div>
+            <div style="display: flex; gap: 8px;">
+              <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                ${getModeDisplayName(item.mode)}
+              </span>
+              <span style="color: var(--text-secondary); font-size: 12px;">
+                ${item.date}
+              </span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="flex: 1;" onclick="reprintBarcode('${
+              item.id
+            }')">
+              <i class="fas fa-print"></i> Печать
+            </button>
+            <button class="btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
+              item.id
+            }')">
+              <i class="fas fa-trash"></i> Удалить
+            </button>
+          </div>
+        </div>
+      `
     )
     .join("");
 }
@@ -417,9 +488,8 @@ function deleteBarcode(id) {
   state.barcodeHistory = state.barcodeHistory.filter(
     (item) => item.id.toString() !== id
   );
-  localStorage.setItem("barcodeHistory", JSON.stringify(state.barcodeHistory));
   updateBarcodeDisplay();
-  showNotification("Проба удалена", "success");
+  showNotification("Проба удалена из текущей сессии", "success");
 }
 
 function specialLabel(type) {
@@ -498,34 +568,32 @@ function generateRacks() {
   rackContainer.innerHTML = racks
     .map(
       (rack) => `
-                <div class="rack">
-                    <div class="rack-header">
-                        <div class="rack-title">${rack}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">
-                            ${rack.startsWith("D") ? "Разбавитель" : "Реагент"}
-                        </div>
-                    </div>
-                    <div class="rack-holes">
-                        ${Array.from(
-                          { length: 6 },
-                          (_, i) => `
-                            <div class="hole" 
-                                 data-rack="${rack}" 
-                                 data-hole="${i + 1}"
-                                 onclick="fillHole('${rack}', ${i + 1})">
-                                ${
-                                  state.reagentData[rack][i]
-                                    ? getReagentShortName(
-                                        state.reagentData[rack][i]
-                                      )
-                                    : ""
-                                }
-                            </div>
-                        `
-                        ).join("")}
-                    </div>
+        <div class="rack">
+          <div class="rack-header">
+            <div class="rack-title">${rack}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              ${rack.startsWith("D") ? "Разбавитель" : "Реагент"}
+            </div>
+          </div>
+          <div class="rack-holes">
+            ${Array.from(
+              { length: 6 },
+              (_, i) => `
+                <div class="hole" 
+                     data-rack="${rack}" 
+                     data-hole="${i + 1}"
+                     onclick="fillHole('${rack}', ${i + 1})">
+                  ${
+                    state.reagentData[rack][i]
+                      ? getReagentShortName(state.reagentData[rack][i])
+                      : ""
+                  }
                 </div>
-            `
+              `
+            ).join("")}
+          </div>
+        </div>
+      `
     )
     .join("");
 }
@@ -622,7 +690,6 @@ function clearAllRacks() {
   showNotification("Все реки очищены", "success");
 }
 
-// ===== Модуль Roche =====
 function setRocheMode(mode, buttonElement) {
   state.rocheMode = mode;
 
@@ -897,7 +964,7 @@ function updateSystemStatus() {
   }, 5000);
 }
 
-// ===== Модуль расчетов =====
+// ===== Модуль расчетов  =====
 function calculateNaOH() {
   const waterVolume = parseFloat(document.getElementById("water-volume").value);
   const molarity = parseFloat(document.getElementById("molarity").value);
@@ -968,13 +1035,16 @@ function printAliquots() {
     timestamp: new Date().toISOString(),
   };
 
-  // Сохранить в историю
-  let history = JSON.parse(localStorage.getItem("aliquotHistory") || "[]");
-  history.unshift({
+  // Сохранить в историю текущей сессии
+  state.aliquotHistory.unshift({
     ...aliquotData,
     date: new Date().toLocaleString("ru-RU"),
   });
-  localStorage.setItem("aliquotHistory", JSON.stringify(history.slice(0, 20))); // Храним последние 20 записей
+
+  // Ограничиваем историю (например, 20 записей)
+  if (state.aliquotHistory.length > 20) {
+    state.aliquotHistory = state.aliquotHistory.slice(0, 20);
+  }
 
   // Копировать в буфер обмена
   copyToClipboard(JSON.stringify(aliquotData, null, 2))
@@ -1003,45 +1073,42 @@ function updateAliquotHistory() {
   const historyElement = document.getElementById("aliquot-history");
   if (!historyElement) return;
 
-  const history = JSON.parse(localStorage.getItem("aliquotHistory") || "[]");
+  const history = state.aliquotHistory;
 
   if (history.length === 0) {
     historyElement.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
-                <h3>Нет данных</h3>
-                <p>Здесь появится история распечатанных этикеток</p>
-            </div>
-        `;
+      <div style="text-align: center; padding: 40px;">
+        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
+        <h3>Нет данных</h3>
+        <p>Здесь появится история распечатанных этикеток</p>
+        <p style="font-size: 12px; margin-top: 10px; color: #888;">
+          <i class="fas fa-info-circle"></i> Данные хранятся только в текущей сессии
+        </p>
+      </div>
+    `;
     return;
   }
 
   historyElement.innerHTML = history
     .map(
       (item) => `
-        <div style="
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: var(--text-primary);">${item.text}</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">${item.date}</div>
-            </div>
-            <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-secondary);">
-                <span>Лот: ${item.lot}</span>
-                <span>Кол-во: ${item.retry} шт.</span>
-                <span>Объем: ${item.volume}</span>
-            </div>
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: var(--text-primary);">${item.text}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${item.date}</div>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-secondary);">
+            <span>Лот: ${item.lot}</span>
+            <span>Кол-во: ${item.retry} шт.</span>
+            <span>Объем: ${item.volume}</span>
+          </div>
         </div>
-    `
+      `
     )
     .join("");
 }
 
-// ===== Утилиты =====
+// ===== Утилиты (без изменений) =====
 function copyToClipboard(text) {
   if (navigator.clipboard) {
     return navigator.clipboard.writeText(text);
@@ -1061,7 +1128,6 @@ function showNotification(message, type = "info") {
   const notification = document.getElementById("notification");
   if (!notification) return;
 
-  // Очищаем предыдущие уведомления
   notification.innerHTML = "";
 
   const icon =
@@ -1179,7 +1245,6 @@ function handleResize() {
   }
 }
 
-// ===== Карусель для баннеров =====
 class Carousel {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
@@ -1233,19 +1298,6 @@ class Carousel {
     this.dots = [];
     this.isTransitioning = false;
 
-    console.log(`Carousel ${containerId} initialized:`, {
-      slides: this.slideCount,
-      slidesPerView: this.slidesPerView,
-      infinite: this.options.infinite,
-      elementsFound: {
-        track: !!this.track,
-        slides: this.slides.length,
-        prevBtn: !!this.prevBtn,
-        nextBtn: !!this.nextBtn,
-        dotsContainer: !!this.dotsContainer,
-      },
-    });
-
     if (this.slideCount > 0) {
       this.init();
     }
@@ -1273,12 +1325,6 @@ class Carousel {
     this.currentIndex = 1;
     this.slideCount = this.slides.length;
     this.maxIndex = this.slideCount - 1;
-
-    console.log("Infinite slides setup:", {
-      originalCount: this.slideCount - 2, // минус 2 клона
-      totalCount: this.slideCount,
-      currentIndex: this.currentIndex,
-    });
   }
 
   init() {
@@ -1334,8 +1380,6 @@ class Carousel {
     const originalSlides = this.options.infinite
       ? this.slideCount - 2 // минус клоны
       : this.slideCount;
-
-    console.log(`Generating ${originalSlides} dots`);
 
     for (let i = 0; i < originalSlides; i++) {
       const dot = document.createElement("button");
@@ -1428,10 +1472,6 @@ class Carousel {
     // Рассчитываем смещение
     const slideWidth = 100 / this.slidesPerView;
     const translateX = this.currentIndex * slideWidth;
-
-    console.log(
-      `Update: index=${this.currentIndex}, translateX=${translateX}%`
-    );
 
     this.track.style.transform = `translateX(-${translateX}%)`;
     this.track.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
@@ -1578,10 +1618,11 @@ class Carousel {
 function exportData() {
   const exportData = {
     barcodeHistory: state.barcodeHistory,
-    aliquotHistory: JSON.parse(localStorage.getItem("aliquotHistory") || "[]"),
+    aliquotHistory: state.aliquotHistory,
     reagentData: state.reagentData,
     exportDate: new Date().toISOString(),
     version: "1.0.0",
+    note: "Данные экспортированы из текущей сессии",
   };
 
   const dataStr = JSON.stringify(exportData, null, 2);
@@ -1589,14 +1630,14 @@ function exportData() {
 
   const downloadLink = document.createElement("a");
   downloadLink.href = URL.createObjectURL(dataBlob);
-  downloadLink.download = `lab-assistant-export-${new Date()
+  downloadLink.download = `lab-assistant-session-${new Date()
     .toISOString()
     .slice(0, 10)}.json`;
   document.body.appendChild(downloadLink);
   downloadLink.click();
   document.body.removeChild(downloadLink);
 
-  showNotification("Данные экспортированы", "success");
+  showNotification("Данные текущей сессии экспортированы", "success");
 }
 
 function importData(event) {
@@ -1608,20 +1649,15 @@ function importData(event) {
     try {
       const importedData = JSON.parse(e.target.result);
 
-      if (confirm("Импортировать данные? Текущие данные будут заменены.")) {
+      if (
+        confirm("Импортировать данные? Текущие данные сессии будут заменены.")
+      ) {
         if (importedData.barcodeHistory) {
           state.barcodeHistory = importedData.barcodeHistory;
-          localStorage.setItem(
-            "barcodeHistory",
-            JSON.stringify(state.barcodeHistory)
-          );
         }
 
         if (importedData.aliquotHistory) {
-          localStorage.setItem(
-            "aliquotHistory",
-            JSON.stringify(importedData.aliquotHistory)
-          );
+          state.aliquotHistory = importedData.aliquotHistory;
         }
 
         if (importedData.reagentData) {
@@ -1631,7 +1667,7 @@ function importData(event) {
 
         updateBarcodeDisplay();
         updateAliquotHistory();
-        showNotification("Данные импортированы", "success");
+        showNotification("Данные импортированы в текущую сессию", "success");
       }
     } catch (error) {
       console.error("Ошибка импорта:", error);
@@ -1646,8 +1682,7 @@ function importData(event) {
 }
 
 function resetApp() {
-  if (confirm("Вы уверены? Все данные будут удалены.")) {
-    localStorage.clear();
+  if (confirm("Вы уверены? Все данные текущей сессии будут удалены.")) {
     Object.assign(state, {
       barcodeHistory: [],
       aliquotHistory: [],
@@ -1669,11 +1704,11 @@ function resetApp() {
     generateRacks();
     closeAllContainers();
 
-    showNotification("Приложение сброшено", "info");
+    showNotification("Данные текущей сессии сброшены", "info");
   }
 }
 
-// ===== Горячие клавиши =====
+// ===== Горячие клавиши (без изменений) =====
 document.addEventListener("keydown", (e) => {
   // Ctrl+B - открыть модуль баркодов
   if (e.ctrlKey && e.key === "b") {
@@ -1999,6 +2034,12 @@ document.addEventListener("DOMContentLoaded", () => {
     initFloatingTests();
   }, 1000);
 });
+
+/// my test function //
+
+function testRocheModule() {
+  showModule("test-module");
+}
 
 // ===== Экспорт функций в глобальную область видимости =====
 // Нужно для обработчиков onclick в HTML

@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 import win32print
 import win32api
 import win32con
@@ -31,17 +32,17 @@ class PrintManager():
                 win32print.ClosePrinter(hPrinter)
                 retry -= 1
             except Exception as e:
-                print(f"{self.default_printer} не отвечает.")
+                print(e)
                 break
+        return True  # Заглушка для отсутствующего принтера
 
 
 class ZPL:
-    def __init__(self, mode=False, text=False,
+    def __init__(self, mode=False, text=False, code="B2N",
                  lot=False, size='m', anchor="c", volume=False,
                  barcode=False, number=False, data=False, **kwargs):
 
-        if "code" in kwargs:
-            self.code = kwargs["code"] or "B2N"
+        self.code = code
 
         self.start = "^XA^PW406^LL360^LS0"
         self.mode = mode
