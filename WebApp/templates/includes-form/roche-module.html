@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Roche Module -->
+    <div id="roche-module" class="container-modern">
+      <div class="container-header">
+        <div class="container-icon">
+          <i class="fas fa-microscope"></i>
+        </div>
+        <div class="container-title">
+          <h2>Roche Анализаторы</h2>
+          <p>Визуализация работы линий и сортеров</p>
+        </div>
+      </div>
+
+      <div class="container-content roche-container-content">
+        <!-- Левая панель - настройки -->
+        <div class="roche-left-panel">
+          <!-- Режимы сортеров -->
+          <div class="cycle-mode">
+            <div>
+              <h3><i class="fas fa-cogs"></i> Режимы сортеров</h3>
+            </div>
+            <div class="button-group">
+              <button
+                class="roche-mode-btn active"
+                onclick="setRocheMode('routine')"
+              >
+                Routine-AUE
+              </button>
+              <button class="roche-mode-btn" onclick="setRocheMode('mode1')">
+                CEE+EEEE1+CC
+              </button>
+              <button class="roche-mode-btn" onclick="setRocheMode('mode2')">
+                EEEE2+CCC
+              </button>
+            </div>
+          </div>
+
+          <!-- Пути доставки реков -->
+          <div class="cycle-mode">
+            <div>
+              <h3><i class="fas fa-route"></i> Пути доставки реков</h3>
+            </div>
+            <div class="button-group rack-buttons">
+              <button class="rack-btn">CCM-2</button>
+              <button class="rack-btn">CCM3</button>
+              <button class="rack-btn">CCM4</button>
+              <button class="rack-btn">C2+C5</button>
+              <button class="rack-btn">C3+C5</button>
+              <button class="rack-btn active">C4E</button>
+              <button class="rack-btn">C4C</button>
+              <button class="rack-btn">CCM7</button>
+            </div>
+          </div>
+
+          <!-- Информационная панель -->
+          <div class="roche-info-panel">
+            <h4><i class="fas fa-info-circle"></i> Статус системы</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Активные линии:</div>
+                <div class="info-value" id="active-lines">4</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Сортеры:</div>
+                <div class="info-value" id="active-sorters">2</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Пробы/час:</div>
+                <div class="info-value" id="samples-hour">120</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Загрузка:</div>
+                <div class="info-value" id="system-load">78%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Правая панель - визуализация -->
+        <div class="roche-visualization">
+          <div class="visual">
+            <!-- Левая колонка - сортеры -->
+            <div class="block-analyze">
+              <!-- Линия CC -->
+              <div class="analyze active-line" id="line-cc">
+                <div class="analyze-header">
+                  <div class="analyze-title">
+                    <h5><i class="fas fa-conveyor-belt"></i> Линия CC</h5>
+                  </div>
+                  <div class="analyze-status active">Active</div>
+                </div>
+                <div class="analyze-segment">
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                </div>
+              </div>
+              <!-- Сортер S3 -->
+              <div class="sorter" id="sorter-s3">
+                <div class="sorter-header">
+                  <div class="sorter-title">
+                    <h6><i class="fas fa-robot"></i> P612 Sorter S3</h6>
+                  </div>
+                  <div class="sorter-status active">Online</div>
+                </div>
+                <div class="work-group">
+                  <div class="input-area">
+                    <div class="zone-label">Input</div>
+                    <div class="zone-content" id="input-s3">
+                      <!-- Входные пробы -->
+                    </div>
+                  </div>
+                  <div class="alicvote-zone">
+                    <div class="zone-label">Aliquot</div>
+                    <div class="zone-content" id="aliquot-s3">
+                      <!-- Аликвоты -->
+                    </div>
+                  </div>
+                  <div class="output-zone">
+                    <div class="zone-label">Output</div>
+                    <div class="roche-container" id="roche-container-s3">
+                      <!-- Визуализация Roche -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Сортер S2 -->
+              <div class="sorter" id="sorter-s2">
+                <div class="sorter-header">
+                  <div class="sorter-title">
+                    <h6><i class="fas fa-robot"></i> P612 Sorter S2</h6>
+                  </div>
+                  <div class="sorter-status active">Online</div>
+                </div>
+                <div class="work-group">
+                  <div class="input-area">
+                    <div class="zone-label">Input</div>
+                    <div class="zone-content" id="input-s2">
+                      <!-- Входные пробы -->
+                    </div>
+                  </div>
+                  <div class="alicvote-zone">
+                    <div class="zone-label">Aliquot</div>
+                    <div class="zone-content" id="aliquot-s2">
+                      <!-- Аликвоты -->
+                    </div>
+                  </div>
+                  <div class="output-zone">
+                    <div class="zone-label">Output</div>
+                    <div class="roche-container" id="roche-container-s2">
+                      <!-- Визуализация Roche -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Правая колонка - линии анализа -->
+            <div class="block-analyze">
+              <!-- Линия EEEE1 -->
+              <div class="analyze active-line" id="line-e1">
+                <div class="analyze-header">
+                  <div class="analyze-title">
+                    <h5><i class="fas fa-conveyor-belt"></i> Линия EEEE1</h5>
+                  </div>
+                  <div class="analyze-status active">Active</div>
+                </div>
+                <div class="analyze-segment">
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                </div>
+              </div>
+
+              <!-- Линия EEEE2 -->
+              <div class="analyze active-line" id="line-e2">
+                <div class="analyze-header">
+                  <div class="analyze-title">
+                    <h5><i class="fas fa-conveyor-belt"></i> Линия EEEE2</h5>
+                  </div>
+                  <div class="analyze-status active">Active</div>
+                </div>
+                <div class="analyze-segment">
+                  <div class="segment"></div>
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                  <div class="segment active"></div>
+                </div>
+              </div>
+
+              <!-- Линия CEEE -->
+              <div class="analyze" id="line-ce">
+                <div class="analyze-header">
+                  <div class="analyze-title">
+                    <h5><i class="fas fa-conveyor-belt"></i> Линия CEEE</h5>
+                  </div>
+                  <div class="analyze-status">Standby</div>
+                </div>
+                <div class="analyze-segment">
+                  <div class="segment"></div>
+                  <div class="segment"></div>
+                  <div class="segment"></div>
+                  <div class="segment"></div>
+                </div>
+              </div>
+
+              <!-- Линия CCC -->
+              <div class="analyze" id="line-c1">
+                <div class="analyze-header">
+                  <div class="analyze-title">
+                    <h5><i class="fas fa-conveyor-belt"></i> Линия CCC</h5>
+                  </div>
+                  <div class="analyze-status active">Active</div>
+                </div>
+                <div class="analyze-segment">
+                  <div class="segment active"></div>
+                  <div class="segment"></div>
+                  <div class="segment active"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Описание режима -->
+          <div class="description" id="roche-description">
+            <h4><i class="fas fa-info-circle"></i> Режим: Routine-AUE</h4>
+            <p><strong>Активные линии:</strong> EEEE1, EEEE2, CCC</p>
+            <p><strong>Аналиты сортирующиеся в зону Roche:</strong></p>
+            <div class="test-list">
+              <button class="test-button">Zinc</button>
+              <button class="test-button">Lpa</button>
+              <button class="test-button">Cu</button>
+              <button class="test-button">CHE</button>
+              <button class="test-button">LIP</button>
+              <button class="test-button">CK-Total</button>
+              <button class="test-button">C-peptid</button>
+              <button class="test-button">AFP</button>
+            </div>
+            <p><strong>Всего активных элементов:</strong> 3 из 4</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

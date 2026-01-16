@@ -41,6 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
       draggable: true,
     });
     carousels.push(carousel2);
+
+    const carousel3 = new Carousel("carousel-test", {
+      autoplay: true,
+      autoplaySpeed: 4000,
+      slidesToShow: 1,
+      infinite: true,
+      dots: true,
+      arrows: true,
+      draggable: true,
+    });
+    carousels.push(carousel3);
   });
 
   setTimeout(() => {
@@ -241,11 +252,11 @@ function selectMode(mode) {
   }
 }
 
-async function sendToDjango(barcode, mode) {
-  console.log(`📤 Отправка данных: ${barcode}, ${mode}`);
+async function sendToDjango(data) {
+  console.log(`📤 Отправка данных: ${JSON.stringify(data)}`);
 
   // Формируем данные для отправки
-  const dataToSend = {
+  const dataToSend = data || {
     type: "barcode",
     barcode: barcode,
     mode: mode || "standard",
@@ -322,11 +333,10 @@ async function saveBarcode() {
 
   // Создаем объект для текущей сессии
   const barcodeObject = {
-    id: Date.now(),
+    type: "barcode",
+    barcode: barcode,
     number: barcode,
     mode: state.barcodeMode,
-    timestamp: new Date().toISOString(),
-    date: new Date().toLocaleString("ru-RU"),
   };
 
   // Добавляем в историю текущей сессии
@@ -334,7 +344,7 @@ async function saveBarcode() {
 
   try {
     console.log("🔄 Отправка на Django сервер...");
-    const serverResponse = await sendToDjango(barcode, state.barcodeMode);
+    const serverResponse = await sendToDjango(barcodeObject);
     console.log("✅ Данные успешно отправлены на сервер:", serverResponse);
 
     showNotification(`✅ Проба "${barcode}" отправлена на печать!`, "success");
@@ -420,7 +430,9 @@ function updateBarcodeDisplay() {
       (item) => `
         <div class="history-item">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 18px; font-weight: 600;">${item.number}</div>
+            <div style="font-size: 18px; font-weight: 600;">ID : ${
+              item.number
+            }</div>
             <div style="display: flex; gap: 8px;">
               <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
                 ${getModeDisplayName(item.mode)}
@@ -431,12 +443,7 @@ function updateBarcodeDisplay() {
             </div>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="flex: 1;" onclick="reprintBarcode('${
-              item.id
-            }')">
-              <i class="fas fa-print"></i> Печать
-            </button>
-            <button class="btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
+            <button class="btn" style="flex: 0.5; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
               item.id
             }')">
               <i class="fas fa-trash"></i> Удалить
@@ -492,7 +499,7 @@ function deleteBarcode(id) {
   showNotification("Проба удалена из текущей сессии", "success");
 }
 
-function specialLabel(type) {
+async function specialLabel(type) {
   const labelTemplates = {
     saliva: { type: "text", text: "Sluna", anchor: "c", size: "l" },
     virtual: {
@@ -514,14 +521,7 @@ function specialLabel(type) {
 
   const template = labelTemplates[type];
   if (template) {
-    copyToClipboard(JSON.stringify(template, null, 2))
-      .then(() => {
-        showNotification(`Этикетка "${type}" скопирована в буфер`, "success");
-      })
-      .catch((err) => {
-        console.error("Ошибка копирования:", err);
-        showNotification("Ошибка копирования", "error");
-      });
+    const response = await sendToDjango(template);
   }
 }
 
@@ -1125,10 +1125,25 @@ function copyToClipboard(text) {
 }
 
 function showNotification(message, type = "info") {
-  const notification = document.getElementById("notification");
-  if (!notification) return;
+  // Создаем контейнер для уведомлений, если его нет
+  let notificationContainer = document.getElementById("notification-container");
 
-  notification.innerHTML = "";
+  if (!notificationContainer) {
+    notificationContainer = document.createElement("div");
+    notificationContainer.id = "notification-container";
+    notificationContainer.style.cssText = `
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      width: 400px;
+      max-width: calc(100vw - 40px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    `;
+    document.body.appendChild(notificationContainer);
+  }
 
   const icon =
     {
@@ -1146,58 +1161,259 @@ function showNotification(message, type = "info") {
       warning: "#f59e0b",
     }[type] || "#667eea";
 
+  const bgColor =
+    {
+      success: "rgba(16, 185, 129, 0.1)",
+      error: "rgba(239, 68, 68, 0.1)",
+      info: "rgba(102, 126, 234, 0.1)",
+      warning: "rgba(245, 158, 11, 0.1)",
+    }[type] || "rgba(102, 126, 234, 0.1)";
+
+  const borderColor =
+    {
+      success: "rgba(16, 185, 129, 0.3)",
+      error: "rgba(239, 68, 68, 0.3)",
+      info: "rgba(102, 126, 234, 0.3)",
+      warning: "rgba(245, 158, 11, 0.3)",
+    }[type] || "rgba(102, 126, 234, 0.3)";
+
   const notificationItem = document.createElement("div");
   notificationItem.className = "notification-item";
   notificationItem.style.cssText = `
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border: 1px solid ${color}30;
+    border: 1px solid ${borderColor};
     border-left: 4px solid ${color};
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+  `;
+
+  // Добавляем градиентный эффект для фона
+  const gradientOverlay = document.createElement("div");
+  gradientOverlay.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${bgColor};
+    border-radius: var(--radius-lg);
+    z-index: -1;
+    opacity: 0.3;
+  `;
+  notificationItem.appendChild(gradientOverlay);
+
+  const iconContainer = document.createElement("div");
+  iconContainer.style.cssText = `
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background: ${bgColor};
+    border: 1px solid ${borderColor};
     border-radius: var(--radius-md);
-    padding: 16px;
-    margin-bottom: 10px;
-    animation: slideInRight 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    font-size: 20px;
+    color: ${color};
   `;
 
-  notificationItem.innerHTML = `
-    <i class="fas ${icon}" style="color: ${color}; font-size: 20px;"></i>
-    <div style="flex: 1;">
-      <div style="font-weight: 600; color: var(--text-primary);">${message}</div>
-      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-        ${new Date().toLocaleTimeString("ru-RU", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </div>
-    </div>
-    <button onclick="this.parentElement.remove()" style="
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 4px;
-      border-radius: var(--radius-sm);
-    ">
-      <i class="fas fa-times"></i>
-    </button>
+  const iconElement = document.createElement("i");
+  iconElement.className = `fas ${icon}`;
+  iconContainer.appendChild(iconElement);
+
+  const contentContainer = document.createElement("div");
+  contentContainer.style.cssText = `
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   `;
 
-  notification.appendChild(notificationItem);
+  const messageElement = document.createElement("div");
+  messageElement.style.cssText = `
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.4;
+  `;
+  messageElement.textContent = message;
+
+  const timeElement = document.createElement("div");
+  timeElement.style.cssText = `
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+
+  const timeIcon = document.createElement("i");
+  timeIcon.className = "far fa-clock";
+
+  const timeText = document.createElement("span");
+  timeText.textContent = new Date().toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  timeElement.appendChild(timeIcon);
+  timeElement.appendChild(timeText);
+
+  const closeButton = document.createElement("button");
+  closeButton.style.cssText = `
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    margin-left: auto;
+    align-self: flex-start;
+    min-width: 36px;
+    min-height: 36px;
+  `;
+
+  const closeIcon = document.createElement("i");
+  closeIcon.className = "fas fa-times";
+
+  closeButton.appendChild(closeIcon);
+  closeButton.addEventListener("mouseenter", () => {
+    closeButton.style.background = "rgba(239, 68, 68, 0.1)";
+    closeButton.style.borderColor = "#ef4444";
+    closeIcon.style.color = "#ef4444";
+  });
+
+  closeButton.addEventListener("mouseleave", () => {
+    closeButton.style.background = "rgba(255, 255, 255, 0.05)";
+    closeButton.style.borderColor = "var(--border-color)";
+    closeIcon.style.color = "var(--text-secondary)";
+  });
+
+  closeButton.addEventListener("click", () => {
+    removeNotification(notificationItem);
+  });
+
+  // Собираем элементы
+  contentContainer.appendChild(messageElement);
+  contentContainer.appendChild(timeElement);
+
+  notificationItem.appendChild(iconContainer);
+  notificationItem.appendChild(contentContainer);
+  notificationItem.appendChild(closeButton);
+
+  // Добавляем уведомление в контейнер
+  notificationContainer.insertBefore(
+    notificationItem,
+    notificationContainer.firstChild
+  );
 
   // Автоматическое удаление через 5 секунд
-  setTimeout(() => {
-    if (notificationItem.parentElement) {
-      notificationItem.style.animation = "slideOutRight 0.3s ease";
-      setTimeout(() => {
-        if (notificationItem.parentElement) {
-          notificationItem.remove();
-        }
-      }, 300);
+  const autoRemoveTimeout = setTimeout(() => {
+    removeNotification(notificationItem);
+  }, 5000);
+
+  // Функция для удаления уведомления с анимацией
+  function removeNotification(element) {
+    if (!element.parentElement) return;
+
+    clearTimeout(autoRemoveTimeout);
+
+    element.style.animation = "slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+    element.style.opacity = "0";
+    element.style.transform = "translateX(100%)";
+
+    setTimeout(() => {
+      if (element.parentElement) {
+        element.parentElement.removeChild(element);
+      }
+
+      // Удаляем контейнер если пустой
+      if (notificationContainer.children.length === 0) {
+        notificationContainer.remove();
+      }
+    }, 300);
+  }
+
+  // Ограничиваем количество уведомлений
+  const maxNotifications = 5;
+  const notifications =
+    notificationContainer.querySelectorAll(".notification-item");
+  if (notifications.length > maxNotifications) {
+    const oldNotifications = Array.from(notifications).slice(maxNotifications);
+    oldNotifications.forEach((notification) => {
+      if (notification !== notificationItem) {
+        removeNotification(notification);
+      }
+    });
+  }
+
+  // Добавляем анимацию при наведении
+  notificationItem.addEventListener("mouseenter", () => {
+    notificationItem.style.transform = "translateX(-4px)";
+    notificationItem.style.boxShadow = "var(--shadow-lg)";
+  });
+
+  notificationItem.addEventListener("mouseleave", () => {
+    notificationItem.style.transform = "";
+    notificationItem.style.boxShadow = "var(--shadow-md)";
+  });
+}
+
+// Добавляем стили анимации в документ если их нет
+if (!document.querySelector("#notification-animations")) {
+  const style = document.createElement("style");
+  style.id = "notification-animations";
+  style.textContent = `
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
-  }, 2000);
+    
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    .notification-item {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .notification-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function getRussianPlural(number, one, two, five) {
@@ -2028,17 +2244,11 @@ function toggleTestsAnimation() {
   }
 }
 
-// Инициализация при загрузке страницы
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    initFloatingTests();
-  }, 1000);
-});
-
 /// my test function //
 
 function testRocheModule() {
   showModule("test-module");
+  quizSystem = new TestQuizSystem();
 }
 
 // ===== Экспорт функций в глобальную область видимости =====

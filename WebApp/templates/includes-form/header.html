@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header__logo">
+        <div class="logo-icon">
+          <i class="fas fa-flask"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Гемотест Хелпер</h1>
+          <span>Лабораторная система</span>
+        </div>
+      </div>
+
+      <nav class="header__nav">
+        <button class="nav-btn active" onclick="showModule('home')">
+          <i class="fas fa-home"></i>
+          <span>Главная</span>
+        </button>
+        <button class="nav-btn" onclick="showModule('barcode')">
+          <i class="fas fa-barcode"></i>
+          <span>Баркоды</span>
+        </button>
+        <button class="nav-btn" onclick="showModule('reagent')">
+          <i class="fas fa-vial"></i>
+          <span>Гемостаз</span>
+        </button>
+        <button class="nav-btn" onclick="showModule('roche')">
+          <i class="fas fa-microscope"></i>
+          <span>Roche</span>
+        </button>
+        <button class="nav-btn" onclick="showModule('calculations')">
+          <i class="fas fa-calculator"></i>
+          <span>Расчеты</span>
+        </button>
+        <button class="nav-btn" onclick="showModule('aliquots')">
+          <i class="fas fa-vial-virus"></i>
+          <span>Аликвоты</span>
+        </button>
+      </nav>
+
+      <button class="mobile-menu-btn">
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+  </body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <section class="carousel-section" id="carousel1">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-rocket"></i>
+          Доступные модули
+        </h2>
+        <p class="section-subtitle">
+          Выберите необходимый инструмент для работы
+        </p>
+
+        <!-- Контролы карусели -->
+        <div class="carousel-controls">
+          <button class="carousel-btn prev" id="carouselPrev">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="carousel-indicators" id="carouselIndicators">
+            <!-- Индикаторы будут добавлены через JS -->
+          </div>
+          <button class="carousel-btn next" id="carouselNext">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Карусель контейнер -->
+      <div class="carousel-container">
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Карточка 1 - Баркоды -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div class="module-badge">Популярное</div>
+                <div class="module-icon">
+                  <i class="fas fa-barcode"></i>
+                </div>
+                <h3 class="module-card__title">Баркоды и этикетки</h3>
+                <p class="module-card__description">
+                  Печать этикеток с поддержкой всех режимов анализа.
+                  Автоматическое форматирование и оптимизация.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Testosterone 1:10</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>A-TPO, A-THSR</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Кастомные режимы</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button class="module-btn" onclick="showModule('barcode')">
+                  <i class="fas fa-arrow-right"></i>
+                  Открыть модуль
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 2 - Гемостаз -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div
+                  class="module-badge"
+                  style="background: var(--danger-gradient)"
+                >
+                  Тренажер
+                </div>
+                <div
+                  class="module-icon"
+                  style="background: var(--danger-gradient)"
+                >
+                  <i class="fas fa-vial"></i>
+                </div>
+                <h3 class="module-card__title">Гемостаз ACL Top</h3>
+                <p class="module-card__description">
+                  Интерактивный тренажер для работы с анализатором ACL Top 700.
+                  Реалистичная симуляция процессов.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Реалистичная симуляция</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Все типы реагентов</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Обучение и практика</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button
+                  class="module-btn"
+                  style="background: var(--danger-gradient)"
+                  onclick="showModule('reagent')"
+                >
+                  <i class="fas fa-flask"></i>
+                  Начать тренировку
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 3 - Roche -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div
+                  class="module-badge"
+                  style="background: var(--success-gradient)"
+                >
+                  Визуализация
+                </div>
+                <div
+                  class="module-icon"
+                  style="background: var(--success-gradient)"
+                >
+                  <i class="fas fa-microscope"></i>
+                </div>
+                <h3 class="module-card__title">Roche Анализаторы</h3>
+                <p class="module-card__description">
+                  3D визуализация работы линий Roche. Интерактивное обучение и
+                  настройка маршрутов.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>CCM Маршруты</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Визуализация сортеров</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Настройки линий</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button
+                  class="module-btn"
+                  style="background: var(--success-gradient)"
+                  onclick="showModule('roche')"
+                >
+                  <i class="fas fa-play-circle"></i>
+                  Исследовать
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 4 - Расчеты -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div
+                  class="module-badge"
+                  style="background: var(--warning-gradient)"
+                >
+                  Инструменты
+                </div>
+                <div
+                  class="module-icon"
+                  style="background: var(--warning-gradient)"
+                >
+                  <i class="fas fa-calculator"></i>
+                </div>
+                <h3 class="module-card__title">Лабораторные расчеты</h3>
+                <p class="module-card__description">
+                  Продвинутые инструменты для сложных расчетов. Автоматизация
+                  вычислений и визуализация результатов.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Приготовление растворов</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Концентрации и разведения</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Автоматические расчеты</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button
+                  class="module-btn"
+                  style="background: var(--warning-gradient)"
+                  onclick="showModule('calculations')"
+                >
+                  <i class="fas fa-calculator"></i>
+                  Калькулятор
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 5 - Аликвоты -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div
+                  class="module-badge"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #9b59b6 0%,
+                      #8e44ad 100%
+                    );
+                  "
+                >
+                  Управление
+                </div>
+                <div
+                  class="module-icon"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #9b59b6 0%,
+                      #8e44ad 100%
+                    );
+                  "
+                >
+                  <i class="fas fa-vial-virus"></i>
+                </div>
+                <h3 class="module-card__title">Аликвоты и образцы</h3>
+                <p class="module-card__description">
+                  Система управления образцами и аликвотами. Печать серийных
+                  этикеток, контроль партий.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Серийная печать</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>База образцов</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Архивация и поиск</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button
+                  class="module-btn"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #9b59b6 0%,
+                      #8e44ad 100%
+                    );
+                  "
+                  onclick="showModule('aliquots')"
+                >
+                  <i class="fas fa-sliders-h"></i>
+                  Управление
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

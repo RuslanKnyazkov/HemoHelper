@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторные расчеты</title>
+    <link rel="stylesheet" href="{% static 'css/roshe.css'%}" />
+  </head>
+  <body>
+    <div id="test-module" class="container-modern">
+      <div class="container-content" id="test-container">
+        <div class="test-quiz-container glass-effect">
+            <div class="quiz-stats">
+              <div class="stat-item">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">Правильно</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="incorrectCount">0</div>
+                <div class="stat-label">Ошибки</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Всего</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timer display -->
+          <div class="timer-display">
+            <div class="timer-label">Время на ответ</div>
+            <div class="timer-value" id="timerDisplay">17 сек</div>
+          </div>
+
+          <!-- Current test display -->
+          <div class="current-test-display">
+            <div class="test-code-label">Код теста</div>
+            <div class="test-code" id="currentTestCode">АЛС</div>
+            <div class="test-name" id="currentTestName">Анализ крови общий</div>
+          </div>
+
+          <!-- Answer options -->
+          <div class="answer-options">
+            <div class="options-label">
+              <i class="fas fa-mouse-pointer"></i>
+              Выберите все правильные линии (можно несколько)
+            </div>
+
+            <div class="options-grid">
+              <button class="option-btn option-e1" data-line="E1">
+                <div class="line-code">E1</div>
+                <div class="line-key">Клавиша 1</div>
+                <div class="line-check" id="e1-selected">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+              </button>
+
+              <button class="option-btn option-e2" data-line="E2">
+                <div class="line-code">E2</div>
+                <div class="line-key">Клавиша 2</div>
+                <div class="line-check" id="e2-selected">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+              </button>
+
+              <button class="option-btn option-ce" data-line="CE">
+                <div class="line-code">CE</div>
+                <div class="line-key">Клавиша 3</div>
+                <div class="line-check" id="ce-selected">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feedback message -->
+          <div class="feedback-message" id="feedbackMessage"></div>
+
+          <!-- Action buttons -->
+          <div class="action-buttons">
+            <button id="skipTestBtn" class="btn btn-secondary">
+              <i class="fas fa-forward-fast"></i>
+              Пропустить тест
+              <span class="key-hint">(Пробел)</span>
+            </button>
+
+            <button id="checkAnswerBtn" class="btn btn-primary">
+              <i class="fas fa-check-circle"></i>
+              Проверить ответ
+              <span class="key-hint">(Enter)</span>
+            </button>
+
+            <button id="resetSelectionBtn" class="btn btn-secondary">
+              <i class="fas fa-undo"></i>
+              Сбросить выбор
+              <span class="key-hint">(R)</span>
+            </button>
+          </div>
+
+          <!-- Quick stats -->
+          <div class="quiz-quick-stats">
+            <div class="quick-stats-grid">
+              <div class="quick-stat">
+                <div class="quick-stat-label">Точность ответов</div>
+                <div class="quick-stat-value" id="accuracyRate">0%</div>
+              </div>
+
+              <div class="quick-stat">
+                <div class="quick-stat-label">Текущая серия</div>
+                <div class="quick-stat-value" id="streakCount">0</div>
+              </div>
+
+              <div class="quick-stat">
+                <div class="quick-stat-label">Выбрано линий</div>
+                <div class="quick-stat-value" id="selectedCount">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // ===== Система тестирования лабораторных тестов =====
+
+      // База данных тестов с распределением по линиям
+      const testsDatabase = [
+        // Только на линии E1
+        {
+          code: "A-CCP",
+          name: "Анти-ЦЦП антитела",
+          lines: ["E1"],
+        },
+        {
+          code: "RF",
+          name: "Ревматоидный фактор",
+          lines: ["E1"],
+        },
+        {
+          code: "ANA",
+          name: "Антинуклеарные антитела",
+          lines: ["E1"],
+        },
+        {
+          code: "ASLO",
+          name: "Антистрептолизин-О",
+          lines: ["E1"],
+        },
+
+        // Только на линии E2
+        {
+          code: "HBVDNA",
+          name: "ДНК вируса гепатита В",
+          lines: ["E2"],
+        },
+        {
+          code: "HCVRNA",
+          name: "РНК вируса гепатита С",
+          lines: ["E2"],
+        },
+        {
+          code: "HIVRNA",
+          name: "РНК ВИЧ",
+          lines: ["E2"],
+        },
+        {
+          code: "CMVDNA",
+          name: "ДНК цитомегаловируса",
+          lines: ["E2"],
+        },
+
+        // На обеих линиях E1 и E2
+        {
+          code: "TSH",
+          name: "Тиреотропный гормон",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "FT4",
+          name: "Тироксин свободный",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "FT3",
+          name: "Трийодтиронин свободный",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "Anti-TPO",
+          name: "Антитела к тиреопероксидазе",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "Cortisol",
+          name: "Кортизол",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "Testosterone",
+          name: "Тестостерон",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "Estradiol",
+          name: "Эстрадиол",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "Progesterone",
+          name: "Прогестерон",
+          lines: ["E1", "E2"],
+        },
+
+        // Только на линии CE
+        {
+          code: "CTscan",
+          name: "Компьютерная томография",
+          lines: ["CE"],
+        },
+        {
+          code: "MRI",
+          name: "Магнитно-резонансная томография",
+          lines: ["CE"],
+        },
+        {
+          code: "PET-CT",
+          name: "ПЭТ-КТ исследование",
+          lines: ["CE"],
+        },
+        {
+          code: "Angio",
+          name: "Ангиография",
+          lines: ["CE"],
+        },
+
+        // На всех линиях
+        {
+          code: "CBC",
+          name: "Общий анализ крови",
+          lines: ["E1", "E2", "CE"],
+        },
+        {
+          code: "UA",
+          name: "Общий анализ мочи",
+          lines: ["E1", "E2", "CE"],
+        },
+        {
+          code: "Glucose",
+          name: "Глюкоза крови",
+          lines: ["E1", "E2", "CE"],
+        },
+        {
+          code: "CRP",
+          name: "С-реактивный белок",
+          lines: ["E1", "E2", "CE"],
+        },
+        {
+          code: "ESR",
+          name: "СОЭ",
+          lines: ["E1", "E2", "CE"],
+        },
+
+        // На E1 и CE
+        {
+          code: "Biochem",
+          name: "Биохимический профиль",
+          lines: ["E1", "CE"],
+        },
+        {
+          code: "Coagulation",
+          name: "Коагулограмма",
+          lines: ["E1", "CE"],
+        },
+        {
+          code: "Electrolytes",
+          name: "Электролиты",
+          lines: ["E1", "CE"],
+        },
+
+        // На E2 и CE
+        {
+          code: "TumorMarkers",
+          name: "Онкомаркеры",
+          lines: ["E2", "CE"],
+        },
+        {
+          code: "Allergy",
+          name: "Аллергопанель",
+          lines: ["E2", "CE"],
+        },
+        {
+          code: "Immunoglobulins",
+          name: "Иммуноглобулины",
+          lines: ["E2", "CE"],
+        },
+      ];
+
+      // Класс системы тестирования
+      class TestQuizSystem {
+        constructor() {
+          this.currentTest = null;
+          this.selectedLines = new Set(); // Используем Set для хранения выбранных линий
+          this.stats = {
+            correct: 0,
+            incorrect: 0,
+            total: 0,
+            streak: 0,
+            maxStreak: 0,
+          };
+
+          this.timeLimit = 25; // 17 секунд на ответ
+          this.timer = null;
+          this.timeLeft = this.timeLimit;
+          this.filter = "all";
+
+          this.initialize();
+        }
+
+        initialize() {
+          // Находим все элементы
+          this.elements = {
+            testCode: document.getElementById("currentTestCode"),
+            testName: document.getElementById("currentTestName"),
+            correctCount: document.getElementById("correctCount"),
+            incorrectCount: document.getElementById("incorrectCount"),
+            totalCount: document.getElementById("totalCount"),
+            accuracyRate: document.getElementById("accuracyRate"),
+            streakCount: document.getElementById("streakCount"),
+            selectedCount: document.getElementById("selectedCount"),
+            timerDisplay: document.getElementById("timerDisplay"),
+            feedbackMessage: document.getElementById("feedbackMessage"),
+            optionButtons: document.querySelectorAll(".option-btn"),
+            checkAnswerBtn: document.getElementById("checkAnswerBtn"),
+            skipTestBtn: document.getElementById("skipTestBtn"),
+            resetSelectionBtn: document.getElementById("resetSelectionBtn"),
+            filterButtons: document.querySelectorAll(
+              ".control-btn[data-filter]"),
+            
+          };
+
+          // Назначаем обработчики
+          this.setupEventListeners();
+
+          // Запускаем первый тест
+          this.generateNewTest();
+
+          // Запускаем таймер
+          this.startTimer();
+        }
+
+        setupEventListeners() {
+          // Кнопки выбора линии (множественный выбор)
+          this.elements.optionButtons.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              this.toggleLine(e.currentTarget.dataset.line);
+            });
+          });
+
+          // Кнопка проверки ответа
+          this.elements.checkAnswerBtn.addEventListener("click", () => {
+            this.checkAnswer();
+          });
+
+          // Кнопка пропуска теста
+          this.elements.skipTestBtn.addEventListener("click", () => {
+            this.skipTest();
+          });
+
+          // Кнопка сброса выбора
+          this.elements.resetSelectionBtn.addEventListener("click", () => {
+            this.resetSelection();
+          });
+
+          // Кнопки фильтрации
+          this.elements.filterButtons.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              this.applyFilter(e.currentTarget.dataset.filter);
+            });
+          });
+
+          // Горячие клавиши
+          document.addEventListener("keydown", (e) => {
+            switch (e.key) {
+              case "1":
+                this.toggleLine("E1");
+                break;
+              case "2":
+                this.toggleLine("E2");
+                break;
+              case "3":
+                this.toggleLine("CE");
+                break;
+              case " ":
+                e.preventDefault();
+                this.skipTest();
+                break;
+              case "Enter":
+                e.preventDefault();
+                this.checkAnswer();
+                break;
+              case "r":
+              case "R":
+                e.preventDefault();
+                this.resetSelection();
+                break;
+            }
+          });
+        }
+
+        toggleLine(line) {
+          if (this.selectedLines.has(line)) {
+            // Удаляем линию, если она уже выбрана
+            this.selectedLines.delete(line);
+            document.querySelector(
+              `#${line.toLowerCase()}-selected`
+            ).style.display = "none";
+            document.querySelector(
+              `.option-${line.toLowerCase()}`
+            ).style.background = `rgba(${
+              line === "E1"
+                ? "231, 76, 60"
+                : line === "E2"
+                ? "52, 152, 219"
+                : "46, 204, 113"
+            }, 0.1)`;
+          } else {
+            // Добавляем линию
+            this.selectedLines.add(line);
+            document.querySelector(
+              `#${line.toLowerCase()}-selected`
+            ).style.display = "block";
+            document.querySelector(
+              `.option-${line.toLowerCase()}`
+            ).style.background = `rgba(${
+              line === "E1"
+                ? "231, 76, 60"
+                : line === "E2"
+                ? "52, 152, 219"
+                : "46, 204, 113"
+            }, 0.3)`;
+          }
+
+          // Обновляем счетчик выбранных линий
+          this.elements.selectedCount.textContent = this.selectedLines.size;
+        }
+
+        resetSelection() {
+          this.selectedLines.clear();
+          this.elements.optionButtons.forEach((btn) => {
+            const line = btn.dataset.line;
+            document.querySelector(
+              `#${line.toLowerCase()}-selected`
+            ).style.display = "none";
+            btn.style.background = `rgba(${
+              line === "E1"
+                ? "231, 76, 60"
+                : line === "E2"
+                ? "52, 152, 219"
+                : "46, 204, 113"
+            }, 0.1)`;
+          });
+          this.elements.selectedCount.textContent = "0";
+        }
+
+        generateNewTest(filter = "all") {
+          // Фильтруем тесты
+          let availableTests = testsDatabase;
+
+          if (filter === "e1") {
+            availableTests = testsDatabase.filter((test) =>
+              test.lines.includes("E1")
+            );
+          } else if (filter === "e2") {
+            availableTests = testsDatabase.filter((test) =>
+              test.lines.includes("E2")
+            );
+          } else if (filter === "ce") {
+            availableTests = testsDatabase.filter((test) =>
+              test.lines.includes("CE")
+            );
+          }
+
+          // Выбираем случайный тест
+          if (availableTests.length > 0) {
+            this.currentTest =
+              availableTests[Math.floor(Math.random() * availableTests.length)];
+
+            // Обновляем отображение
+            this.elements.testCode.textContent = this.currentTest.code;
+            this.elements.testName.textContent = this.currentTest.name;
+
+            // Сбрасываем выбор
+            this.resetSelection();
+
+            // Сбрасываем сообщение
+            this.elements.feedbackMessage.style.opacity = "0";
+            this.elements.feedbackMessage.textContent = "";
+
+            // Сбрасываем таймер
+            this.resetTimer();
+          }
+        }
+
+        checkAnswer() {
+          if (!this.currentTest || this.selectedLines.size === 0) {
+            this.showFeedback("Выберите хотя бы одну линию!", "warning");
+            return;
+          }
+
+          // Создаем массивы для сравнения (приводим к массиву и сортируем)
+          const selectedLinesArray = Array.from(this.selectedLines).sort();
+          const correctLinesArray = this.currentTest.lines.sort();
+
+          // Сравниваем массивы
+          const isCorrect =
+            selectedLinesArray.length === correctLinesArray.length &&
+            selectedLinesArray.every(
+              (value, index) => value === correctLinesArray[index]
+            );
+
+          // Обновляем статистику
+          this.stats.total++;
+
+          if (isCorrect) {
+            this.stats.correct++;
+            this.stats.streak++;
+            if (this.stats.streak > this.stats.maxStreak) {
+              this.stats.maxStreak = this.stats.streak;
+            }
+            this.showFeedback("✅ Правильно!", "success");
+          } else {
+            this.stats.incorrect++;
+            this.stats.streak = 0;
+
+            // Показываем правильные линии
+            const correctLines = this.currentTest.lines.join(", ");
+            const selectedLines = Array.from(this.selectedLines).join(", ");
+            this.showFeedback(
+              `❌ Неверно! Вы выбрали: ${selectedLines}. Правильные линии: ${correctLines}`,
+              "error"
+            );
+          }
+
+          // Обновляем отображение статистики
+          this.updateStatsDisplay();
+
+          // Автоматически переходим к следующему тесту через 2 секунды
+          setTimeout(() => {
+            this.generateNewTest();
+          }, 2000);
+        }
+
+        skipTest() {
+          if (!this.currentTest) return;
+
+          this.stats.total++;
+          this.stats.streak = 0;
+
+          // Показываем правильный ответ
+          const correctLines = this.currentTest.lines.join(", ");
+          const selectedLines =
+            this.selectedLines.size > 0
+              ? `Вы выбрали: ${Array.from(this.selectedLines).join(", ")}. `
+              : "";
+          this.showFeedback(
+            `⏭️ Пропущено. ${selectedLines}Правильные линии: ${correctLines}`,
+            "info"
+          );
+
+          this.updateStatsDisplay();
+
+          // Автоматически переходим к следующему тесту через 1.5 секунды
+          setTimeout(() => {
+            this.generateNewTest();
+          }, 1500);
+        }
+
+        showFeedback(message, type) {
+          const color =
+            {
+              success: "#10b981",
+              error: "#ef4444",
+              warning: "#f59e0b",
+              info: "#667eea",
+            }[type] || "#667eea";
+
+          this.elements.feedbackMessage.textContent = message;
+          this.elements.feedbackMessage.style.color = color;
+          this.elements.feedbackMessage.style.backgroundColor = `${color}20`;
+          this.elements.feedbackMessage.style.border = `1px solid ${color}40`;
+          this.elements.feedbackMessage.style.opacity = "1";
+
+          // Автоматическое скрытие через 3 секунды
+          setTimeout(() => {
+            this.elements.feedbackMessage.style.opacity = "0";
+          }, 3000);
+        }
+
+        updateStatsDisplay() {
+          // Обновляем счетчики
+          this.elements.correctCount.textContent = this.stats.correct;
+          this.elements.incorrectCount.textContent = this.stats.incorrect;
+          this.elements.totalCount.textContent = this.stats.total;
+          this.elements.streakCount.textContent = this.stats.streak;
+
+          // Рассчитываем точность
+          const accuracy =
+            this.stats.total > 0
+              ? Math.round((this.stats.correct / this.stats.total) * 100)
+              : 0;
+          this.elements.accuracyRate.textContent = `${accuracy}%`;
+        }
+
+        applyFilter(filter) {
+          // Обновляем активную кнопку фильтра
+          this.elements.filterButtons.forEach((btn) => {
+            btn.classList.remove("active");
+          });
+          document
+            .querySelector(`.control-btn[data-filter="${filter}"]`)
+            .classList.add("active");
+
+          // Генерируем новый тест с фильтром
+          this.generateNewTest(filter);
+        }
+
+        startTimer() {
+          this.timer = setInterval(() => {
+            if (this.timeLeft > 0) {
+              this.timeLeft--;
+              this.elements.timerDisplay.textContent = `${this.timeLeft} сек`;
+
+              // Меняем цвет при малом времени
+              if (this.timeLeft <= 5) {
+                this.elements.timerDisplay.style.color = "#ef4444";
+              } else if (this.timeLeft <= 10) {
+                this.elements.timerDisplay.style.color = "#f59e0b";
+              }
+            } else {
+              // Время вышло - пропускаем тест
+              this.skipTest();
+            }
+          }, 1000);
+        }
+
+        resetTimer() {
+          this.timeLeft = this.timeLimit;
+          this.elements.timerDisplay.textContent = `${this.timeLeft} сек`;
+          this.elements.timerDisplay.style.color = "#f59e0b";
+        }
+      }
+
+      // Инициализация системы при загрузке страницы
+      let quizSystem;
+      // const startButton = document.getElementById("roshe-test")
+
+
+      // startButton.addEventListener("click", () => {
+      //   setTimeout(() => {
+      //     quizSystem = new TestQuizSystem();
+      //   }, 500);
+      // });
+
+      // Экспортируем в глобальную область для кнопок
+      window.startNewQuiz = function () {
+        quizSystem.generateNewTest();
+      };
+
+      window.checkAnswer = function () {
+        quizSystem.checkAnswer();
+      };
+
+      window.skipTest = function () {
+        quizSystem.skipTest();
+      };
+
+      window.resetSelection = function () {
+        quizSystem.resetSelection();
+      };
+    </script>
+  </body>
+</html>
