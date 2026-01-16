@@ -78,13 +78,25 @@
               <div class="module-card__header">
                 <div
                   class="module-badge"
-                  style="background: var(--danger-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #ef4444 0%,
+                      #dc2626 100%
+                    );
+                  "
                 >
                   Тренажер
                 </div>
                 <div
                   class="module-icon"
-                  style="background: var(--danger-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #ef4444 0%,
+                      #dc2626 100%
+                    );
+                  "
                 >
                   <i class="fas fa-vial"></i>
                 </div>
@@ -113,7 +125,13 @@
               <div class="module-card__footer">
                 <button
                   class="module-btn"
-                  style="background: var(--danger-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #ef4444 0%,
+                      #dc2626 100%
+                    );
+                  "
                   onclick="showModule('reagent')"
                 >
                   <i class="fas fa-flask"></i>
@@ -129,13 +147,25 @@
               <div class="module-card__header">
                 <div
                   class="module-badge"
-                  style="background: var(--success-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #10b981 0%,
+                      #059669 100%
+                    );
+                  "
                 >
                   Визуализация
                 </div>
                 <div
                   class="module-icon"
-                  style="background: var(--success-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #10b981 0%,
+                      #059669 100%
+                    );
+                  "
                 >
                   <i class="fas fa-microscope"></i>
                 </div>
@@ -164,7 +194,13 @@
               <div class="module-card__footer">
                 <button
                   class="module-btn"
-                  style="background: var(--success-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #10b981 0%,
+                      #059669 100%
+                    );
+                  "
                   onclick="showModule('roche')"
                 >
                   <i class="fas fa-play-circle"></i>
@@ -180,13 +216,25 @@
               <div class="module-card__header">
                 <div
                   class="module-badge"
-                  style="background: var(--warning-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #f59e0b 0%,
+                      #d97706 100%
+                    );
+                  "
                 >
                   Инструменты
                 </div>
                 <div
                   class="module-icon"
-                  style="background: var(--warning-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #f59e0b 0%,
+                      #d97706 100%
+                    );
+                  "
                 >
                   <i class="fas fa-calculator"></i>
                 </div>
@@ -215,7 +263,13 @@
               <div class="module-card__footer">
                 <button
                   class="module-btn"
-                  style="background: var(--warning-gradient)"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #f59e0b 0%,
+                      #d97706 100%
+                    );
+                  "
                   onclick="showModule('calculations')"
                 >
                   <i class="fas fa-calculator"></i>
@@ -225,7 +279,76 @@
             </div>
           </div>
 
-          <!-- Карточка 5 - Аликвоты -->
+          <!-- Карточка 5 - Тестирование (НОВЫЙ МОДУЛЬ) -->
+          <div class="carousel-slide">
+            <div class="module-card">
+              <div class="module-card__header">
+                <div
+                  class="module-badge"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #8b5cf6 0%,
+                      #7c3aed 100%
+                    );
+                  "
+                >
+                  Тестирование
+                </div>
+                <div
+                  class="module-icon"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #8b5cf6 0%,
+                      #7c3aed 100%
+                    );
+                  "
+                >
+                  <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3 class="module-card__title">Тестирование знаний</h3>
+                <p class="module-card__description">
+                  Интерактивные тесты для проверки знаний по лабораторным
+                  тестам. Тренируйте распознавание тестов по кодам.
+                </p>
+              </div>
+
+              <div class="module-card__features">
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Распознавание тестов</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Таймер на ответы</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i>
+                  <span>Статистика результатов</span>
+                </div>
+              </div>
+
+              <div class="module-card__footer">
+                <button
+                  class="module-btn"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #8b5cf6 0%,
+                      #7c3aed 100%
+                    );
+                  "
+                  onclick="scrollElement('carousel-test')"
+                >
+                  <i class="fas fa-play"></i>
+                  Начать тестирование
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Карточка 6 - Аликвоты -->
           <div class="carousel-slide">
             <div class="module-card">
               <div class="module-card__header">
@@ -285,7 +408,7 @@
                       #8e44ad 100%
                     );
                   "
-                  onclick="showModule('aliquots')"
+                  onclick="scrollElement('carousel2')"
                 >
                   <i class="fas fa-sliders-h"></i>
                   Управление
@@ -296,5 +419,16 @@
         </div>
       </div>
     </section>
+    <script>
+      function scrollElement(idElement) {
+        const currectElement = document.getElementById(idElement);
+        if (currectElement) {
+          currectElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }
+    </script>
   </body>
 </html>

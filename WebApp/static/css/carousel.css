@@ -1,0 +1,148 @@
+/* ===== Карусель - Исправленные стили ===== */
+.carousel-section {
+  margin: 60px 0 40px;
+  position: relative;
+}
+
+.carousel-section .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.carousel-section .section-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.carousel-section .section-header h2 i {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin: 0;
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.carousel-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-btn:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  transform: scale(1.1);
+}
+
+.carousel-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.carousel-indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  padding: 0;
+}
+
+.carousel-indicator.active {
+  background: #667eea;
+  transform: scale(1.2);
+}
+
+/* Контейнер карусели */
+.carousel-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* Трек карусели */
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Слайд карусели - без фиксированного min-width */
+.carousel-slide {
+  flex: 0 0 auto;
+  transition: transform var(--transition-normal);
+  box-sizing: border-box;
+  padding: 0 12px;
+}
+
+.carousel-slide:hover {
+  transform: translateY(-5px);
+}
+
+/* Гарантируем что контейнер виден */
+.carousel-container {
+  min-height: 400px;
+}
+
+/* Адаптивные стили */
+@media (max-width: 1200px) {
+  .carousel-slide {
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .carousel-controls {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+
+  .carousel-container {
+    /* min-height: 350px; */
+    display: grid;
+  }
+}

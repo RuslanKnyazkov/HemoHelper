@@ -18,14 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   generateRacks();
   updateBarcodeDisplay();
-  updateAliquotHistory();
   setTimeout(() => {
     const carousel1 = new Carousel("carousel1", {
       autoplay: true,
       autoplaySpeed: 2000,
       slidesToShow: 5,
       infinite: true,
-      dots: false,
+      dots: true,
       arrows: true,
       draggable: true,
     });
@@ -34,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const carousel2 = new Carousel("carousel2", {
       autoplay: true,
       autoplaySpeed: 4000,
-      slidesToShow: 6,
+      slidesToShow: 5,
       infinite: true,
       dots: true,
       arrows: true,
@@ -45,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const carousel3 = new Carousel("carousel-test", {
       autoplay: true,
       autoplaySpeed: 4000,
-      slidesToShow: 1,
+      slidesToShow: 4,
       infinite: true,
       dots: true,
       arrows: true,
@@ -152,8 +151,6 @@ function showModule(moduleId) {
   // Обновить отображение для текущего модуля
   if (moduleId === "barcode") {
     updateBarcodeDisplay();
-  } else if (moduleId === "aliquots") {
-    updateAliquotHistory();
   } else if (moduleId === "roche") {
     initRocheModule();
   }
@@ -1008,106 +1005,6 @@ function calculateNaOH() {
   showNotification("Расчет выполнен успешно", "success");
 }
 
-// ===== Модуль аликвот =====
-function printAliquots() {
-  const name = document.getElementById("aliquot-name").value.trim();
-  const lot = document.getElementById("aliquot-lot").value.trim();
-  const count = document.getElementById("aliquot-count").value;
-  const volume = document.getElementById("aliquot-volume").value.trim();
-
-  if (!name || !lot || !count || !volume) {
-    showNotification("Заполните все поля!", "error");
-    return;
-  }
-
-  const countNum = parseInt(count, 10);
-  if (isNaN(countNum) || countNum > 10) {
-    showNotification("Максимум 10 этикеток за раз!", "error");
-    return;
-  }
-
-  const aliquotData = {
-    type: "custom",
-    text: name,
-    lot: lot,
-    retry: countNum,
-    volume: volume,
-    timestamp: new Date().toISOString(),
-  };
-
-  // Сохранить в историю текущей сессии
-  state.aliquotHistory.unshift({
-    ...aliquotData,
-    date: new Date().toLocaleString("ru-RU"),
-  });
-
-  // Ограничиваем историю (например, 20 записей)
-  if (state.aliquotHistory.length > 20) {
-    state.aliquotHistory = state.aliquotHistory.slice(0, 20);
-  }
-
-  // Копировать в буфер обмена
-  copyToClipboard(JSON.stringify(aliquotData, null, 2))
-    .then(() => {
-      showNotification(
-        `✅ Этикетки "${name}" (${count} шт.) скопированы в буфер`,
-        "success"
-      );
-      updateAliquotHistory();
-    })
-    .catch((err) => {
-      console.error("Ошибка копирования:", err);
-      showNotification("Ошибка копирования в буфер", "error");
-    });
-}
-
-function clearAliquotForm() {
-  document.getElementById("aliquot-name").value = "";
-  document.getElementById("aliquot-lot").value = "";
-  document.getElementById("aliquot-count").value = "";
-  document.getElementById("aliquot-volume").value = "";
-  showNotification("Форма очищена", "info");
-}
-
-function updateAliquotHistory() {
-  const historyElement = document.getElementById("aliquot-history");
-  if (!historyElement) return;
-
-  const history = state.aliquotHistory;
-
-  if (history.length === 0) {
-    historyElement.innerHTML = `
-      <div style="text-align: center; padding: 40px;">
-        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
-        <h3>Нет данных</h3>
-        <p>Здесь появится история распечатанных этикеток</p>
-        <p style="font-size: 12px; margin-top: 10px; color: #888;">
-          <i class="fas fa-info-circle"></i> Данные хранятся только в текущей сессии
-        </p>
-      </div>
-    `;
-    return;
-  }
-
-  historyElement.innerHTML = history
-    .map(
-      (item) => `
-        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-weight: 600; color: var(--text-primary);">${item.text}</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">${item.date}</div>
-          </div>
-          <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-secondary);">
-            <span>Лот: ${item.lot}</span>
-            <span>Кол-во: ${item.retry} шт.</span>
-            <span>Объем: ${item.volume}</span>
-          </div>
-        </div>
-      `
-    )
-    .join("");
-}
-
 // ===== Утилиты (без изменений) =====
 function copyToClipboard(text) {
   if (navigator.clipboard) {
@@ -1474,96 +1371,63 @@ class Carousel {
       autoplay: true,
       autoplaySpeed: 5000,
       slidesToShow: 3,
-      infinite: true,
+      infinite: true, // Включена бесконечная прокрутка
       dots: true,
       arrows: true,
       draggable: false,
       ...options,
     };
 
-    // Элементы DOM - используем querySelector для поиска внутри контейнера
+    // Элементы DOM
     this.track = this.container.querySelector(".carousel-track");
-
-    // Ищем слайды внутри трека
-    if (this.track) {
-      this.slides = this.track.querySelectorAll(".carousel-slide");
-    } else {
-      this.slides = [];
-    }
-
-    // Ищем элементы управления внутри контейнера карусели
+    this.slides = this.track ? Array.from(this.track.children) : [];
     this.prevBtn = this.container.querySelector(".carousel-btn.prev");
     this.nextBtn = this.container.querySelector(".carousel-btn.next");
     this.dotsContainer = this.container.querySelector(".carousel-indicators");
-    this.progressBar = this.container.querySelector(".carousel-progress-bar");
 
     // Состояние
     this.currentIndex = 0;
     this.slideCount = this.slides.length;
-    this.slidesPerView = Math.min(this.options.slidesToShow, this.slideCount);
-
-    // Для бесконечной карусели
-    if (this.options.infinite && this.slideCount > 0) {
-      this.setupInfiniteSlides();
-    } else {
-      this.maxIndex = Math.max(0, this.slideCount - this.slidesPerView);
-    }
-
-    this.interval = null;
-    this.isAutoPlaying = this.options.autoplay;
-    this.dots = [];
+    this.slidesPerView = this.getSlidesPerView();
     this.isTransitioning = false;
+    this.isAutoPlaying = this.options.autoplay;
+    this.interval = null;
+    this.dots = [];
+
+    // Для бесконечной прокрутки
+    this.isInfinite =
+      this.options.infinite && this.slideCount > this.slidesPerView;
 
     if (this.slideCount > 0) {
       this.init();
     }
   }
 
-  setupInfiniteSlides() {
-    // Клонируем первый и последний слайды
-    if (this.slideCount < 2) return;
+  // Определяем сколько слайдов показывать
+  getSlidesPerView() {
+    if (!this.container || this.slideCount === 0) return 1;
 
-    const firstSlide = this.slides[0];
-    const lastSlide = this.slides[this.slideCount - 1];
+    const containerWidth = this.container.offsetWidth;
 
-    // Клонируем
-    const firstClone = firstSlide.cloneNode(true);
-    const lastClone = lastSlide.cloneNode(true);
+    if (containerWidth <= 768) return 1;
+    if (containerWidth <= 1200) return 2;
 
-    // Добавляем клоны
-    this.track.appendChild(firstClone); // Клон первого в конец
-    this.track.insertBefore(lastClone, firstSlide); // Клон последнего в начало
-
-    // Обновляем список слайдов
-    this.slides = this.track.querySelectorAll(".carousel-slide");
-
-    // Устанавливаем начальную позицию (1, потому что добавили клон в начало)
-    this.currentIndex = 1;
-    this.slideCount = this.slides.length;
-    this.maxIndex = this.slideCount - 1;
+    return Math.min(this.options.slidesToShow, this.slideCount);
   }
 
   init() {
-    // Устанавливаем размеры
     this.setupSlides();
 
-    // Создаем точки навигации
-    if (this.options.dots) {
-      this.generateDots();
+    // Для бесконечной прокрутки добавляем клоны слайдов
+    if (this.isInfinite) {
+      this.setupInfiniteSlides();
     }
 
-    // Настраиваем кнопки
-    if (this.options.arrows) {
-      this.setupArrows();
-    }
-
-    // Обновляем отображение
+    this.setupArrows();
+    this.createDots();
+    this.setupEventListeners();
     this.updateCarousel();
 
-    // Настраиваем обработчики
-    this.setupEventListeners();
-
-    // Запускаем автопрокрутку
     if (this.options.autoplay) {
       this.startAutoSlide();
     }
@@ -1578,29 +1442,57 @@ class Carousel {
     // Устанавливаем стили для каждого слайда
     this.slides.forEach((slide) => {
       slide.style.flex = `0 0 ${slideWidth}%`;
-      slide.style.maxWidth = `${slideWidth}%`;
     });
-
-    // Рассчитываем ширину трека
-    const trackWidth = (100 * this.slideCount) / this.slidesPerView;
-    this.track.style.width = `${trackWidth}%`;
   }
 
-  generateDots() {
-    if (!this.dotsContainer) return;
+  setupInfiniteSlides() {
+    // Клонируем первые и последние слайды для бесконечной прокрутки
+    const firstClones = [];
+    const lastClones = [];
+
+    // Клонируем последние slidesPerView слайдов в начало
+    for (
+      let i = this.slideCount - this.slidesPerView;
+      i < this.slideCount;
+      i++
+    ) {
+      const clone = this.slides[i].cloneNode(true);
+      clone.classList.add("clone");
+      firstClones.push(clone);
+    }
+
+    // Клонируем первые slidesPerView слайдов в конец
+    for (let i = 0; i < this.slidesPerView; i++) {
+      const clone = this.slides[i].cloneNode(true);
+      clone.classList.add("clone");
+      lastClones.push(clone);
+    }
+
+    // Добавляем клоны в трек
+    firstClones.forEach((clone) =>
+      this.track.insertBefore(clone, this.slides[0])
+    );
+    lastClones.forEach((clone) => this.track.appendChild(clone));
+
+    // Обновляем список слайдов
+    this.slides = Array.from(this.track.children);
+
+    // Устанавливаем начальную позицию
+    this.currentIndex = this.slidesPerView;
+  }
+
+  createDots() {
+    if (!this.dotsContainer || !this.options.dots) return;
 
     this.dotsContainer.innerHTML = "";
     this.dots = [];
 
-    // Количество точек = количество оригинальных слайдов
-    const originalSlides = this.options.infinite
-      ? this.slideCount - 2 // минус клоны
-      : this.slideCount;
-
-    for (let i = 0; i < originalSlides; i++) {
+    // Количество точек равно количеству оригинальных слайдов
+    for (let i = 0; i < this.slideCount; i++) {
       const dot = document.createElement("button");
       dot.className = "carousel-indicator";
       dot.setAttribute("data-index", i);
+      dot.setAttribute("aria-label", `Перейти к слайду ${i + 1}`);
 
       dot.addEventListener("click", () => {
         if (this.isTransitioning) return;
@@ -1631,8 +1523,10 @@ class Carousel {
   }
 
   setupEventListeners() {
-    // Ресайз
-    window.addEventListener("resize", () => this.handleResize());
+    // Ресайз окна
+    window.addEventListener("resize", () => {
+      this.handleResize();
+    });
 
     // Пауза при наведении
     if (this.container) {
@@ -1644,40 +1538,38 @@ class Carousel {
       );
     }
 
-    // Обработчик завершения анимации
-    if (this.track) {
-      this.track.addEventListener("transitionend", () =>
-        this.handleTransitionEnd()
-      );
-    }
+    // Поддержка клавиатуры
+    document.addEventListener("keydown", (e) => {
+      if (
+        document.activeElement.closest(".carousel-container") === this.container
+      ) {
+        if (e.key === "ArrowLeft") this.prevSlide();
+        if (e.key === "ArrowRight") this.nextSlide();
+      }
+    });
   }
 
   handleResize() {
-    // Пересчитываем при изменении размера
-    const newSlidesPerView = this.calculateSlidesPerView();
+    const newSlidesPerView = this.getSlidesPerView();
 
     if (newSlidesPerView !== this.slidesPerView) {
       this.slidesPerView = newSlidesPerView;
+      this.isInfinite =
+        this.options.infinite && this.slideCount > this.slidesPerView;
 
-      if (!this.options.infinite) {
-        this.maxIndex = Math.max(0, this.slideCount - this.slidesPerView);
+      // Переинициализируем слайды
+      this.setupSlides();
+
+      if (this.isInfinite) {
+        // Удаляем старые клоны
+        const clones = this.track.querySelectorAll(".clone");
+        clones.forEach((clone) => clone.remove());
+        this.setupInfiniteSlides();
       }
 
-      this.setupSlides();
       this.updateCarousel();
+      this.updateDots();
     }
-  }
-
-  calculateSlidesPerView() {
-    if (!this.container || this.slideCount === 0) return 1;
-
-    const containerWidth = this.container.offsetWidth;
-
-    // Адаптивные брейкпоинты
-    if (containerWidth <= 768) return 1;
-    if (containerWidth <= 1200) return 2;
-
-    return Math.min(this.options.slidesToShow, this.slideCount);
   }
 
   updateCarousel() {
@@ -1687,39 +1579,89 @@ class Carousel {
 
     // Рассчитываем смещение
     const slideWidth = 100 / this.slidesPerView;
-    const translateX = this.currentIndex * slideWidth;
+    const translateX = -this.currentIndex * slideWidth;
 
-    this.track.style.transform = `translateX(-${translateX}%)`;
+    this.track.style.transform = `translateX(${translateX}%)`;
     this.track.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
 
-    // Обновляем точки
+    // Обновляем точки и кнопки
     this.updateDots();
-
-    // Обновляем кнопки
     this.updateArrows();
+
+    // Сбрасываем флаг перехода после анимации
+    setTimeout(() => {
+      this.isTransitioning = false;
+
+      // Проверяем и корректируем позицию для бесконечной прокрутки
+      if (this.isInfinite) {
+        this.handleInfiniteBoundary();
+      }
+    }, 500);
+  }
+
+  handleInfiniteBoundary() {
+    const originalSlidesCount = this.slideCount;
+    const totalSlides = this.slides.length;
+
+    // Если мы в начале клонов (перед первым оригинальным слайдом)
+    if (this.currentIndex < this.slidesPerView) {
+      // Мгновенно переходим к соответствующим слайдам в конце
+      const jumpTo =
+        originalSlidesCount + (this.currentIndex - this.slidesPerView);
+
+      // Отключаем анимацию для мгновенного перехода
+      this.track.style.transition = "none";
+      const slideWidth = 100 / this.slidesPerView;
+      const translateX = -jumpTo * slideWidth;
+      this.track.style.transform = `translateX(${translateX}%)`;
+
+      // Обновляем текущий индекс
+      this.currentIndex = jumpTo;
+
+      // Включаем анимацию обратно
+      setTimeout(() => {
+        this.track.style.transition =
+          "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+      }, 50);
+    }
+
+    // Если мы в конце клонов (после последнего оригинального слайда)
+    else if (this.currentIndex >= originalSlidesCount + this.slidesPerView) {
+      // Мгновенно переходим к соответствующим слайдам в начале
+      const jumpTo = this.currentIndex - originalSlidesCount;
+
+      // Отключаем анимацию для мгновенного перехода
+      this.track.style.transition = "none";
+      const slideWidth = 100 / this.slidesPerView;
+      const translateX = -jumpTo * slideWidth;
+      this.track.style.transform = `translateX(${translateX}%)`;
+
+      // Обновляем текущий индекс
+      this.currentIndex = jumpTo;
+
+      // Включаем анимацию обратно
+      setTimeout(() => {
+        this.track.style.transition =
+          "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+      }, 50);
+    }
   }
 
   updateDots() {
     if (this.dots.length === 0) return;
 
-    // Рассчитываем активный индекс для точек
-    let activeIndex;
-    if (this.options.infinite) {
-      // Для бесконечной карусели: учитываем клоны
-      const originalSlides = this.slideCount - 2;
-      if (this.currentIndex === 0) {
-        activeIndex = originalSlides - 1; // Последний оригинальный слайд
-      } else if (this.currentIndex === this.slideCount - 1) {
-        activeIndex = 0; // Первый оригинальный слайд
-      } else {
-        activeIndex = (this.currentIndex - 1) % originalSlides;
-      }
+    // Рассчитываем индекс оригинального слайда
+    let originalIndex;
+    if (this.isInfinite) {
+      originalIndex =
+        (this.currentIndex - this.slidesPerView + this.slideCount) %
+        this.slideCount;
     } else {
-      activeIndex = this.currentIndex;
+      originalIndex = Math.min(this.currentIndex, this.slideCount - 1);
     }
 
     this.dots.forEach((dot, index) => {
-      const isActive = index === activeIndex;
+      const isActive = index === originalIndex;
       dot.classList.toggle("active", isActive);
       dot.setAttribute("aria-current", isActive);
     });
@@ -1728,18 +1670,34 @@ class Carousel {
   updateArrows() {
     if (!this.options.arrows) return;
 
-    if (this.prevBtn) {
-      // Для бесконечной карусели кнопки всегда активны
-      const isDisabled = !this.options.infinite && this.currentIndex === 0;
-      this.prevBtn.disabled = isDisabled;
-      this.prevBtn.style.opacity = isDisabled ? "0.3" : "1";
-    }
+    // Для бесконечной прокрутки кнопки всегда активны
+    if (this.isInfinite) {
+      if (this.prevBtn) {
+        this.prevBtn.disabled = false;
+        this.prevBtn.style.opacity = "1";
+        this.prevBtn.style.cursor = "pointer";
+      }
+      if (this.nextBtn) {
+        this.nextBtn.disabled = false;
+        this.nextBtn.style.opacity = "1";
+        this.nextBtn.style.cursor = "pointer";
+      }
+    } else {
+      // Для обычной прокрутки
+      if (this.prevBtn) {
+        const isDisabled = this.currentIndex === 0;
+        this.prevBtn.disabled = isDisabled;
+        this.prevBtn.style.opacity = isDisabled ? "0.3" : "1";
+        this.prevBtn.style.cursor = isDisabled ? "not-allowed" : "pointer";
+      }
 
-    if (this.nextBtn) {
-      const isDisabled =
-        !this.options.infinite && this.currentIndex >= this.maxIndex;
-      this.nextBtn.disabled = isDisabled;
-      this.nextBtn.style.opacity = isDisabled ? "0.3" : "1";
+      if (this.nextBtn) {
+        const maxSlide = Math.max(0, this.slideCount - this.slidesPerView);
+        const isDisabled = this.currentIndex >= maxSlide;
+        this.nextBtn.disabled = isDisabled;
+        this.nextBtn.style.opacity = isDisabled ? "0.3" : "1";
+        this.nextBtn.style.cursor = isDisabled ? "not-allowed" : "pointer";
+      }
     }
   }
 
@@ -1755,53 +1713,18 @@ class Carousel {
     this.resetAutoSlide();
   }
 
-  goToSlide(index) {
-    if (this.options.infinite) {
-      // Для бесконечной карусели: индекс + 1 (из-за клона в начале)
-      this.currentIndex = index + 1;
+  goToSlide(slideIndex) {
+    if (this.isInfinite) {
+      // Для бесконечной прокрутки переходим к соответствующей позиции
+      this.currentIndex = slideIndex + this.slidesPerView;
     } else {
-      this.currentIndex = Math.min(index, this.maxIndex);
+      // Для обычной прокрутки ограничиваем индекс
+      const maxSlide = Math.max(0, this.slideCount - this.slidesPerView);
+      this.currentIndex = Math.max(0, Math.min(slideIndex, maxSlide));
     }
 
     this.updateCarousel();
     this.resetAutoSlide();
-  }
-
-  handleTransitionEnd() {
-    this.isTransitioning = false;
-
-    if (!this.options.infinite) return;
-
-    // Проверяем границы для бесконечной карусели
-    if (this.currentIndex === 0) {
-      // Перескакиваем на предпоследний слайд (который оригинальный последний)
-      this.track.style.transition = "none";
-      this.currentIndex = this.slideCount - 2;
-      const slideWidth = 100 / this.slidesPerView;
-      const translateX = this.currentIndex * slideWidth;
-      this.track.style.transform = `translateX(-${translateX}%)`;
-
-      // Восстанавливаем transition
-      setTimeout(() => {
-        this.track.style.transition =
-          "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
-      }, 50);
-    } else if (this.currentIndex === this.slideCount - 1) {
-      // Перескакиваем на второй слайд (который оригинальный первый)
-      this.track.style.transition = "none";
-      this.currentIndex = 1;
-      const slideWidth = 100 / this.slidesPerView;
-      const translateX = this.currentIndex * slideWidth;
-      this.track.style.transform = `translateX(-${translateX}%)`;
-
-      // Восстанавливаем transition
-      setTimeout(() => {
-        this.track.style.transition =
-          "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
-      }, 50);
-    }
-
-    this.updateDots();
   }
 
   startAutoSlide() {
@@ -1828,7 +1751,40 @@ class Carousel {
       this.startAutoSlide();
     }
   }
+
+  destroy() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+
+    // Удаляем клоны слайдов
+    if (this.isInfinite) {
+      const clones = this.track.querySelectorAll(".clone");
+      clones.forEach((clone) => clone.remove());
+    }
+
+    // Восстанавливаем оригинальные стили
+    this.track.style.transform = "";
+    this.track.style.transition = "";
+    this.slides.forEach((slide) => {
+      slide.style.flex = "";
+    });
+
+    console.log("Carousel destroyed");
+  }
 }
+
+// Инициализация карусели
+document.addEventListener("DOMContentLoaded", () => {
+  new Carousel("carouselContainer", {
+    autoplay: true,
+    autoplaySpeed: 5000,
+    slidesToShow: 3,
+    infinite: true,
+    dots: true,
+    arrows: true,
+  });
+});
 
 // ===== Расширенные функции =====
 function exportData() {
@@ -1882,7 +1838,6 @@ function importData(event) {
         }
 
         updateBarcodeDisplay();
-        updateAliquotHistory();
         showNotification("Данные импортированы в текущую сессию", "success");
       }
     } catch (error) {
@@ -1916,7 +1871,6 @@ function resetApp() {
     });
 
     updateBarcodeDisplay();
-    updateAliquotHistory();
     generateRacks();
     closeAllContainers();
 
@@ -2310,8 +2264,6 @@ window.clearAllRacks = clearAllRacks;
 window.setRocheMode = setRocheMode;
 window.selectTest = selectTest;
 window.calculateNaOH = calculateNaOH;
-window.printAliquots = printAliquots;
-window.clearAliquotForm = clearAliquotForm;
 window.exportData = exportData;
 window.importData = importData;
 window.resetApp = resetApp;
