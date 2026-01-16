@@ -121,9 +121,6 @@
       </div>
     </div>
     <script>
-      // ===== Система тестирования лабораторных тестов =====
-
-      // База данных тестов с распределением по линиям
       const testsDatabase = [
         // Только на линии E1
         {
@@ -132,167 +129,120 @@
           lines: ["E1"],
         },
         {
-          code: "RF",
-          name: "Ревматоидный фактор",
+          code: "C-Peptid",
+          name: "Ц-пептид",
           lines: ["E1"],
         },
         {
-          code: "ANA",
-          name: "Антинуклеарные антитела",
+          code: "AFP",
+          name: "Альфа Фето протеин",
           lines: ["E1"],
         },
         {
-          code: "ASLO",
-          name: "Антистрептолизин-О",
+          code: "HGH",
+          name: "Соматотропин",
           lines: ["E1"],
         },
-
-        // Только на линии E2
         {
-          code: "HBVDNA",
-          name: "ДНК вируса гепатита В",
-          lines: ["E2"],
+          code: "PCT(PCTX)",
+          name: "Прокальцитонин",
+          lines: ["E1"],
+        },
+       {
+          code: "IGF",
+          name: "Cоматомедин",
+          lines: ["E1"],
         },
         {
-          code: "HCVRNA",
-          name: "РНК вируса гепатита С",
-          lines: ["E2"],
+          code: "Cyfra 21-1",
+          name: "Цифра 21-1",
+          lines: ["E1"],
         },
         {
-          code: "HIVRNA",
-          name: "РНК ВИЧ",
-          lines: ["E2"],
+          code: "PTH",
+          name: "Паратиреоидный гормон (паратгормон, ПТГ)",
+          lines: ["E1"],
         },
-        {
-          code: "CMVDNA",
-          name: "ДНК цитомегаловируса",
-          lines: ["E2"],
-        },
-
         // На обеих линиях E1 и E2
+        {
+          code: "PBNP",
+          name: "натрийуретический пропептид",
+          lines: ["E1", "E2"],
+        },        {
+          code: "S-100",
+          name: "Белок s-100",
+          lines: ["E1", "E2"],
+        },        {
+          code: "CA-15-3",
+          name: "Раковый антиген 15-3",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "CA-19-9",
+          name: "Раковый антиген 19-9",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "CA-72-4",
+          name: "Раковый антиген 72-4",
+          lines: ["E1", "E2"],
+        },
+        {
+          code: "CA-125",
+          name: "Раковый антиген 125",
+          lines: ["E1", "E2"],
+        },
         {
           code: "TSH",
           name: "Тиреотропный гормон",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "FT4",
           name: "Тироксин свободный",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "FT3",
           name: "Трийодтиронин свободный",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "Anti-TPO",
           name: "Антитела к тиреопероксидазе",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "Cortisol",
           name: "Кортизол",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "Testosterone",
           name: "Тестостерон",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "Estradiol",
           name: "Эстрадиол",
-          lines: ["E1", "E2"],
+          lines: ["E1", "E2", "CE"],
         },
         {
           code: "Progesterone",
           name: "Прогестерон",
-          lines: ["E1", "E2"],
-        },
-
-        // Только на линии CE
-        {
-          code: "CTscan",
-          name: "Компьютерная томография",
-          lines: ["CE"],
-        },
-        {
-          code: "MRI",
-          name: "Магнитно-резонансная томография",
-          lines: ["CE"],
-        },
-        {
-          code: "PET-CT",
-          name: "ПЭТ-КТ исследование",
-          lines: ["CE"],
-        },
-        {
-          code: "Angio",
-          name: "Ангиография",
-          lines: ["CE"],
-        },
-
-        // На всех линиях
-        {
-          code: "CBC",
-          name: "Общий анализ крови",
           lines: ["E1", "E2", "CE"],
         },
         {
-          code: "UA",
+          code: "FERR",
           name: "Общий анализ мочи",
           lines: ["E1", "E2", "CE"],
         },
         {
-          code: "Glucose",
-          name: "Глюкоза крови",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "CRP",
-          name: "С-реактивный белок",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "ESR",
+          code: "B12",
           name: "СОЭ",
           lines: ["E1", "E2", "CE"],
         },
 
-        // На E1 и CE
-        {
-          code: "Biochem",
-          name: "Биохимический профиль",
-          lines: ["E1", "CE"],
-        },
-        {
-          code: "Coagulation",
-          name: "Коагулограмма",
-          lines: ["E1", "CE"],
-        },
-        {
-          code: "Electrolytes",
-          name: "Электролиты",
-          lines: ["E1", "CE"],
-        },
-
-        // На E2 и CE
-        {
-          code: "TumorMarkers",
-          name: "Онкомаркеры",
-          lines: ["E2", "CE"],
-        },
-        {
-          code: "Allergy",
-          name: "Аллергопанель",
-          lines: ["E2", "CE"],
-        },
-        {
-          code: "Immunoglobulins",
-          name: "Иммуноглобулины",
-          lines: ["E2", "CE"],
-        },
       ];
 
       // Класс системы тестирования
@@ -650,16 +600,6 @@
         }
       }
 
-      // Инициализация системы при загрузке страницы
-      let quizSystem;
-      // const startButton = document.getElementById("roshe-test")
-
-
-      // startButton.addEventListener("click", () => {
-      //   setTimeout(() => {
-      //     quizSystem = new TestQuizSystem();
-      //   }, 500);
-      // });
 
       // Экспортируем в глобальную область для кнопок
       window.startNewQuiz = function () {

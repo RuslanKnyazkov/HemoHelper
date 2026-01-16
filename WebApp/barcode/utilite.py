@@ -80,6 +80,15 @@ class PrintMonitor:
                         'success': False,
                         'error': 'Ошибка при печати штрихкода'
                     }, status=500)
+            elif type_label == "aliquote":
+                names = data.pop("text")
+                retry = data.pop("count")
+                for name in names:
+                    zpl_code = self.zpl_generator.create_simple_text_zpl(
+                        text=name, **data)
+
+                    self.print_manager.print_barcode(
+                        zpl=zpl_code, retry=int(retry))
 
             else:
                 return JsonResponse({

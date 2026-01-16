@@ -1959,10 +1959,8 @@ document.addEventListener("keydown", (e) => {
 
 function generateAlictoveContainer(name) {
   showModule("alicvote-container");
-  // 2. Получаем контейнер правильно
   const currentContainer = document.getElementById("alicvote-container");
 
-  // 3. Проверяем, что контейнер существует
   if (!currentContainer) {
     console.error("Aliquot container not found!");
     return;
@@ -1970,7 +1968,6 @@ function generateAlictoveContainer(name) {
 
   const placeContent = document.getElementById("container-aliquote");
 
-  // 4. Создаем содержимое
   const content = `<div class="aliquot-content">
       <h2><i class="fas fa-flask"></i> Создание аликвот для: ${
         name || "Образец"
@@ -2034,10 +2031,25 @@ function generateAlictoveContainer(name) {
             step="1"
           />
         </div>
+        <div class="input-group">
+          <label class="input-label">
+            <i class="fas fa-weight"></i>
+            Кол-во этикеток
+          </label>
+          <input 
+            type="number" 
+            class="input-field" 
+            id="aliquot-count" 
+            placeholder="Укажите кол-во"
+            min="1"
+            max="10"
+            step="1"
+          />
+        </div>
       </div>
       
       <div class="aliquot-actions" style="display: flex; gap: 12px;">
-        <button class="btn btn-primary" onclick="printAliquotsFromForm()">
+        <button class="btn btn-primary" onclick="PrintAliquotsForm()">
           <i class="fas fa-print"></i> Печать этикеток
         </button>
       </div>
@@ -2045,6 +2057,29 @@ function generateAlictoveContainer(name) {
   `;
 
   placeContent.innerHTML = content;
+}
+
+function PrintAliquotsForm() {
+  const aliquoteObject = {
+    type: "aliquote",
+    text: [
+      document.getElementById("aliquot-name-1").value,
+      document.getElementById("aliquot-name-2").value,
+    ],
+    lot: document.getElementById("aliquot-lot").value,
+    volume: document.getElementById("aliquot-volume").value,
+    count: document.getElementById("aliquot-count").value || 1,
+  };
+
+  if (!aliquoteObject.text || !aliquoteObject.lot || !aliquoteObject.volume) {
+    showNotification("Заполните все необходимые поля");
+  } else {
+    sendToDjango(aliquoteObject)
+      .then(() => showNotification("Аликвота отправлена на печать"))
+      .catch(() => {
+        showNotification("Ошибка печати аликвот", "danger");
+      });
+  }
 }
 
 // Данные тестов
@@ -2245,10 +2280,17 @@ function toggleTestsAnimation() {
 }
 
 /// my test function //
+let quizSystem = null;
 
 function testRocheModule() {
   showModule("test-module");
-  quizSystem = new TestQuizSystem();
+
+  if (quizSystem) {
+    quizSystem.resetTimer();
+    quizSystem.generateNewTest();
+  } else {
+    quizSystem = new TestQuizSystem();
+  }
 }
 
 // ===== Экспорт функций в глобальную область видимости =====
