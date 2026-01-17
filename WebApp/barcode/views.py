@@ -1,8 +1,9 @@
 from django.http import JsonResponse
 import json
 from .utilite import PrintMonitor
+from django.views.decorators.csrf import csrf_exempt
 
-
+@csrf_exempt
 def save_barcode(request):
     """Принимает штрихкод с фронтенда"""
     if request.method == 'POST':
