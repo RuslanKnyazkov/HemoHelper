@@ -334,6 +334,8 @@ async function saveBarcode() {
     barcode: barcode,
     number: barcode,
     mode: state.barcodeMode,
+    anchor: "h",
+    size: 's',
   };
 
   // Добавляем в историю текущей сессии
