@@ -4,6 +4,8 @@ echo ========================================
 echo     ЗАПУСК DJANGO ПРОЕКТА
 echo ========================================
 
+cmd
+
 echo [1] Активация виртуального окружения...
 call .\venv\Scripts\activate.bat
 if %errorlevel% neq 0 (
@@ -14,7 +16,7 @@ if %errorlevel% neq 0 (
 echo ✅ Виртуальное окружение активировано
 
 echo [2] Переход в папку проекта...
-cd /d WebApp
+cd  WebApp
 if %errorlevel% neq 0 (
     echo ❌ Ошибка перехода в папку WebApp
     pause
