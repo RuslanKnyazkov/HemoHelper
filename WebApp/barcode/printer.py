@@ -70,7 +70,7 @@ class ZPL:
 
     def add_lot(self, lot):
         self.build.append(
-            f"^FO30,40^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FDlot: {lot}^FS")
+            f"^FO30,100^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FDlot: {lot}^FS")
 
     def add_barcode(self, number_barcode):
         self.build.append(
@@ -82,7 +82,7 @@ class ZPL:
 
     def add_volume(self, volume):
         self.build.append(
-            f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{volume + "mkl" if len(volume) > 1 else "ml"}^FS")
+            f"^FO30,150^ADN,20,20 ^FB388,1,0,C^FD{volume + "mkl" if len(volume) > 1 else volume + "ml"}^FS")
 
     def add_data(self):
         self.build.append(
