@@ -2025,6 +2025,8 @@ function PrintAliquotsForm() {
     lot: document.getElementById("aliquot-lot").value,
     volume: document.getElementById("aliquot-volume").value,
     count: document.getElementById("aliquot-count").value || 1,
+        size: "s",
+    anchor: "h"
   };
 
   if (!aliquoteObject.text || !aliquoteObject.lot || !aliquoteObject.volume) {
