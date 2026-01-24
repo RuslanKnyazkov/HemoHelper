@@ -7,7 +7,7 @@ echo ========================================
 cmd
 
 echo [1] Активация виртуального окружения...
-call .\venv\Scripts\activate.bat
+call .\venv\Scripts\activate
 if %errorlevel% neq 0 (
     echo ❌ Ошибка активации виртуального окружения
     pause
