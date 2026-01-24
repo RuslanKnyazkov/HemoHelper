@@ -459,31 +459,152 @@ function updateBarcodeDisplay() {
   historyElement.innerHTML = state.barcodeHistory
     .map(
       (item) => `
-        <div class="history-item">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 18px; font-weight: 600;">ID : ${
-              item.number
-            }</div>
-            <div style="display: flex; gap: 8px;">
-              <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                ${getModeDisplayName(item.mode)}
-              </span>
-              <span style="color: var(--text-secondary); font-size: 12px;">
-                ${item.date}
-              </span>
+        <div class="history-item" style="
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="
+                    font-size: 18px; 
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    position: relative;
+                    z-index: 1;
+                ">
+                    <div style="
+                        width: 32px;
+                        height: 32px;
+                        background: rgba(102, 126, 234, 0.1);
+                        color: #667eea;
+                        border-radius: 8px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 14px;
+                        font-weight: 600;
+                    ">
+                        <i class="fas fa-barcode"></i>
+                    </div>
+                    <span>Номер пробы: ${item.number}</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px; position: relative; z-index: 1;">
+                    <div style="
+                        background: rgba(34, 197, 94, 0.1);
+                        color: #22c55e;
+                        padding: 6px 16px;
+                        border-radius: 20px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        border: 1px solid rgba(34, 197, 94, 0.2);
+                    ">
+                        <i class="fas fa-sticky-note"></i>
+                        Кол-во наклеек: ${state.retry || 1}
+                    </div>
+                    
+                    <span style="
+                        background: rgba(102, 126, 234, 0.1); 
+                        color: #667eea; 
+                        padding: 6px 16px; 
+                        border-radius: 20px; 
+                        font-size: 12px;
+                        font-weight: 500;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        border: 1px solid rgba(102, 126, 234, 0.2);
+                    ">
+                        <i class="fas fa-${getModeIcon(item.mode)}"></i>
+                        ${getModeDisplayName(item.mode)}
+                    </span>
+                    
+                    <span style="
+                        color: var(--text-secondary); 
+                        font-size: 12px;
+                        background: rgba(255,255,255,0.05);
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        border: 1px solid rgba(255,255,255,0.1);
+                    ">
+                        <i class="far fa-clock"></i>
+                        ${
+                          item.date ||
+                          new Date().toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        }
+                    </span>
+                </div>
             </div>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn" style="flex: 0.5; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="deleteBarcode('${
-              item.id
-            }')">
-              <i class="fas fa-trash"></i> Удалить
-            </button>
-          </div>
+            
+            <!-- Кнопки действий -->
+            <div style="display: flex; gap: 8px; position: relative; z-index: 1;">
+                <button class="btn" style="
+                    flex: 1;
+                    background: rgba(59, 130, 246, 0.1);
+                    color: #3b82f6;
+                    border: 1px solid rgba(59, 130, 246, 0.2);
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                " onclick="reuseBarcode('${item.number}')">
+                    <i class="fas fa-redo"></i>
+                    Использовать снова
+                </button>
+                
+                <button class="btn" style="
+                    flex: 0.5; 
+                    background: rgba(239, 68, 68, 0.1); 
+                    color: #ef4444;
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                " onclick="deleteBarcode('${item.number}')">
+                    <i class="fas fa-trash"></i>
+                    Удалить
+                </button>
+            </div>
+            
         </div>
-      `
+        `
     )
     .join("");
+}
+
+// Вспомогательная функция для иконок
+function getModeIcon(mode) {
+  const icons = {
+    scan: "barcode",
+    manual: "keyboard",
+    import: "file-import",
+    default: "barcode",
+  };
+  return icons[mode] || icons.default;
 }
 
 function getModeDisplayName(mode) {
@@ -497,7 +618,9 @@ function getModeDisplayName(mode) {
 }
 
 function reprintBarcode(id) {
-  const item = state.barcodeHistory.find((item) => item.id.toString() === id);
+  const item = state.barcodeHistory.find(
+    (item) => item.number.toString() === id
+  );
   if (item) {
     const clipboardObject = {
       type: "barcode",
@@ -524,7 +647,7 @@ function reprintBarcode(id) {
 
 function deleteBarcode(id) {
   state.barcodeHistory = state.barcodeHistory.filter(
-    (item) => item.id.toString() !== id
+    (item) => item.number.toString() !== id
   );
   updateBarcodeDisplay();
   showNotification("Проба удалена из текущей сессии", "success");
@@ -1820,18 +1943,6 @@ class Carousel {
     console.log("Carousel destroyed");
   }
 }
-
-// Инициализация карусели
-document.addEventListener("DOMContentLoaded", () => {
-  new Carousel("carouselContainer", {
-    autoplay: true,
-    autoplaySpeed: 5000,
-    slidesToShow: 3,
-    infinite: true,
-    dots: true,
-    arrows: true,
-  });
-});
 
 // ===== Расширенные функции =====
 function exportData() {
