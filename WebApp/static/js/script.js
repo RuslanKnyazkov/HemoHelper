@@ -7,6 +7,7 @@ const state = {
   rocheMode: "routine",
   aliquotHistory: [],
   isContainerOpen: false,
+  retry: 1,
 };
 
 // Массив для хранения экземпляров каруселей
@@ -246,7 +247,36 @@ function selectMode(mode) {
     case "prog":
       modeCards[3]?.classList.add("active");
       break;
+    case "a-thsr":
+      modeCards[4]?.classList.add("active");
+      break;
+    case "dhea":
+      modeCards[5]?.classList.add("active");
+      break;
   }
+}
+
+function selectRetry(count) {
+  state.retry = count;
+
+  document.querySelectorAll(".mode-card-btn").forEach((elem) => {
+    elem.classList.remove("active");
+  });
+
+  const selectButton = document.querySelectorAll(".mode-card-btn");
+
+  switch (count) {
+    case "1":
+      selectButton[0]?.classList.add("active");
+      break;
+    case "2":
+      selectButton[1]?.classList.add("active");
+      break;
+    case "3":
+      selectButton[2]?.classList.add("active");
+      break;
+  }
+  console.log(`Колличество наклеек ${state.retry}`);
 }
 
 async function sendToDjango(data) {
@@ -259,6 +289,7 @@ async function sendToDjango(data) {
     mode: mode || "standard",
     size: "s", // размер штрихкода
     anchor: "h", // позиционирование
+    retry: state.retry || 1,
   };
 
   console.log("📦 Отправляемые данные:", dataToSend);
@@ -335,7 +366,8 @@ async function saveBarcode() {
     number: barcode,
     mode: state.barcodeMode,
     anchor: "h",
-    size: 's',
+    size: "s",
+    retry: state.retry,
   };
 
   // Добавляем в историю текущей сессии
@@ -503,7 +535,7 @@ async function specialLabel(type) {
     saliva: { type: "text", text: "Sluna", anchor: "c", size: "l" },
     virtual: {
       type: "text",
-      text: "VIRTUAL ARCHIVE",
+      text: "LAMI",
       anchor: "c",
       size: "l",
     },
@@ -519,6 +551,19 @@ async function specialLabel(type) {
   };
 
   const template = labelTemplates[type];
+
+  if (type === "virtual") {
+    if (!document.getElementById("barcode-input").value) {
+      showNotification(
+        "Сначала введите номер для штатива. После нажмите на кнопку!!",
+        "danger"
+      );
+    } else {
+      template.text = `LAMI \n ${
+        document.getElementById("barcode-input").value
+      }`;
+    }
+  }
   if (template) {
     const response = await sendToDjango(template);
   }
@@ -2025,8 +2070,8 @@ function PrintAliquotsForm() {
     lot: document.getElementById("aliquot-lot").value,
     volume: document.getElementById("aliquot-volume").value,
     count: document.getElementById("aliquot-count").value || 1,
-        size: "s",
-    anchor: "h"
+    size: "s",
+    anchor: "h",
   };
 
   if (!aliquoteObject.text || !aliquoteObject.lot || !aliquoteObject.volume) {

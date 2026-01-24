@@ -13,12 +13,9 @@ class PrintManager():
     def get_default_printer(self) -> str:
         return self.default_printer
 
-    def print_barcode(self, zpl: str,  mode: str = None, retry: int = None):
-        if not retry:
-            if mode in ["default", None]:
-                retry = 1
-            else:
-                retry = 2
+    def print_barcode(self, zpl: str,  mode: str = "default", retry: int = 1):
+        if isinstance(retry, str):
+            retry = int(retry)
 
         while retry > 0:
             try:
@@ -54,7 +51,7 @@ class ZPL:
         self.volume = volume
         self.end = "^XZ"
         self.font = {"s": 10, 'm': 15, "l": 30}
-        self.geometry_item = {"h": 10, "c": 50, "b": 10}
+        self.geometry_item = {"h": 20, "c": 50, "b": 10}
         self.size = size
         self.anchor = anchor
 

@@ -8,6 +8,7 @@
   <body>
     <div id="barcode-module" class="container-modern">
       <div class="container-header">
+        <button class="close-btn" onclick="closeAllContainers()">x</button>
         <div class="container-icon">
           <i class="fas fa-barcode"></i>
         </div>
@@ -53,16 +54,39 @@
                   <p>Разведение 1:10</p>
                 </div>
                 <div class="mode-card active" onclick="selectMode('default')">
-                  <h4>По умолчанию</h4>
-                  <p>Macro prl</p>
+                  <h4>Обычная наклейка</h4>
+                  <p>Default</p>
                 </div>
                 <div class="mode-card" onclick="selectMode('a-tpo')">
-                  <h4>A-TPO</h4>
+                  <h4>A-TPO 1:5</h4>
                   <p>Антитела к тиреопероксидазе</p>
                 </div>
                 <div class="mode-card" onclick="selectMode('prog')">
-                  <h4>Progesterone</h4>
+                  <h4>Progesterone 1:10</h4>
                   <p>Прогестерон</p>
+                </div>
+                <div class="mode-card" onclick="selectMode('a-thsr')">
+                  <h4>A-THSR 1:10</h4>
+                  <p>Антитела к рецепторам ТТГ</p>
+                </div>
+                <div class="mode-card" onclick="selectMode('dhea')">
+                  <h4>DHEA 1:10</h4>
+                  <p>Дегидроэпиандростерон сульфат</p>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Колличество наклеек</label>
+                <div class="mode-grid-btn">
+                  <div class="mode-card-btn" onclick="selectRetry('1')">
+                    <h4>1</h4>
+                  </div>
+                  <div class="mode-card-btn" onclick="selectRetry('2')">
+                    <h4>2</h4>
+                  </div>
+                  <div class="mode-card-btn" onclick="selectRetry('3')">
+                    <h4>3</h4>
+                  </div>
                 </div>
               </div>
             </div>
