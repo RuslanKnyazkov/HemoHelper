@@ -32,6 +32,7 @@
 
 .input-wrapper {
   position: relative;
+  min-width: 450px;
 }
 
 .input-field {
@@ -72,6 +73,9 @@
   align-items: center;
   justify-content: center;
   transition: var(--transition-normal);
+}
+.input-btn.active {
+  border: 2px solid #3498db;
 }
 
 .input-btn:hover {

@@ -76,7 +76,7 @@ class Task(models.Model):
         indexes = [
             models.Index(fields=['status']),
             models.Index(fields=['user', 'status']),
-            models.Index(fields=['due_date']),
+
         ]
 
     def __str__(self):

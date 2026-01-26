@@ -8,6 +8,7 @@ const state = {
   aliquotHistory: [],
   isContainerOpen: false,
   retry: 1,
+  selectCodeFormat: "B2N",
 };
 
 // Массив для хранения экземпляров каруселей
@@ -19,6 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   generateRacks();
   updateBarcodeDisplay();
+  selectCode("2of5");
+  selectRetry("2");
   setTimeout(() => {
     const carousel1 = new Carousel("carousel1", {
       autoplay: true,
@@ -157,13 +160,29 @@ function showModule(moduleId) {
   }
 }
 
+function selectCode(code) {
+  const selectButtonCode = document.getElementById(code);
+  let typeCode = ["128", "2of5"];
+  typeCode.forEach((btn) => {
+    document.getElementById(btn).classList.remove("active");
+  });
+  selectButtonCode.classList.add("active");
+  if (code === "128") {
+    state.selectCodeFormat = "BCN";
+    showNotification("Установлен формат печати буквенно-числовой", "success");
+  } else {
+    state.selectCodeFormat = "B2N";
+    showNotification("Установлен формат циферный", "success");
+  }
+}
+
 function updateNavigation(moduleId) {
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.classList.remove("active");
   });
 
   const activeBtn = document.querySelector(
-    `.nav-btn[onclick="showModule('${moduleId}')"]`
+    `.nav-btn[onclick="showModule('${moduleId}')"]`,
   );
   if (activeBtn) {
     activeBtn.classList.add("active");
@@ -197,7 +216,7 @@ function openSlideContainer(moduleId) {
     // Фокус на первый интерактивный элемент
     setTimeout(() => {
       const firstInput = targetContainer.querySelector(
-        "input, button, select, textarea"
+        "input, button, select, textarea",
       );
       if (firstInput) firstInput.focus();
     }, 150);
@@ -350,7 +369,7 @@ async function saveBarcode() {
 
   // Проверка на дубликат в текущей сессии
   const isDuplicate = state.barcodeHistory.some(
-    (item) => item.number === barcode
+    (item) => item.number === barcode,
   );
   if (
     isDuplicate &&
@@ -368,6 +387,7 @@ async function saveBarcode() {
     anchor: "h",
     size: "s",
     retry: state.retry,
+    code: state.selectCodeFormat || "B2N",
   };
 
   // Добавляем в историю текущей сессии
@@ -382,23 +402,6 @@ async function saveBarcode() {
   } catch (error) {
     console.error("❌ Ошибка отправки на сервер:", error);
     showNotification(`❌ Ошибка отправки: ${error.message}`, "error");
-  }
-
-  // Копирование в буфер обмена
-  const clipboardObject = {
-    type: "barcode",
-    number: barcode,
-    mode: state.barcodeMode,
-    barcode: barcode,
-    anchor: "h",
-    size: "s",
-  };
-
-  try {
-    await copyToClipboard(JSON.stringify(clipboardObject, null, 2));
-    console.log("📋 Скопировано в буфер обмена");
-  } catch (err) {
-    console.error("❌ Ошибка копирования:", err);
   }
 
   // Обновляем интерфейс и очищаем поле
@@ -419,7 +422,7 @@ function clearBarcodeInput() {
 function simulateScan() {
   // Генерация случайного баркода для симуляции
   const randomBarcode = Math.floor(
-    100000000 + Math.random() * 900000000
+    100000000 + Math.random() * 900000000,
   ).toString();
   const input = document.getElementById("barcode-input");
   if (input) {
@@ -439,7 +442,7 @@ function updateBarcodeDisplay() {
     count,
     "проба",
     "пробы",
-    "проб"
+    "проб",
   )} (текущая сессия)`;
 
   if (count === 0) {
@@ -591,7 +594,7 @@ function updateBarcodeDisplay() {
             </div>
             
         </div>
-        `
+        `,
     )
     .join("");
 }
@@ -619,7 +622,7 @@ function getModeDisplayName(mode) {
 
 function reprintBarcode(id) {
   const item = state.barcodeHistory.find(
-    (item) => item.number.toString() === id
+    (item) => item.number.toString() === id,
   );
   if (item) {
     const clipboardObject = {
@@ -629,25 +632,16 @@ function reprintBarcode(id) {
       barcode: item.number,
       anchor: "h",
       size: "s",
+      code: state.selectCodeFormat || "B2N",
     };
 
-    copyToClipboard(JSON.stringify(clipboardObject, null, 2))
-      .then(() => {
-        showNotification(
-          `✅ Проба "${item.number}" скопирована для печати`,
-          "success"
-        );
-      })
-      .catch((err) => {
-        console.error("Ошибка копирования:", err);
-        showNotification("Ошибка копирования", "error");
-      });
+    sendToDjango(clipboardObject);
   }
 }
 
 function deleteBarcode(id) {
   state.barcodeHistory = state.barcodeHistory.filter(
-    (item) => item.number.toString() !== id
+    (item) => item.number.toString() !== id,
   );
   updateBarcodeDisplay();
   showNotification("Проба удалена из текущей сессии", "success");
@@ -679,12 +673,17 @@ async function specialLabel(type) {
     if (!document.getElementById("barcode-input").value) {
       showNotification(
         "Сначала введите номер для штатива. После нажмите на кнопку!!",
-        "danger"
+        "error",
       );
     } else {
       template.text = `LAMI \n ${
         document.getElementById("barcode-input").value
       }`;
+      showNotification(
+        `Виртуальный штатив с номером ${document.getElementById("barcode-input").value} успешно отправлен на сервер для обработкив`,
+        "success",
+      );
+      clearBarcodeInput();
     }
   }
   if (template) {
@@ -702,7 +701,7 @@ function selectReagent(reagent) {
   });
 
   const activeBtn = Array.from(document.querySelectorAll(".reagent-btn")).find(
-    (btn) => btn.textContent.includes(getReagentDisplayName(reagent))
+    (btn) => btn.textContent.includes(getReagentDisplayName(reagent)),
   );
   if (activeBtn) {
     activeBtn.classList.add("active");
@@ -756,11 +755,11 @@ function generateRacks() {
                       : ""
                   }
                 </div>
-              `
+              `,
             ).join("")}
           </div>
         </div>
-      `
+      `,
     )
     .join("");
 }
@@ -806,9 +805,9 @@ function fillHole(rack, hole) {
     updateHoleDisplay(rack, hole, state.selectedReagent);
     showNotification(
       `${getReagentDisplayName(
-        state.selectedReagent
+        state.selectedReagent,
       )} установлен в ${rack} лунка ${hole}`,
-      "success"
+      "success",
     );
   }
 }
@@ -828,7 +827,7 @@ function getAllowedRacks(reagent) {
 
 function updateHoleDisplay(rack, hole, reagent) {
   const holeElement = document.querySelector(
-    `.hole[data-rack="${rack}"][data-hole="${hole}"]`
+    `.hole[data-rack="${rack}"][data-hole="${hole}"]`,
   );
   if (holeElement) {
     holeElement.textContent = reagent ? getReagentShortName(reagent) : "";
@@ -976,7 +975,7 @@ function setRocheMode(mode, buttonElement) {
                   .map(
                     (test) => `
                     <button class="test-button" onclick="selectTest('${test}')">${test}</button>
-                `
+                `,
                   )
                   .join("")}
             </div>
@@ -988,7 +987,7 @@ function setRocheMode(mode, buttonElement) {
 
   showNotification(
     `Режим Roche установлен: ${modeNames[mode] || mode}`,
-    "success"
+    "success",
   );
 }
 
@@ -1383,7 +1382,7 @@ function showNotification(message, type = "info") {
   // Добавляем уведомление в контейнер
   notificationContainer.insertBefore(
     notificationItem,
-    notificationContainer.firstChild
+    notificationContainer.firstChild,
   );
 
   // Автоматическое удаление через 5 секунд
@@ -1640,7 +1639,7 @@ class Carousel {
 
     // Добавляем клоны в трек
     firstClones.forEach((clone) =>
-      this.track.insertBefore(clone, this.slides[0])
+      this.track.insertBefore(clone, this.slides[0]),
     );
     lastClones.forEach((clone) => this.track.appendChild(clone));
 
@@ -1701,10 +1700,10 @@ class Carousel {
     // Пауза при наведении
     if (this.container) {
       this.container.addEventListener("mouseenter", () =>
-        this.pauseAutoSlide()
+        this.pauseAutoSlide(),
       );
       this.container.addEventListener("mouseleave", () =>
-        this.resumeAutoSlide()
+        this.resumeAutoSlide(),
       );
     }
 
