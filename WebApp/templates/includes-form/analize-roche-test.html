@@ -1,622 +1,1234 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    {% load static %}
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Лабораторные расчеты</title>
-    <link rel="stylesheet" href="{% static 'css/roshe.css'%}" />
-  </head>
-  <body>
-    <div id="test-module" class="container-modern">
-      <div class="container-content" id="test-container">
-        <div class="test-quiz-container glass-effect">
-            <div class="quiz-stats">
-              <div class="stat-item">
-                <div class="stat-value" id="correctCount">0</div>
-                <div class="stat-label">Правильно</div>
+{% extends 'index.html' %} {% load static %}
+<!-- Основа для тестирования -->
+{% block content %} {% include 'modules.html'%}
+
+<div class="main-content">
+  <!-- Заголовок разделов -->
+  <div class="sections-header">
+    <h1><i class="fas fa-flask"></i> Профессиональные модули обучения</h1>
+    <p class="subtitle">
+      Выберите направление для изучения материалов и тренировки
+    </p>
+  </div>
+
+  <!-- Табы для выбора раздела -->
+  <div class="section-tabs">
+    <button class="section-tab active" data-section="immunochemistry">
+      <i class="fas fa-vial"></i> Иммунохимия
+    </button>
+    <button class="section-tab" data-section="biochemistry">
+      <i class="fas fa-atom"></i> Биохимия
+    </button>
+    <button class="section-tab" data-section="hemostasis">
+      <i class="fas fa-tint"></i> Гемостазззззззззззз
+    </button>
+  </div>
+
+  <!-- Контейнер для динамического контента -->
+  <div class="sections-container">
+    <!-- Раздел Иммунохимия (активный по умолчанию) -->
+    <div class="section-content active" id="immunochemistry-section">
+      <!-- Видео материалы -->
+      <div class="video-section">
+        <h2>
+          <i class="fas fa-play-circle"></i> Видео материалы по иммунохимии
+        </h2>
+        <div class="video-grid">
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/immuno-video1.jpg' %}"
+                alt="Принципы иммунохимии"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
               </div>
-              <div class="stat-item">
-                <div class="stat-value" id="incorrectCount">0</div>
-                <div class="stat-label">Ошибки</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value" id="totalCount">0</div>
-                <div class="stat-label">Всего</div>
+            </div>
+            <div class="video-info">
+              <h3>Основные принципы иммунохимии</h3>
+              <p>Введение в методы иммунохимического анализа</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 25 мин</span>
+                <span><i class="fas fa-chart-line"></i> Начальный</span>
               </div>
             </div>
           </div>
 
-          <!-- Timer display -->
-          <div class="timer-display">
-            <div class="timer-label">Время на ответ</div>
-            <div class="timer-value" id="timerDisplay">17 сек</div>
-          </div>
-
-          <!-- Current test display -->
-          <div class="current-test-display">
-            <div class="test-code-label">Код теста</div>
-            <div class="test-code" id="currentTestCode">АЛС</div>
-            <div class="test-name" id="currentTestName">Анализ крови общий</div>
-          </div>
-
-          <!-- Answer options -->
-          <div class="answer-options">
-            <div class="options-label">
-              <i class="fas fa-mouse-pointer"></i>
-              Выберите все правильные линии (можно несколько)
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/immuno-video2.jpg' %}"
+                alt="Иммуноферментный анализ"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
             </div>
-
-            <div class="options-grid">
-              <button class="option-btn option-e1" data-line="E1">
-                <div class="line-code">E1</div>
-                <div class="line-key">Клавиша 1</div>
-                <div class="line-check" id="e1-selected">
-                  <i class="fas fa-check-circle"></i>
-                </div>
-              </button>
-
-              <button class="option-btn option-e2" data-line="E2">
-                <div class="line-code">E2</div>
-                <div class="line-key">Клавиша 2</div>
-                <div class="line-check" id="e2-selected">
-                  <i class="fas fa-check-circle"></i>
-                </div>
-              </button>
-
-              <button class="option-btn option-ce" data-line="CE">
-                <div class="line-code">CE</div>
-                <div class="line-key">Клавиша 3</div>
-                <div class="line-check" id="ce-selected">
-                  <i class="fas fa-check-circle"></i>
-                </div>
-              </button>
+            <div class="video-info">
+              <h3>Иммуноферментный анализ (ИФА)</h3>
+              <p>Технологии и применение ИФА в лаборатории</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 32 мин</span>
+                <span><i class="fas fa-chart-line"></i> Средний</span>
+              </div>
             </div>
           </div>
 
-          <!-- Feedback message -->
-          <div class="feedback-message" id="feedbackMessage"></div>
-
-          <!-- Action buttons -->
-          <div class="action-buttons">
-            <button id="skipTestBtn" class="btn btn-secondary">
-              <i class="fas fa-forward-fast"></i>
-              Пропустить тест
-              <span class="key-hint">(Пробел)</span>
-            </button>
-
-            <button id="checkAnswerBtn" class="btn btn-primary">
-              <i class="fas fa-check-circle"></i>
-              Проверить ответ
-              <span class="key-hint">(Enter)</span>
-            </button>
-
-            <button id="resetSelectionBtn" class="btn btn-secondary">
-              <i class="fas fa-undo"></i>
-              Сбросить выбор
-              <span class="key-hint">(R)</span>
-            </button>
-          </div>
-
-          <!-- Quick stats -->
-          <div class="quiz-quick-stats">
-            <div class="quick-stats-grid">
-              <div class="quick-stat">
-                <div class="quick-stat-label">Точность ответов</div>
-                <div class="quick-stat-value" id="accuracyRate">0%</div>
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/immuno-video3.jpg' %}"
+                alt="Иммунохемилюминесценция"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
               </div>
-
-              <div class="quick-stat">
-                <div class="quick-stat-label">Текущая серия</div>
-                <div class="quick-stat-value" id="streakCount">0</div>
-              </div>
-
-              <div class="quick-stat">
-                <div class="quick-stat-label">Выбрано линий</div>
-                <div class="quick-stat-value" id="selectedCount">0</div>
+            </div>
+            <div class="video-info">
+              <h3>Иммунохемилюминесценция</h3>
+              <p>Метод ИХЛ и его преимущества</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 28 мин</span>
+                <span><i class="fas fa-chart-line"></i> Средний</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Тесты и тренировки -->
+      <div class="tests-section">
+        <h2><i class="fas fa-brain"></i> Тренировка тестов по иммунохимии</h2>
+        <div class="test-cards">
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-vial"></i>
+            </div>
+            <h3>Гормональные исследования</h3>
+            <p>Тесты на TSH, FT4, FT3, Cortisol, Testosterone</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 25 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="immuno_hormones">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-dna"></i>
+            </div>
+            <h3>Онкомаркеры</h3>
+            <p>CA-125, CA-15-3, CA-19-9, AFP, CEA</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 20 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Высокая сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="immuno_onco">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-allergies"></i>
+            </div>
+            <h3>Аутоиммунные антитела</h3>
+            <p>A-CCP, Anti-TPO, ревматоидный фактор</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 15 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="immuno_autoimmune">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица тестов -->
+      <div class="tests-table-section">
+        <h2><i class="fas fa-table"></i> Справочник тестов по иммунохимии</h2>
+        <div class="table-responsive">
+          <table class="tests-table">
+            <thead>
+              <tr>
+                <th>Код теста</th>
+                <th>Название</th>
+                <th>Нормальные значения</th>
+                <th>Материал</th>
+                <th>Линии</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TSH</td>
+                <td>Тиреотропный гормон</td>
+                <td>0.4-4.0 мМЕ/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                  <span class="line-badge ce">CE</span>
+                </td>
+              </tr>
+              <tr>
+                <td>FT4</td>
+                <td>Тироксин свободный</td>
+                <td>9-20 пмоль/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                  <span class="line-badge ce">CE</span>
+                </td>
+              </tr>
+              <tr>
+                <td>CA-125</td>
+                <td>Раковый антиген 125</td>
+                <td><35 Ед/мл</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Cortisol</td>
+                <td>Кортизол</td>
+                <td>138-690 нмоль/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                  <span class="line-badge ce">CE</span>
+                </td>
+              </tr>
+              <tr>
+                <td>AFP</td>
+                <td>Альфа-фетопротеин</td>
+                <td><7.0 МЕ/мл</td>
+                <td>Сыворотка</td>
+                <td><span class="line-badge e1">E1</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <script>
-      const testsDatabase = [
-        // Только на линии E1
-        {
-          code: "A-CCP",
-          name: "Анти-ЦЦП антитела",
-          lines: ["E1"],
-        },
-        {
-          code: "C-Peptid",
-          name: "Ц-пептид",
-          lines: ["E1"],
-        },
-        {
-          code: "AFP",
-          name: "Альфа Фето протеин",
-          lines: ["E1"],
-        },
-        {
-          code: "HGH",
-          name: "Соматотропин",
-          lines: ["E1"],
-        },
-        {
-          code: "PCT(PCTX)",
-          name: "Прокальцитонин",
-          lines: ["E1"],
-        },
-       {
-          code: "IGF",
-          name: "Cоматомедин",
-          lines: ["E1"],
-        },
-        {
-          code: "Cyfra 21-1",
-          name: "Цифра 21-1",
-          lines: ["E1"],
-        },
-        {
-          code: "PTH",
-          name: "Паратиреоидный гормон (паратгормон, ПТГ)",
-          lines: ["E1"],
-        },
-        // На обеих линиях E1 и E2
-        {
-          code: "PBNP",
-          name: "натрийуретический пропептид",
-          lines: ["E1", "E2"],
-        },        {
-          code: "S-100",
-          name: "Белок s-100",
-          lines: ["E1", "E2"],
-        },        {
-          code: "CA-15-3",
-          name: "Раковый антиген 15-3",
-          lines: ["E1", "E2"],
-        },
-        {
-          code: "CA-19-9",
-          name: "Раковый антиген 19-9",
-          lines: ["E1", "E2"],
-        },
-        {
-          code: "CA-72-4",
-          name: "Раковый антиген 72-4",
-          lines: ["E1", "E2"],
-        },
-        {
-          code: "CA-125",
-          name: "Раковый антиген 125",
-          lines: ["E1", "E2"],
-        },
-        {
-          code: "TSH",
-          name: "Тиреотропный гормон",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "FT4",
-          name: "Тироксин свободный",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "FT3",
-          name: "Трийодтиронин свободный",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "Anti-TPO",
-          name: "Антитела к тиреопероксидазе",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "Cortisol",
-          name: "Кортизол",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "Testosterone",
-          name: "Тестостерон",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "Estradiol",
-          name: "Эстрадиол",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "Progesterone",
-          name: "Прогестерон",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "FERR",
-          name: "Общий анализ мочи",
-          lines: ["E1", "E2", "CE"],
-        },
-        {
-          code: "B12",
-          name: "СОЭ",
-          lines: ["E1", "E2", "CE"],
-        },
 
-      ];
+    <!-- Раздел Биохимия -->
+    <div class="section-content" id="biochemistry-section">
+      <!-- Видео материалы -->
+      <div class="video-section">
+        <h2><i class="fas fa-play-circle"></i> Видео материалы по биохимии</h2>
+        <div class="video-grid">
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/bio-video1.jpg' %}"
+                alt="Основы биохимии"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>Основы клинической биохимии</h3>
+              <p>Методы биохимического анализа крови</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 30 мин</span>
+                <span><i class="fas fa-chart-line"></i> Начальный</span>
+              </div>
+            </div>
+          </div>
 
-      // Класс системы тестирования
-      class TestQuizSystem {
-        constructor() {
-          this.currentTest = null;
-          this.selectedLines = new Set(); // Используем Set для хранения выбранных линий
-          this.stats = {
-            correct: 0,
-            incorrect: 0,
-            total: 0,
-            streak: 0,
-            maxStreak: 0,
-          };
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/bio-video2.jpg' %}"
+                alt="Ферменты крови"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>Ферментативная диагностика</h3>
+              <p>ALT, AST, ALP, GGT, LDH, CK и их клиническое значение</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 35 мин</span>
+                <span><i class="fas fa-chart-line"></i> Средний</span>
+              </div>
+            </div>
+          </div>
 
-          this.timeLimit = 25; // 17 секунд на ответ
-          this.timer = null;
-          this.timeLeft = this.timeLimit;
-          this.filter = "all";
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/bio-video3.jpg' %}"
+                alt="Липидный профиль"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>Липидный профиль</h3>
+              <p>Холестерин, триглицериды, ЛПВП, ЛПНП</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 28 мин</span>
+                <span><i class="fas fa-chart-line"></i> Средний</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          this.initialize();
+      <!-- Тесты и тренировки -->
+      <div class="tests-section">
+        <h2><i class="fas fa-brain"></i> Тренировка тестов по биохимии</h2>
+        <div class="test-cards">
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-liver"></i>
+            </div>
+            <h3>Печеночные пробы</h3>
+            <p>ALT, AST, ALP, GGT, билирубин, общий белок</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 30 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="bio_liver">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-heart"></i>
+            </div>
+            <h3>Кардиомаркеры</h3>
+            <p>Troponin I, CK-MB, LDH, миоглобин</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 25 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Высокая сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="bio_cardio">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-kidneys"></i>
+            </div>
+            <h3>Почечные пробы</h3>
+            <p>Креатинин, мочевина, мочевая кислота, электролиты</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 20 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="bio_kidney">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица тестов -->
+      <div class="tests-table-section">
+        <h2><i class="fas fa-table"></i> Справочник тестов по биохимии</h2>
+        <div class="table-responsive">
+          <table class="tests-table">
+            <thead>
+              <tr>
+                <th>Код теста</th>
+                <th>Название</th>
+                <th>Нормальные значения</th>
+                <th>Материал</th>
+                <th>Линии</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ALT</td>
+                <td>Аланинаминотрансфераза</td>
+                <td>7-45 Ед/л</td>
+                <td>Сыворотка</td>
+                <td><span class="line-badge e1">E1</span></td>
+              </tr>
+              <tr>
+                <td>GLU</td>
+                <td>Глюкоза</td>
+                <td>3.9-6.1 ммоль/л</td>
+                <td>Плазма/сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                  <span class="line-badge ce">CE</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Creatinine</td>
+                <td>Креатинин</td>
+                <td>53-97 мкмоль/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                </td>
+              </tr>
+              <tr>
+                <td>CRP</td>
+                <td>С-реактивный белок</td>
+                <td><5 мг/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                  <span class="line-badge ce">CE</span>
+                </td>
+              </tr>
+              <tr>
+                <td>LDH</td>
+                <td>Лактатдегидрогеназа</td>
+                <td>125-220 Ед/л</td>
+                <td>Сыворотка</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Раздел Гемостаз -->
+    <div class="section-content" id="hemostasis-section">
+      <!-- Видео материалы -->
+      <div class="video-section">
+        <h2><i class="fas fa-play-circle"></i> Видео материалы по гемостазу</h2>
+        <div class="video-grid">
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/hemo-video1.jpg' %}"
+                alt="Основы гемостаза"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>Основы системы гемостаза</h3>
+              <p>Свертывающая и противосвертывающая системы</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 28 мин</span>
+                <span><i class="fas fa-chart-line"></i> Начальный</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img
+                src="{% static 'images/hemo-video2.jpg' %}"
+                alt="Коагулограмма"
+              />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>Коагулограмма: интерпретация</h3>
+              <p>APTT, PT, INR, фибриноген, тромбиновое время</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 35 мин</span>
+                <span><i class="fas fa-chart-line"></i> Средний</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card">
+            <div class="video-thumbnail">
+              <img src="{% static 'images/hemo-video3.jpg' %}" alt="D-димер" />
+              <div class="video-overlay">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+            <div class="video-info">
+              <h3>D-димер и фибринолиз</h3>
+              <p>Диагностика тромбозов и ДВС-синдрома</p>
+              <div class="video-meta">
+                <span><i class="far fa-clock"></i> 30 мин</span>
+                <span><i class="fas fa-chart-line"></i> Высокая сложность</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Тесты и тренировки -->
+      <div class="tests-section">
+        <h2><i class="fas fa-brain"></i> Тренировка тестов по гемостазу</h2>
+        <div class="test-cards">
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-hand-holding-medical"></i>
+            </div>
+            <h3>Основная коагулограмма</h3>
+            <p>APTT, PT, INR, фибриноген, тромбиновое время</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 25 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="hemo_coag">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-virus"></i>
+            </div>
+            <h3>Тромбофилии</h3>
+            <p>Факторы свертывания, антитромбин III, протеины C и S</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 30 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Высокая сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="hemo_thrombophilia">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+
+          <div class="test-card">
+            <div class="test-icon">
+              <i class="fas fa-prescription-bottle"></i>
+            </div>
+            <h3>Антикоагулянтная терапия</h3>
+            <p>Контроль терапии варфарином, гепарином, НОАК</p>
+            <div class="test-stats">
+              <span><i class="fas fa-question-circle"></i> 20 вопросов</span>
+              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            </div>
+            <button class="start-test-btn" data-test="hemo_anticoag">
+              <i class="fas fa-play"></i> Начать тренировку
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица тестов -->
+      <div class="tests-table-section">
+        <h2><i class="fas fa-table"></i> Справочник тестов по гемостазу</h2>
+        <div class="table-responsive">
+          <table class="tests-table">
+            <thead>
+              <tr>
+                <th>Код теста</th>
+                <th>Название</th>
+                <th>Нормальные значения</th>
+                <th>Материал</th>
+                <th>Линии</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>APTT</td>
+                <td>Активированное частичное тромбопластиновое время</td>
+                <td>25-35 сек</td>
+                <td>Плазма цитратная</td>
+                <td><span class="line-badge e1">E1</span></td>
+              </tr>
+              <tr>
+                <td>PT</td>
+                <td>Протромбиновое время</td>
+                <td>11-16 сек</td>
+                <td>Плазма цитратная</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Fibrinogen</td>
+                <td>Фибриноген</td>
+                <td>2-4 г/л</td>
+                <td>Плазма цитратная</td>
+                <td>
+                  <span class="line-badge e1">E1</span>
+                  <span class="line-badge e2">E2</span>
+                </td>
+              </tr>
+              <tr>
+                <td>D-Dimer</td>
+                <td>D-димер</td>
+                <td><0.5 мкг/мл</td>
+                <td>Плазма цитратная</td>
+                <td><span class="line-badge e1">E1</span></td>
+              </tr>
+              <tr>
+                <td>AT-III</td>
+                <td>Антитромбин III</td>
+                <td>80-120%</td>
+                <td>Плазма цитратная</td>
+                <td><span class="line-badge e1">E1</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Стили для разделов */
+  .sections-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: linear-gradient(
+      135deg,
+      rgba(102, 126, 234, 0.1),
+      rgba(118, 75, 162, 0.1)
+    );
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+  }
+
+  .sections-header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    background: linear-gradient(45deg, #667eea, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sections-header .subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Табы разделов */
+  .section-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .section-tab {
+    padding: 15px 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+  }
+
+  .section-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+
+  /* Контейнер контента */
+  .sections-container {
+    position: relative;
+  }
+
+  .section-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .section-content.active {
+    display: block;
+  }
+
+  /* Видео секция */
+  .video-section {
+    margin-bottom: 50px;
+  }
+
+  .video-section h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-primary);
+  }
+
+  .video-section h2 i {
+    color: #ef4444;
+    font-size: 32px;
+  }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+  }
+
+  .video-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition-normal);
+  }
+
+  .video-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .video-thumbnail {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+  }
+
+  .video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .video-card:hover .video-thumbnail img {
+    transform: scale(1.1);
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .video-card:hover .video-overlay {
+    opacity: 1;
+  }
+
+  .video-overlay i {
+    font-size: 48px;
+    color: white;
+    background: rgba(239, 68, 68, 0.8);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-info {
+    padding: 20px;
+  }
+
+  .video-info h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .video-info p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+
+  .video-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .video-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Тесты секция */
+  .tests-section {
+    margin-bottom: 50px;
+  }
+
+  .tests-section h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-primary);
+  }
+
+  .tests-section h2 i {
+    color: #10b981;
+    font-size: 32px;
+  }
+
+  .test-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+  }
+
+  .test-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    transition: var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .test-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: var(--shadow-md);
+  }
+
+  .test-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #10b981;
+  }
+
+  .test-card h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .test-card p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+
+  .test-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .test-stats span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .start-test-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .start-test-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Таблица тестов */
+  .tests-table-section {
+    margin-bottom: 50px;
+  }
+
+  .tests-table-section h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-primary);
+  }
+
+  .tests-table-section h2 i {
+    color: #667eea;
+    font-size: 32px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+  }
+
+  .tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+
+  .tests-table thead {
+    background: rgba(102, 126, 234, 0.1);
+  }
+
+  .tests-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .tests-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .tests-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .tests-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Бейджи линий */
+  .line-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 5px;
+  }
+
+  .line-badge.e1 {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+  }
+
+  .line-badge.e2 {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+  }
+
+  .line-badge.ce {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+  }
+
+  /* Анимации */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .sections-header h1 {
+      font-size: 28px;
+    }
+
+    .section-tabs {
+      flex-direction: column;
+    }
+
+    .section-tab {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .video-grid,
+    .test-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .tests-table th,
+    .tests-table td {
+      padding: 12px 8px;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .sections-header {
+      padding: 20px;
+    }
+
+    .sections-header h1 {
+      font-size: 24px;
+    }
+
+    .video-section h2,
+    .tests-section h2,
+    .tests-table-section h2 {
+      font-size: 22px;
+    }
+
+    .video-info,
+    .test-card {
+      padding: 15px;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Переключение между разделами
+    const sectionTabs = document.querySelectorAll(".section-tab");
+    const sectionContents = document.querySelectorAll(".section-content");
+
+    sectionTabs.forEach((tab) => {
+      tab.addEventListener("click", function () {
+        const sectionId = this.dataset.section + "-section";
+
+        // Убираем активный класс у всех табов
+        sectionTabs.forEach((t) => t.classList.remove("active"));
+        // Добавляем активный класс текущему табу
+        this.classList.add("active");
+
+        // Скрываем все разделы
+        sectionContents.forEach((content) => {
+          content.classList.remove("active");
+          content.style.display = "none";
+        });
+
+        // Показываем выбранный раздел
+        const activeSection = document.getElementById(sectionId);
+        if (activeSection) {
+          activeSection.classList.add("active");
+          activeSection.style.display = "block";
         }
+      });
+    });
 
-        initialize() {
-          // Находим все элементы
-          this.elements = {
-            testCode: document.getElementById("currentTestCode"),
-            testName: document.getElementById("currentTestName"),
-            correctCount: document.getElementById("correctCount"),
-            incorrectCount: document.getElementById("incorrectCount"),
-            totalCount: document.getElementById("totalCount"),
-            accuracyRate: document.getElementById("accuracyRate"),
-            streakCount: document.getElementById("streakCount"),
-            selectedCount: document.getElementById("selectedCount"),
-            timerDisplay: document.getElementById("timerDisplay"),
-            feedbackMessage: document.getElementById("feedbackMessage"),
-            optionButtons: document.querySelectorAll(".option-btn"),
-            checkAnswerBtn: document.getElementById("checkAnswerBtn"),
-            skipTestBtn: document.getElementById("skipTestBtn"),
-            resetSelectionBtn: document.getElementById("resetSelectionBtn"),
-            filterButtons: document.querySelectorAll(
-              ".control-btn[data-filter]"),
-            
-          };
+    // Обработка кнопок начала тренировки
+    const startTestButtons = document.querySelectorAll(".start-test-btn");
+    startTestButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const testType = this.dataset.test;
 
-          // Назначаем обработчики
-          this.setupEventListeners();
+        // Загружаем тестовую систему с выбранным типом теста
+        loadTestSystem(testType);
 
-          // Запускаем первый тест
-          this.generateNewTest();
+        // Показываем уведомление
+        showNotification(
+          `Запускаем тренировку: ${this.closest(".test-card").querySelector("h3").textContent}`,
+          "success",
+        );
+      });
+    });
 
-          // Запускаем таймер
-          this.startTimer();
-        }
+    // Загрузка тестовой системы
+    function loadTestSystem(testType) {
+      // Определяем фильтр в зависимости от типа теста
+      let filter = "all";
 
-        setupEventListeners() {
-          // Кнопки выбора линии (множественный выбор)
-          this.elements.optionButtons.forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              this.toggleLine(e.currentTarget.dataset.line);
-            });
-          });
-
-          // Кнопка проверки ответа
-          this.elements.checkAnswerBtn.addEventListener("click", () => {
-            this.checkAnswer();
-          });
-
-          // Кнопка пропуска теста
-          this.elements.skipTestBtn.addEventListener("click", () => {
-            this.skipTest();
-          });
-
-          // Кнопка сброса выбора
-          this.elements.resetSelectionBtn.addEventListener("click", () => {
-            this.resetSelection();
-          });
-
-          // Кнопки фильтрации
-          this.elements.filterButtons.forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              this.applyFilter(e.currentTarget.dataset.filter);
-            });
-          });
-
-          // Горячие клавиши
-          document.addEventListener("keydown", (e) => {
-            switch (e.key) {
-              case "1":
-                this.toggleLine("E1");
-                break;
-              case "2":
-                this.toggleLine("E2");
-                break;
-              case "3":
-                this.toggleLine("CE");
-                break;
-              case " ":
-                e.preventDefault();
-                this.skipTest();
-                break;
-              case "Enter":
-                e.preventDefault();
-                this.checkAnswer();
-                break;
-              case "r":
-              case "R":
-                e.preventDefault();
-                this.resetSelection();
-                break;
-            }
-          });
-        }
-
-        toggleLine(line) {
-          if (this.selectedLines.has(line)) {
-            // Удаляем линию, если она уже выбрана
-            this.selectedLines.delete(line);
-            document.querySelector(
-              `#${line.toLowerCase()}-selected`
-            ).style.display = "none";
-            document.querySelector(
-              `.option-${line.toLowerCase()}`
-            ).style.background = `rgba(${
-              line === "E1"
-                ? "231, 76, 60"
-                : line === "E2"
-                ? "52, 152, 219"
-                : "46, 204, 113"
-            }, 0.1)`;
-          } else {
-            // Добавляем линию
-            this.selectedLines.add(line);
-            document.querySelector(
-              `#${line.toLowerCase()}-selected`
-            ).style.display = "block";
-            document.querySelector(
-              `.option-${line.toLowerCase()}`
-            ).style.background = `rgba(${
-              line === "E1"
-                ? "231, 76, 60"
-                : line === "E2"
-                ? "52, 152, 219"
-                : "46, 204, 113"
-            }, 0.3)`;
-          }
-
-          // Обновляем счетчик выбранных линий
-          this.elements.selectedCount.textContent = this.selectedLines.size;
-        }
-
-        resetSelection() {
-          this.selectedLines.clear();
-          this.elements.optionButtons.forEach((btn) => {
-            const line = btn.dataset.line;
-            document.querySelector(
-              `#${line.toLowerCase()}-selected`
-            ).style.display = "none";
-            btn.style.background = `rgba(${
-              line === "E1"
-                ? "231, 76, 60"
-                : line === "E2"
-                ? "52, 152, 219"
-                : "46, 204, 113"
-            }, 0.1)`;
-          });
-          this.elements.selectedCount.textContent = "0";
-        }
-
-        generateNewTest(filter = "all") {
-          // Фильтруем тесты
-          let availableTests = testsDatabase;
-
-          if (filter === "e1") {
-            availableTests = testsDatabase.filter((test) =>
-              test.lines.includes("E1")
-            );
-          } else if (filter === "e2") {
-            availableTests = testsDatabase.filter((test) =>
-              test.lines.includes("E2")
-            );
-          } else if (filter === "ce") {
-            availableTests = testsDatabase.filter((test) =>
-              test.lines.includes("CE")
-            );
-          }
-
-          // Выбираем случайный тест
-          if (availableTests.length > 0) {
-            this.currentTest =
-              availableTests[Math.floor(Math.random() * availableTests.length)];
-
-            // Обновляем отображение
-            this.elements.testCode.textContent = this.currentTest.code;
-            this.elements.testName.textContent = this.currentTest.name;
-
-            // Сбрасываем выбор
-            this.resetSelection();
-
-            // Сбрасываем сообщение
-            this.elements.feedbackMessage.style.opacity = "0";
-            this.elements.feedbackMessage.textContent = "";
-
-            // Сбрасываем таймер
-            this.resetTimer();
-          }
-        }
-
-        checkAnswer() {
-          if (!this.currentTest || this.selectedLines.size === 0) {
-            this.showFeedback("Выберите хотя бы одну линию!", "warning");
-            return;
-          }
-
-          // Создаем массивы для сравнения (приводим к массиву и сортируем)
-          const selectedLinesArray = Array.from(this.selectedLines).sort();
-          const correctLinesArray = this.currentTest.lines.sort();
-
-          // Сравниваем массивы
-          const isCorrect =
-            selectedLinesArray.length === correctLinesArray.length &&
-            selectedLinesArray.every(
-              (value, index) => value === correctLinesArray[index]
-            );
-
-          // Обновляем статистику
-          this.stats.total++;
-
-          if (isCorrect) {
-            this.stats.correct++;
-            this.stats.streak++;
-            if (this.stats.streak > this.stats.maxStreak) {
-              this.stats.maxStreak = this.stats.streak;
-            }
-            this.showFeedback("✅ Правильно!", "success");
-          } else {
-            this.stats.incorrect++;
-            this.stats.streak = 0;
-
-            // Показываем правильные линии
-            const correctLines = this.currentTest.lines.join(", ");
-            const selectedLines = Array.from(this.selectedLines).join(", ");
-            this.showFeedback(
-              `❌ Неверно! Вы выбрали: ${selectedLines}. Правильные линии: ${correctLines}`,
-              "error"
-            );
-          }
-
-          // Обновляем отображение статистики
-          this.updateStatsDisplay();
-
-          // Автоматически переходим к следующему тесту через 2 секунды
-          setTimeout(() => {
-            this.generateNewTest();
-          }, 2000);
-        }
-
-        skipTest() {
-          if (!this.currentTest) return;
-
-          this.stats.total++;
-          this.stats.streak = 0;
-
-          // Показываем правильный ответ
-          const correctLines = this.currentTest.lines.join(", ");
-          const selectedLines =
-            this.selectedLines.size > 0
-              ? `Вы выбрали: ${Array.from(this.selectedLines).join(", ")}. `
-              : "";
-          this.showFeedback(
-            `⏭️ Пропущено. ${selectedLines}Правильные линии: ${correctLines}`,
-            "info"
-          );
-
-          this.updateStatsDisplay();
-
-          // Автоматически переходим к следующему тесту через 1.5 секунды
-          setTimeout(() => {
-            this.generateNewTest();
-          }, 1500);
-        }
-
-        showFeedback(message, type) {
-          const color =
-            {
-              success: "#10b981",
-              error: "#ef4444",
-              warning: "#f59e0b",
-              info: "#667eea",
-            }[type] || "#667eea";
-
-          this.elements.feedbackMessage.textContent = message;
-          this.elements.feedbackMessage.style.color = color;
-          this.elements.feedbackMessage.style.backgroundColor = `${color}20`;
-          this.elements.feedbackMessage.style.border = `1px solid ${color}40`;
-          this.elements.feedbackMessage.style.opacity = "1";
-
-          // Автоматическое скрытие через 3 секунды
-          setTimeout(() => {
-            this.elements.feedbackMessage.style.opacity = "0";
-          }, 3000);
-        }
-
-        updateStatsDisplay() {
-          // Обновляем счетчики
-          this.elements.correctCount.textContent = this.stats.correct;
-          this.elements.incorrectCount.textContent = this.stats.incorrect;
-          this.elements.totalCount.textContent = this.stats.total;
-          this.elements.streakCount.textContent = this.stats.streak;
-
-          // Рассчитываем точность
-          const accuracy =
-            this.stats.total > 0
-              ? Math.round((this.stats.correct / this.stats.total) * 100)
-              : 0;
-          this.elements.accuracyRate.textContent = `${accuracy}%`;
-        }
-
-        applyFilter(filter) {
-          // Обновляем активную кнопку фильтра
-          this.elements.filterButtons.forEach((btn) => {
-            btn.classList.remove("active");
-          });
-          document
-            .querySelector(`.control-btn[data-filter="${filter}"]`)
-            .classList.add("active");
-
-          // Генерируем новый тест с фильтром
-          this.generateNewTest(filter);
-        }
-
-        startTimer() {
-          this.timer = setInterval(() => {
-            if (this.timeLeft > 0) {
-              this.timeLeft--;
-              this.elements.timerDisplay.textContent = `${this.timeLeft} сек`;
-
-              // Меняем цвет при малом времени
-              if (this.timeLeft <= 5) {
-                this.elements.timerDisplay.style.color = "#ef4444";
-              } else if (this.timeLeft <= 10) {
-                this.elements.timerDisplay.style.color = "#f59e0b";
-              }
-            } else {
-              // Время вышло - пропускаем тест
-              this.skipTest();
-            }
-          }, 1000);
-        }
-
-        resetTimer() {
-          this.timeLeft = this.timeLimit;
-          this.elements.timerDisplay.textContent = `${this.timeLeft} сек`;
-          this.elements.timerDisplay.style.color = "#f59e0b";
-        }
+      if (testType.includes("immuno")) {
+        filter = "immunochemistry";
+      } else if (testType.includes("bio")) {
+        filter = "biochemistry";
+      } else if (testType.includes("hemo")) {
+        filter = "hemostasis";
       }
 
+      // Если существует глобальная система тестов, обновляем фильтр
+      if (window.quizSystem) {
+        window.quizSystem.applyFilter(filter);
 
-      // Экспортируем в глобальную область для кнопок
-      window.startNewQuiz = function () {
-        quizSystem.generateNewTest();
-      };
+        // Прокручиваем к тестовой системе
+        const testModule = document.getElementById("test-module");
+        if (testModule) {
+          testModule.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
 
-      window.checkAnswer = function () {
-        quizSystem.checkAnswer();
-      };
+    // Показ уведомлений
+    function showNotification(message, type = "info") {
+      // Удаляем старое уведомление
+      const oldNotification = document.querySelector(".custom-notification");
+      if (oldNotification) oldNotification.remove();
 
-      window.skipTest = function () {
-        quizSystem.skipTest();
-      };
+      // Создаем новое уведомление
+      const notification = document.createElement("div");
+      notification.className = `custom-notification notification-${type}`;
+      notification.innerHTML = `
+            <i class="fas fa-${getNotificationIcon(type)}"></i>
+            <span>${message}</span>
+            <button class="notification-close"><i class="fas fa-times"></i></button>
+        `;
 
-      window.resetSelection = function () {
-        quizSystem.resetSelection();
+      document.body.appendChild(notification);
+
+      // Анимация появления
+      setTimeout(() => {
+        notification.classList.add("show");
+      }, 10);
+
+      // Закрытие по клику
+      const closeBtn = notification.querySelector(".notification-close");
+      closeBtn.addEventListener("click", () => {
+        notification.classList.remove("show");
+        setTimeout(() => notification.remove(), 300);
+      });
+
+      // Автоматическое закрытие через 5 секунд
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.classList.remove("show");
+          setTimeout(() => notification.remove(), 300);
+        }
+      }, 5000);
+    }
+
+    function getNotificationIcon(type) {
+      const icons = {
+        success: "check-circle",
+        error: "exclamation-circle",
+        warning: "exclamation-triangle",
+        info: "info-circle",
       };
-    </script>
-  </body>
-</html>
+      return icons[type] || "info-circle";
+    }
+
+    // Стили для уведомлений
+    const notificationStyles = document.createElement("style");
+    notificationStyles.textContent = `
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .custom-notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .notification-success i {
+            color: #10b981;
+        }
+        
+        .notification-error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .notification-error i {
+            color: #ef4444;
+        }
+        
+        .notification-warning {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .notification-warning i {
+            color: #f59e0b;
+        }
+        
+        .notification-info {
+            border-left: 4px solid #667eea;
+        }
+        
+        .notification-info i {
+            color: #667eea;
+        }
+        
+        .custom-notification span {
+            flex: 1;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
+        
+        .notification-close:hover {
+            color: var(--text-primary);
+        }
+    `;
+    document.head.appendChild(notificationStyles);
+  });
+</script>
+{% endblock %}

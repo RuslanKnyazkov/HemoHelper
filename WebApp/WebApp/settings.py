@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'barcode',
     'task',
     'user',
+    'teachbase',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,8 @@ ROOT_URLCONF = 'WebApp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [Path.joinpath(BASE_DIR, 'templates')],
+        'DIRS': [Path.joinpath(BASE_DIR, 'templates'),
+                 Path.joinpath(BASE_DIR, 'templates/teachbase-templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

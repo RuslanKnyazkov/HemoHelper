@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% block title%}
+    <title>Document</title>
+    {% endblock %} {% block style %}
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{%static 'css/style.css'%}" />
+    {%endblock%}
+  </head>
+  <body>
+    <!-- block content -->
+    {%block content%} {%endblock%}
+
+    <!-- Notification System -->
+    <div id="notification" class="notification hidden"></div>
+
+    <!-- block script -->
+    {% block script %}
+    <script src="{%static 'js/script.js'%}"></script>
+    {%endblock%}
+  </body>
+</html>

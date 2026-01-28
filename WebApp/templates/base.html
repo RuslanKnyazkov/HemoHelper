@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="ru" class="dark-theme">
-  <head>
-    {% load static %}
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Гемотест Хелпер | Лабораторная система</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link rel="stylesheet" href="{%static 'css/style.css'%}" />
-  </head>
-  <body>
+{% extends 'index.html'%}
+{% load static %}
+
+    {% block title %}<title>Гемотест Хелпер | Лабораторная система</title>{%endblock%}
+
+    {% block content %}
     <!-- Header -->
-    {% include 'includes-form/header.html'%}
+    {% include 'modules.html'%}
+
+
     <!-- Main Content -->
     <main class="main">
       <!-- Home Module -->
@@ -67,37 +61,16 @@
       <!-- Main Craousel   -->
       {% include 'includes-form/carousel-main.html'%}
 
-      <!-- Quick Actions -->
-      {% include 'includes-form/panel-quick-actions.html'%}
-
       <!-- Carousel alicvote -->
       {% include 'includes-form/carousel-alicvote.html'%}
-
-      <!-- AlicvoteContainer -->
-      {% include 'includes-form/modern-alicvote.html'%}
-
-      <!-- Barcode Module -->
-      {% include 'includes-form/barcode-module.html'%}
-
-      <!-- Reagent System Module -->
-      {% include 'includes-form/reagent-module.html'%}
-
-      <!-- Roche модуль -->
-      {% include 'includes-form/roche-module.html'%}
-
-      <!-- Тестовый модуль для теста -->
-      {% include 'includes-form/analize-roche-test.html'%}
-
-      <!-- Модул расчетов -->
-      {% include 'includes-form/calculate-module.html'%}
 
       <!-- Карусель тестов -->
       {% include 'includes-form/carousel-test.html'%}
     </main>
+    {% endblock %}
 
-    <!-- Notification System -->
-    <div id="notification" class="notification hidden"></div>
-
+    
+    {% block script %}
     <script src="{%static 'js/script.js'%}"></script>
-  </body>
-</html>
+    {% endblock %}
+

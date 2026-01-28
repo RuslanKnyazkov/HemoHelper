@@ -72,6 +72,11 @@ body {
   padding: 0 24px;
 }
 
+.header a {
+  text-decoration: blink;
+  color: var(--text-secondary);
+}
+
 .header__logo {
   display: flex;
   align-items: center;
