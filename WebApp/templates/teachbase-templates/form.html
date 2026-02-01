@@ -1,0 +1,8 @@
+{% extends 'index.html'%} {% block content %}
+<div class="form-container" id="form-immuno">
+  <form method="post" action="" class="form-block">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Создать</button>
+  </form>
+</div>
+{%endblock%}
