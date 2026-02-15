@@ -71,7 +71,7 @@ class ZPL:
 
     def add_barcode(self, number_barcode):
         self.build.append(
-            f"^FO110,60^BY1.5^{self.code},80,N,N,N^FD{number_barcode}^FS")
+            f"^FO110,60^BY{1.5 if self.code == "B2N" else 1}^{self.code},80,N,N,N^FD{number_barcode}^FS")
 
     def add_number(self, number):
         self.build.append(
@@ -83,7 +83,7 @@ class ZPL:
 
     def add_data(self):
         self.build.append(
-            f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{dt.now().strftime("%D")}^FS")
+            f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{dt.now().strftime("%d/%m/%Y")}^FS")
 
     def build_zpl(self) -> str:
         """

@@ -124,6 +124,36 @@
                   <i class="fas fa-infinity"></i>
                   Инфинити
                 </button>
+                <button class="quick-btn" onclick="specialLabel('sorted')">
+                  <i class="fas fa-infinity"></i>
+                  Sorted
+                </button>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="glp-section">
+                <label for="glp-serial">Последовательность наклеек</label>
+                <input
+                  class="input-field"
+                  type="text"
+                  id="glp-serial"
+                  placeholder="Укажите серию наклеек знаком - "
+                />
+                <div class="mode-grid">
+                  <div class="mode-card" onclick="selectMode('Alinity')">
+                    <h4>Arhive Alinity</h4>
+                  </div>
+                  <div class="mode-card" onclick="selectMode('HbA1c')">
+                    <h4>Arhive Arhitect</h4>
+                  </div>
+                  <button
+                    class="btn btn-warning"
+                    onclick="printSerialLabelsGLP()"
+                  >
+                    Печать
+                  </button>
+                </div>
               </div>
             </div>
           </div>

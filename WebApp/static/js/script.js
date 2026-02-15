@@ -272,6 +272,12 @@ function selectMode(mode) {
     case "dhea":
       modeCards[5]?.classList.add("active");
       break;
+    case "Alinity":
+      modeCards[6]?.classList.add("active");
+      break;
+    case "HbA1c":
+      modeCards[7]?.classList.add("active");
+      break;
   }
 }
 
@@ -665,6 +671,7 @@ async function specialLabel(type) {
       anchor: "h",
       retry: 1,
     },
+    sorted: { type: "barcode", code: "BCN", text: "Sorted", barcode: "Sorted" },
   };
 
   const template = labelTemplates[type];
@@ -676,9 +683,7 @@ async function specialLabel(type) {
         "error",
       );
     } else {
-      template.text = `LAMI \n ${
-        document.getElementById("barcode-input").value
-      }`;
+      template.text = `LAMI\n${document.getElementById("barcode-input").value}`;
       showNotification(
         `Виртуальный штатив с номером ${document.getElementById("barcode-input").value} успешно отправлен на сервер для обработкив`,
         "success",
@@ -2404,6 +2409,17 @@ function testRocheModule() {
   } else {
     quizSystem = new TestQuizSystem();
   }
+}
+
+function printSerialLabelsGLP() {
+  const serial = document.getElementById("glp-serial");
+  console.log(serial.value);
+  let param = {
+    type: "serial",
+    text: state.barcodeMode,
+    retry: serial.value,
+  };
+  sendToDjango(param);
 }
 
 // ===== Экспорт функций в глобальную область видимости =====

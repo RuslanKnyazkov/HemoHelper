@@ -175,3 +175,9 @@
   display: flex;
   justify-content: space-evenly;
 }
+
+.glp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

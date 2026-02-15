@@ -89,7 +89,16 @@ class PrintMonitor:
 
                     self.print_manager.print_barcode(
                         zpl=zpl_code, retry=int(retry))
-
+            elif type_label == "serial":
+                ranges = data.pop('retry')
+                text = data.pop('text')
+                if len(ranges.split('-')) > 1:
+                    start, end = ranges.split("-")
+                    for i in range(int(start), int(end)):
+                        zpl_code = self.zpl_generator.create_simple_text_zpl(
+                            text=f'{text}\n{i}', **data
+                        )
+                        self.print_manager.print_barcode(zpl=zpl_code)
             else:
                 return JsonResponse({
                     'success': False,
