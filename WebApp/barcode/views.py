@@ -2,6 +2,8 @@ from django.http import JsonResponse
 import json
 from .utilite import PrintMonitor
 from django.views.decorators.csrf import csrf_exempt
+from utility.controller import PcController
+
 
 @csrf_exempt
 def save_barcode(request):
@@ -67,3 +69,22 @@ def save_barcode(request):
         'success': False,
         'error': 'Только POST запросы'
     }, status=405)
+
+
+mouse_state = PcController()
+
+
+@csrf_exempt
+def turn_state_mouse(request):
+    if request.method == "POST":
+        try:
+
+            if request.content_type == 'application/json':
+                state = json.loads(request.body)
+
+                mouse_state.state = state['state']
+
+                mouse_state.prevent_sleep()
+                return JsonResponse({'status': f"{state}"})
+        except Exception as e:
+            return JsonResponse({'e': e})

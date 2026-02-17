@@ -1,4 +1,5 @@
 <!doctype html>
+{% load static %}
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -16,6 +17,15 @@
           <h2>Баркоды и этикетки</h2>
           <p>Печать этикеток с поддержкой всех режимов анализа</p>
         </div>
+        <div class="doombass-block" onclick="API.turnStateMouse()">
+          <img
+            src="{% static 'images/images-other/doombass.jpeg'%}"
+            alt=""
+            width="80"
+            height="80"
+          />
+        </div>
+
         <div class="container-stats">
           <span id="barcode-count">0 проб</span>
         </div>
@@ -138,14 +148,16 @@
                   class="input-field"
                   type="text"
                   id="glp-serial"
-                  placeholder="Укажите серию наклеек знаком - "
+                  placeholder="Укажите серию наклеек знаком '-' "
                 />
                 <div class="mode-grid">
                   <div class="mode-card" onclick="selectMode('Alinity')">
-                    <h4>Arhive Alinity</h4>
+                    <h4>Alinity</h4>
+                    <p>Архив для сыворотки</p>
                   </div>
                   <div class="mode-card" onclick="selectMode('HbA1c')">
                     <h4>Arhive Arhitect</h4>
+                    <p>Архив для ЭДТА</p>
                   </div>
                   <button
                     class="btn btn-warning"
@@ -172,4 +184,5 @@
       </div>
     </div>
   </body>
+  <script></script>
 </html>

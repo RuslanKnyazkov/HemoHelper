@@ -8,18 +8,22 @@ from datetime import datetime as dt
 class PrintManager():
     def __init__(self):
 
-        self.default_printer: str = "ZDesigner ZD410-203dpi ZPL"
+        self.default_printer: list = [
+            "ZDesigner ZD410-203dpi ZPL", "ZDesigner ZD410-203dpi ZPL (копия 1)"]
 
-    def get_default_printer(self) -> str:
-        return self.default_printer
+    def get_default_printer(self, index: int = 0) -> str:
+        return self.default_printer[index]
 
     def print_barcode(self, zpl: str,  mode: str = "default", retry: int = 1):
         if isinstance(retry, str):
             retry = int(retry)
 
+        printers = self.get_default_printer()
+        count_errors = 0
+
         while retry > 0:
             try:
-                hPrinter = win32print.OpenPrinter(self.get_default_printer())
+                hPrinter = win32print.OpenPrinter(printers)
                 job_info = ("Barcode Print", None, "RAW")
                 job_id = win32print.StartDocPrinter(hPrinter, 1, job_info)
                 win32print.StartPagePrinter(hPrinter)
@@ -30,7 +34,12 @@ class PrintManager():
                 retry -= 1
             except Exception as e:
                 print(e)
+                printers = self.get_default_printer(index=1)
+                count_errors += 1
+            if count_errors > 2:
+                print("Колличество попыток превысило 2")
                 break
+
         return True  # Заглушка для отсутствующего принтера
 
 
