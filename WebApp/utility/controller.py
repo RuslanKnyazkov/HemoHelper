@@ -1,6 +1,5 @@
 import pyautogui
 import time
-import random
 
 
 class PcController:
@@ -13,18 +12,13 @@ class PcController:
         print(f"Активный статус {self.state}")
         try:
             while self.state:
-                # Получаем текущую позицию
-                x, y = pyautogui.position()
+                time.sleep(200)
+                pyautogui.click()
 
-                # Двигаем немного вправо-влево
-                pyautogui.moveTo(x + random.randint(1, 5), y)
-                time.sleep(0.1)
-                pyautogui.moveTo(x, y)
-
-                print(f"🖱️ Мышь пошевелилась в {time.strftime('%H:%M:%S')}")
+                print(f"🖱️ Клик по мыши в {time.strftime('%H:%M:%S')}")
 
                 # Ждем 5 минут (300 секунд)
-                time.sleep(200)
+                time.sleep(400)
 
         except KeyboardInterrupt:
             print("\n🔴 Mouse jiggler остановлен")

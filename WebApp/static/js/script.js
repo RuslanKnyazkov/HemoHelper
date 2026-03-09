@@ -13,15 +13,12 @@ const CONFIG = {
 
 const state = {
   currentModule: "home",
-  barcodeMode: "default",
-  barcodeHistory: [],
+  // Убраны barcodeMode, barcodeHistory, retry, selectCodeFormat
   selectedReagent: null,
   reagentData: {},
   rocheMode: "routine",
   aliquotHistory: [],
   isContainerOpen: false,
-  retry: 1,
-  selectCodeFormat: "B2N",
 };
 
 const carousels = [];
@@ -341,7 +338,7 @@ const Navigation = {
     this.updateNavigation(moduleId);
 
     const moduleHandlers = {
-      barcode: () => updateBarcodeDisplay(),
+      // Убрана ссылка на updateBarcodeDisplay
       roche: () => RocheModule.init(),
     };
     moduleHandlers[moduleId]?.();
@@ -410,253 +407,6 @@ const Navigation = {
       mobileMenu?.classList.remove("active");
       hamburger?.classList.remove("active");
       document.body.style.overflow = "";
-    }
-  },
-};
-
-// ===== Модуль баркодов =====
-const BarcodeModule = {
-  modes: {
-    testosterone: { display: "Testosterone 1:10", active: 0 },
-    default: { display: "По умолчанию", active: 1 },
-    "a-tpo": { display: "A-TPO", active: 2 },
-    prog: { display: "Progesterone", active: 3 },
-    "a-thsr": { display: "A-THSR", active: 4 },
-    dhea: { display: "DHEA", active: 5 },
-    Alinity: { display: "Alinity", active: 6 },
-    HbA1c: { display: "HbA1c", active: 7 },
-  },
-
-  selectMode(mode) {
-    state.barcodeMode = mode;
-    document
-      .querySelectorAll(".mode-card")
-      .forEach((card, i) =>
-        card.classList.toggle("active", i === this.modes[mode]?.active),
-      );
-  },
-
-  selectRetry(count) {
-    state.retry = count;
-    document
-      .querySelectorAll(".mode-card-btn")
-      .forEach((btn, i) =>
-        btn.classList.toggle("active", i === parseInt(count) - 1),
-      );
-    console.log(`Количество наклеек: ${state.retry}`);
-  },
-
-  selectCode(code) {
-    ["128", "2of5"].forEach((id) =>
-      document.getElementById(id)?.classList.remove("active"),
-    );
-    document.getElementById(code)?.classList.add("active");
-    state.selectCodeFormat = code === "128" ? "BCN" : "B2N";
-    showNotification(
-      `Установлен формат ${code === "128" ? "буквенно-числовой" : "циферный"}`,
-      "success",
-    );
-  },
-
-  async saveBarcode() {
-    const input = document.getElementById("barcode-input");
-    if (!input) return;
-
-    const barcode = input.value.trim();
-    if (!barcode) {
-      showNotification("Введите номер пробы!", "error");
-      input.focus();
-      return;
-    }
-    if (barcode.length < 10) {
-      showNotification("Внимание длина номера меньше 10 цифр", "error");
-    }
-
-    const isDuplicate = state.barcodeHistory.some(
-      (item) => item.number === barcode,
-    );
-    if (
-      isDuplicate &&
-      !confirm("Такой номер уже был добавлен. Добавить повторно?")
-    )
-      return;
-
-    const barcodeObject = {
-      type: "barcode",
-      barcode,
-      number: barcode,
-      mode: state.barcodeMode,
-      anchor: "h",
-      size: "s",
-      retry: state.retry,
-      code: state.selectCodeFormat,
-    };
-
-    state.barcodeHistory.unshift(barcodeObject);
-
-    try {
-      await API.sendToDjango(barcodeObject);
-      showNotification(
-        `✅ Проба "${barcode}" отправлена на печать!`,
-        "success",
-      );
-    } catch (error) {
-      showNotification(`❌ Ошибка отправки: ${error.message}`, "error");
-    }
-
-    this.updateDisplay();
-    input.value = "";
-    input.focus();
-  },
-
-  updateDisplay() {
-    const countEl = document.getElementById("barcode-count");
-    const historyEl = document.getElementById("barcode-history");
-    if (!countEl || !historyEl) return;
-
-    const count = state.barcodeHistory.length;
-    countEl.textContent = `${count} ${Utils.getRussianPlural(count, "проба", "пробы", "проб")} (текущая сессия)`;
-
-    if (count === 0) {
-      historyEl.innerHTML = `
-        <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-          <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px;"></i>
-          <h3 style="margin-bottom: 8px;">Нет сохраненных проб</h3>
-          <p>Добавьте первую пробу через форму слева</p>
-          <p style="font-size: 12px; margin-top: 10px; color: #888;">
-            <i class="fas fa-info-circle"></i> Данные хранятся только в текущей сессии
-          </p>
-        </div>
-      `;
-      return;
-    }
-
-    historyEl.innerHTML = state.barcodeHistory
-      .map(
-        (item) => `
-      <div class="history-item" style="background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; overflow: hidden;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div style="font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <div style="width: 32px; height: 32px; background: rgba(102, 126, 234, 0.1); color: #667eea; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-barcode"></i>
-            </div>
-            <span>Номер пробы: ${item.number}</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(34, 197, 94, 0.2);">
-              <i class="fas fa-sticky-note"></i> Кол-во наклеек: ${item.retry}
-            </div>
-            <span style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(102, 126, 234, 0.2);">
-              <i class="fas fa-${this.getModeIcon(item.mode)}"></i> ${this.getModeDisplayName(item.mode)}
-            </span>
-            <span style="color: var(--text-secondary); font-size: 12px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
-              <i class="far fa-clock"></i> ${new Date().toLocaleTimeString()}
-            </span>
-          </div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn" style="flex: 1; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); padding: 10px 16px; border-radius: 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;" onclick="BarcodeModule.reuseBarcode('${item.number}')">
-            <i class="fas fa-redo"></i> Использовать снова
-          </button>
-          <button class="btn" style="flex: 0.5; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px 16px; border-radius: 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;" onclick="BarcodeModule.deleteBarcode('${item.number}')">
-            <i class="fas fa-trash"></i> Удалить
-          </button>
-        </div>
-      </div>
-    `,
-      )
-      .join("");
-  },
-
-  getModeIcon(mode) {
-    const icons = {
-      scan: "barcode",
-      manual: "keyboard",
-      import: "file-import",
-      default: "barcode",
-    };
-    return icons[mode] || "barcode";
-  },
-
-  getModeDisplayName(mode) {
-    return this.modes[mode]?.display || mode;
-  },
-
-  reuseBarcode(id) {
-    const item = state.barcodeHistory.find(
-      (item) => item.number.toString() === id,
-    );
-    if (item) {
-      API.sendToDjango({ ...item, type: "barcode" });
-    }
-  },
-
-  deleteBarcode(id) {
-    state.barcodeHistory = state.barcodeHistory.filter(
-      (item) => item.number.toString() !== id,
-    );
-    this.updateDisplay();
-    showNotification("Проба удалена из текущей сессии", "success");
-  },
-
-  async specialLabel(type) {
-    const templates = {
-      saliva: { type: "text", text: "Sluna", anchor: "c", size: "l" },
-      virtual: { type: "text", text: "LAMI", anchor: "c", size: "l" },
-      duplicate: { type: "text", text: "DUBLI", anchor: "c", size: "l" },
-      infinity: {
-        type: "barcode",
-        code: "BCN",
-        text: "As123456",
-        barcode: "As123456",
-        anchor: "h",
-        retry: 1,
-      },
-      sorted: {
-        type: "barcode",
-        code: "BCN",
-        text: "Sorted",
-        barcode: "Sorted",
-      },
-    };
-
-    const template = templates[type];
-    if (!template) return;
-
-    if (type === "virtual") {
-      const input = document.getElementById("barcode-input");
-      if (!input.value) {
-        showNotification("Сначала введите номер для штатива!", "error");
-        return;
-      }
-      template.text = `LAMI\n${input.value}`;
-      showNotification(
-        `Виртуальный штатив с номером ${input.value} отправлен`,
-        "success",
-      );
-      input.value = "";
-    }
-
-    await API.sendToDjango(template);
-  },
-
-  clearInput() {
-    const input = document.getElementById("barcode-input");
-    if (input) {
-      input.value = "";
-      input.focus();
-    }
-    showNotification("Форма очищена", "info");
-  },
-
-  simulateScan() {
-    const randomBarcode = Math.floor(
-      100000000 + Math.random() * 900000000,
-    ).toString();
-    const input = document.getElementById("barcode-input");
-    if (input) {
-      input.value = randomBarcode;
-      showNotification(`Симуляция сканирования: ${randomBarcode}`, "info");
     }
   },
 };
@@ -1493,7 +1243,7 @@ const Calculations = {
 const DataManager = {
   exportData() {
     const exportData = {
-      barcodeHistory: state.barcodeHistory,
+      // Убраны barcodeHistory
       aliquotHistory: state.aliquotHistory,
       reagentData: state.reagentData,
       exportDate: new Date().toISOString(),
@@ -1520,14 +1270,12 @@ const DataManager = {
       try {
         const imported = JSON.parse(e.target.result);
         if (confirm("Импортировать данные? Текущие данные будут заменены.")) {
-          if (imported.barcodeHistory)
-            state.barcodeHistory = imported.barcodeHistory;
+          // Убрана barcodeHistory
           if (imported.aliquotHistory)
             state.aliquotHistory = imported.aliquotHistory;
           if (imported.reagentData)
             Object.assign(state.reagentData, imported.reagentData);
           ReagentModule.generateRacks();
-          BarcodeModule.updateDisplay();
           showNotification("Данные импортированы", "success");
         }
       } catch (error) {
@@ -1541,16 +1289,14 @@ const DataManager = {
   resetApp() {
     if (confirm("Вы уверены? Все данные текущей сессии будут удалены.")) {
       Object.assign(state, {
-        barcodeHistory: [],
+        // Убраны barcodeHistory, barcodeMode, retry, selectCodeFormat
         aliquotHistory: [],
         reagentData: {},
         currentModule: "home",
-        barcodeMode: "default",
         selectedReagent: null,
         rocheMode: "routine",
       });
       ReagentModule.init();
-      BarcodeModule.updateDisplay();
       Navigation.closeAllContainers();
       showNotification("Данные сброшены", "info");
     }
@@ -1559,15 +1305,7 @@ const DataManager = {
 
 // ===== Глобальные функции для обратной совместимости =====
 window.showModule = (id) => Navigation.showModule(id);
-window.selectMode = (mode) => BarcodeModule.selectMode(mode);
-window.selectRetry = (count) => BarcodeModule.selectRetry(count);
-window.selectCode = (code) => BarcodeModule.selectCode(code);
-window.saveBarcode = () => BarcodeModule.saveBarcode();
-window.clearBarcodeInput = () => BarcodeModule.clearInput();
-window.simulateScan = () => BarcodeModule.simulateScan();
-window.specialLabel = (type) => BarcodeModule.specialLabel(type);
-window.reuseBarcode = (id) => BarcodeModule.reuseBarcode(id);
-window.deleteBarcode = (id) => BarcodeModule.deleteBarcode(id);
+// Убраны функции баркодов (selectMode, selectRetry, selectCode, saveBarcode, clearBarcodeInput, simulateScan, specialLabel, reuseBarcode, deleteBarcode)
 window.selectReagent = (reagent) => ReagentModule.selectReagent(reagent);
 window.fillHole = (rack, hole) => ReagentModule.fillHole(rack, hole);
 window.clearSelection = () => ReagentModule.clearSelection();
@@ -1593,11 +1331,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReagentModule.init();
 
   // Обработчики событий
-  document
-    .getElementById("barcode-input")
-    ?.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") BarcodeModule.saveBarcode();
-    });
+  // Убран обработчик для barcode-input
 
   document
     .querySelector(".mobile-menu-btn")
@@ -1618,9 +1352,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey) {
       const actions = {
-        b: "barcode",
+        // Убраны b и a
         r: "reagent",
-        a: "aliquots",
         h: "home",
         R: () => {
           if (e.shiftKey) DataManager.resetApp();
@@ -1635,8 +1368,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Обновление отображения
-  BarcodeModule.updateDisplay();
+  // Убрано обновление отображения BarcodeModule
 
   // Карусели
   setTimeout(() => {
@@ -1673,38 +1405,4 @@ class TestQuizSystem {
   }
 }
 
-async function printSerialLabelsGLP() {
-  const serial = document.getElementById("glp-serial");
-  console.log(serial.value);
-
-  if (!serial.value.includes("-")) {
-    NotificationManager.show(
-      "Отсутствует знак '-' для определения последовательности",
-      "error",
-    );
-    return;
-  }
-  let count_labels = serial.value.split("-");
-
-  let result = Number(count_labels[1]) - Number(count_labels[0]);
-  console.log(result);
-  if (result > 20) {
-    NotificationManager.show(
-      `Слишком много наклеек ${result}. Максимум 20 наклеек`,
-      "error",
-    );
-    return;
-  }
-  let param = {
-    type: "serial",
-    text: state.barcodeMode,
-    retry: serial.value,
-  };
-  try {
-    await API.sendToDjango(param);
-    NotificationManager.show("Печать успешно отправлена на сервер", "success");
-  } catch (error) {
-    NotificationManager.show("Ошибка: " + error.message, "error");
-    console.error("Детали ошибки:", error);
-  }
-}
+// Убрана функция printSerialLabelsGLP

@@ -1,0 +1,163 @@
+{% extends 'index.html'%} {% load static %}
+
+<!-- ///////// -->
+{% block content %} {% include 'modules.html'%}
+<div id="barcode-module">
+  <div class="container-content">
+    <div class="barcode-container">
+      <div class="barcode-sidebar">
+        <div class="input-group">
+          <div class="container-stats">
+            <span id="barcode-count">0 проб</span>
+          </div>
+          <label class="input-label">Номер пробы</label>
+
+          <div class="input-wrapper">
+            <input
+              type="text"
+              class="input-field"
+              id="barcode-input"
+              placeholder="Введите или отсканируйте номер"
+              maxlength="50"
+              autocomplete="off"
+            />
+            <div class="input-actions">
+              <button class="input-btn" id="128" onclick="selectCode('128')">
+                128
+              </button>
+              <button class="input-btn" id="2of5" onclick="selectCode('2of5')">
+                2of5
+              </button>
+              <button class="input-btn" onclick="clearBarcodeInput()">
+                <i class="fas fa-times"></i>
+              </button>
+              <button class="input-btn" onclick="simulateScan()">
+                <i class="fas fa-camera"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Режим анализа</label>
+          <div class="mode-grid">
+            <div class="mode-card" onclick="selectMode('testosterone')">
+              <h4>Testosterone 1:10</h4>
+              <p>Разведение 1:10</p>
+            </div>
+            <div class="mode-card active" onclick="selectMode('default')">
+              <h4>Обычная наклейка</h4>
+              <p>Default</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('a-tpo')">
+              <h4>A-TPO 1:5</h4>
+              <p>Антитела к тиреопероксидазе</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('prog')">
+              <h4>Progesterone 1:10</h4>
+              <p>Прогестерон</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('a-thsr')">
+              <h4>A-THSR 1:10</h4>
+              <p>Антитела к рецепторам ТТГ</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('dhea')">
+              <h4>DHEA 1:10</h4>
+              <p>Дегидроэпиандростерон сульфат</p>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Колличество наклеек</label>
+            <div class="mode-grid-btn">
+              <div class="mode-card-btn" onclick="selectRetry('1')">
+                <h4>1</h4>
+              </div>
+              <div class="mode-card-btn" onclick="selectRetry('2')">
+                <h4>2</h4>
+              </div>
+              <div class="mode-card-btn" onclick="selectRetry('3')">
+                <h4>3</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Специальные этикетки</label>
+          <div class="quick-actions">
+            <button class="quick-btn" onclick="specialLabel('saliva')">
+              <i class="fas fa-tint"></i>
+              Слюна
+            </button>
+            <button class="quick-btn" onclick="specialLabel('virtual')">
+              <i class="fas fa-cloud"></i>
+              Вирт архив
+            </button>
+            <button class="quick-btn" onclick="specialLabel('duplicate')">
+              <i class="fas fa-copy"></i>
+              Дубликат
+            </button>
+            <button class="quick-btn" onclick="specialLabel('infinity')">
+              <i class="fas fa-infinity"></i>
+              Инфинити
+            </button>
+            <button class="quick-btn" onclick="specialLabel('sorted')">
+              <i class="fas fa-infinity"></i>
+              Sorted
+            </button>
+          </div>
+        </div>
+
+        <!-- ///////////////Special Labels ////////////////////////// -->
+        <div class="input-group">
+          <label for="user-labels"
+            >Пользовательские наклейки
+            <a href="{% url 'create-labels' %}">+</a></label
+          >
+          <div class="user-actions"></div>
+          <div class="mode-grid" id="user-labels"></div>
+        </div>
+        <!-- //////////////////END Block Special Labels/////////////////// -->
+
+        <div class="input-group">
+          <div class="glp-section">
+            <label for="glp-serial">Последовательность наклеек</label>
+            <input
+              class="input-field"
+              type="text"
+              id="glp-serial"
+              placeholder="Укажите серию наклеек знаком '-' "
+            />
+            <div class="mode-grid">
+              <div class="mode-card" onclick="selectMode('Alinity')">
+                <h4>Alinity</h4>
+                <p>Архив для сыворотки</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('HbA1c')">
+                <h4>Arhive Arhitect</h4>
+                <p>Архив для ЭДТА</p>
+              </div>
+            </div>
+            <button class="btn" onclick="printSerialLabelsGLP()">Печать</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="barcode-main">
+        <div class="history-list" id="barcode-history">
+          <!-- History items will be added here -->
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>Нет сохраненных проб</h3>
+            <p>Добавьте первую пробу через форму слева</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block script%}
+<script src="{% static 'js/barcode.js'%}"></script>
+
+{% endblock %}

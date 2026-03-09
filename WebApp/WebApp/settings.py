@@ -59,7 +59,9 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [Path.joinpath(BASE_DIR, 'templates'),
-                 Path.joinpath(BASE_DIR, 'templates/teachbase-templates')],
+                 Path.joinpath(BASE_DIR, 'templates/teachbase-templates'),
+                 Path.joinpath(BASE_DIR, 'templates/forms'),
+                 Path.joinpath(BASE_DIR, 'templates/base')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

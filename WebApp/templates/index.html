@@ -23,7 +23,52 @@
 
     <!-- block script -->
     {% block script %}
-    <script src="{%static 'js/script.js'%}"></script>
+    <script>
+      async function turnStateMouse() {
+        console.log("Режим мыши");
+        const element = document.querySelector(".doombass-block");
+        let state = false;
+
+        if (!element) {
+          alert("Элемент .doombass-block не найден!");
+          console.log(
+            "Доступные классы:",
+            document.querySelectorAll("[class*='doombass']"),
+          );
+          return;
+        }
+
+        if (!element.classList.contains("active")) {
+          element.classList.add("active");
+          state = true;
+        } else {
+          element.classList.remove("active");
+          state = false;
+        }
+
+        const data = { state: state };
+
+        try {
+          const response = await fetch("/turn-mouse/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("Ответ сервера:", result);
+          return result;
+        } catch (error) {
+          console.error("Ошибка отправки на сервер:", error);
+        }
+      }
+    </script>
     {%endblock%}
   </body>
 </html>
