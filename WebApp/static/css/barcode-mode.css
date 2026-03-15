@@ -1,4 +1,9 @@
 /* ===== Barcode Module ===== */
+a {
+  text-decoration: none;
+  color: white;
+}
+
 .barcode-container {
   display: grid;
   grid-template-columns: 850px 1fr;

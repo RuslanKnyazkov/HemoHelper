@@ -185,6 +185,11 @@ const BarcodeModule = {
       searchText: "Arhive Arhitect",
       active: true,
     },
+    PRL_Macro: {
+      display: "Prolactin 1:1",
+      searchText: "Prolactin 1:1",
+      active: true,
+    },
   },
 
   // Инициализация модуля
@@ -466,7 +471,7 @@ const BarcodeModule = {
       <div class="strip-left"></div>
       <div class="strip-code">
         <i class="fas fa-qrcode"></i>
-        <span>${item.number.substring(0, 8)}</span>
+        <span>${item.number.substring(0, 10)}</span>
       </div>
       <div class="strip-right"></div>
     </div>
@@ -720,7 +725,7 @@ async function createViewCustomLabels() {
           // Экранируем JSON для безопасной вставки
           const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
           return `
-            <div class="mode-card" onclick='BarcodeModule.sendCustomLabel(${itemJson})'>
+            <div class="mode-card" onclick='BarcodeAPI.sendToDjango(${itemJson})'>
               <h4>${escapeHtml(item.text || item.name || "Без названия")}</h4>
               <p>${escapeHtml(item.description || "")}</p>
             </div>
@@ -771,29 +776,29 @@ function getCookie(name) {
   return cookieValue;
 }
 
-// Добавляем метод sendCustomLabel в BarcodeModule (если его еще нет)
-if (typeof BarcodeModule !== "undefined" && !BarcodeModule.sendCustomLabel) {
-  BarcodeModule.sendCustomLabel = async function (item) {
-    console.log("Отправка пользовательской метки:", item);
+// // Добавляем метод sendCustomLabel в BarcodeModule (если его еще нет)
+// if (typeof BarcodeModule !== "undefined" && !BarcodeModule.sendCustomLabel) {
+//   BarcodeModule.sendCustomLabel = async function (item) {
+//     console.log("Отправка пользовательской метки:", item);
 
-    try {
-      const data = {
-        type: item.type || "custom",
-        text: item.text || item.name || "",
-        barcode: item.barcode || item.text || "",
-        mode: item.mode || BarcodeState?.barcodeMode || "default",
-        anchor: item.anchor || "h",
-        size: item.size || "s",
-        retry: item.retry || BarcodeState?.retry || 1,
-        code: item.code || BarcodeState?.selectCodeFormat || "B2N",
-        ...item,
-      };
+//     try {
+//       const data = {
+//         type: item.type || "custom",
+//         text: item.text || item.name || "",
+//         barcode: item.barcode || item.text || "",
+//         mode: item.mode || BarcodeState?.barcodeMode || "default",
+//         anchor: item.anchor || "h",
+//         size: item.size || "s",
+//         retry: item.retry || BarcodeState?.retry || 1,
+//         code: item.code || BarcodeState?.selectCodeFormat || "B2N",
+//         ...item,
+//       };
 
-      await BarcodeAPI.sendToDjango(data);
-      showBarcodeNotification(`✅ Метка "${data.text}" отправлена!`, "success");
-    } catch (error) {
-      console.error("Ошибка отправки метки:", error);
-      showBarcodeNotification(`❌ Ошибка: ${error.message}`, "error");
-    }
-  };
-}
+//       await BarcodeAPI.sendToDjango(data);
+//       showBarcodeNotification(`✅ Метка "${data.text}" отправлена!`, "success");
+//     } catch (error) {
+//       console.error("Ошибка отправки метки:", error);
+//       showBarcodeNotification(`❌ Ошибка: ${error.message}`, "error");
+//     }
+//   };
+// }
