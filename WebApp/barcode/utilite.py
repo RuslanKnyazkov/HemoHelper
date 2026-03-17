@@ -53,7 +53,7 @@ class PrintMonitor:
                     }, status=400)
 
                 # Получаем параметры
-                mode = data.get('mode', 'standard')
+                mode = data.get('mode', False)
                 count_retries = data.get('retry', 1)
 
                 print(f"🖨️ Печать штрихкода: {barcode}, режим: {mode}")

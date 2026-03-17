@@ -28,7 +28,7 @@ a {
 }
 
 .input-group {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 }
 
 .input-label {
@@ -98,7 +98,7 @@ a {
   overflow-y: auto;
 }
 
-/* Стили для истории */
+/* Ð¡Ñ‚Ð¸Ð»Ð¸ Ð´Ð»Ñ Ð¸ÑÑ‚Ð¾Ñ€Ð¸Ð¸ */
 .history-item {
   background: linear-gradient(145deg, #1e243b, #161c2f);
   border: 1px solid rgba(102, 126, 234, 0.15);
@@ -405,7 +405,7 @@ a {
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-/* Сетка режимов */
+/* Ð¡ÐµÑ‚ÐºÐ° Ñ€ÐµÐ¶Ð¸Ð¼Ð¾Ð² */
 .mode-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -483,7 +483,7 @@ a {
   gap: 10px;
 }
 
-/* Стили для пользовательских меток */
+/* Ð¡Ñ‚Ð¸Ð»Ð¸ Ð´Ð»Ñ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒÑÐºÐ¸Ñ… Ð¼ÐµÑ‚Ð¾Ðº */
 #user-labels {
   max-height: 300px;
   overflow-y: auto;
@@ -556,7 +556,7 @@ a {
   transform: translateY(-1px);
 }
 
-/* Анимация появления */
+/* ÐÐ½Ð¸Ð¼Ð°Ñ†Ð¸Ñ Ð¿Ð¾ÑÐ²Ð»ÐµÐ½Ð¸Ñ */
 @keyframes slideInItem {
   from {
     opacity: 0;
@@ -589,4 +589,37 @@ a {
 .doombass-block.active {
   border: 2px solid #f7a6eb;
   box-shadow: 0px -1px 20px 2px #00e0ff;
+}
+
+.setting-block {
+  position: relative;
+  left: 70%;
+  overflow: hidden;
+  width: 30%;
+  border: 2px solid;
+  border-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.setting-block:hover {
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+}
+
+.mode-div {
+  border-radius: 5px;
+  border: 1px solid;
+  border-color: rgba(102, 126, 234, 0.4);
+  padding: 2px;
+}
+
+.mode-div:hover {
+  transform: translateY(-1px);
+}
+
+.mode-div.active {
+  background: rgb(87 52 219 / 21%);
 }

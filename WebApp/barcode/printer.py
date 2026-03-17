@@ -9,7 +9,8 @@ class PrintManager():
     def __init__(self):
 
         self.default_printer: list = [
-            "ZDesigner ZD410-203dpi ZPL", "ZDesigner ZD410-203dpi ZPL (копия 1)"]
+            "ZDesigner ZD410-203dpi ZPL", "ZDesigner ZD410-203dpi ZPL (копия 1)",
+            "ZDesigner ZD410-203dpi ZPL (копия 2)", "ZDesigner ZD410-203dpi ZPL (копия 3)"]
 
     def get_default_printer(self, index: int = 0) -> str:
         return self.default_printer[index]
@@ -33,11 +34,13 @@ class PrintManager():
                 win32print.ClosePrinter(hPrinter)
                 retry -= 1
             except Exception as e:
-                print(e)
-                printers = self.get_default_printer(index=1)
+
                 count_errors += 1
-            if count_errors > 2:
-                print("Колличество попыток превысило 2")
+                printers = self.get_default_printer(index=count_errors)
+                print(f'Имя принтера {printers} {e}')
+
+            if count_errors == 3:
+                print("Колличество попыток превысило 3")
                 break
 
         return True  # Заглушка для отсутствующего принтера
@@ -46,7 +49,7 @@ class PrintManager():
 class ZPL:
     def __init__(self, mode=False, text=False, code="B2N",
                  lot=False, size='m', anchor="c", volume=False,
-                 barcode=False, number=False, data=False, **kwargs):
+                 barcode=False, number=False, date=False, **kwargs):
 
         self.code = code
 
@@ -56,7 +59,7 @@ class ZPL:
         self.lot = lot
         self.barcode = barcode
         self.number = number
-        self.data = data
+        self.date = date
         self.volume = volume
         self.end = "^XZ"
         self.font = {"s": 10, 'm': 15, "l": 30}
@@ -90,7 +93,7 @@ class ZPL:
         self.build.append(
             f"^FO30,150^ADN,20,20 ^FB388,1,0,C^FD{volume + "mkl" if len(volume) > 1 else volume + "ml"}^FS")
 
-    def add_data(self):
+    def add_date(self):
         self.build.append(
             f"^FO30,180^ADN,20,20 ^FB388,1,0,C^FD{dt.now().strftime("%d/%m/%Y")}^FS")
 
@@ -114,8 +117,8 @@ class ZPL:
             self.add_barcode(self.barcode)
         if self.number:
             self.add_number(self.number)
-        if self.data:
-            self.add_data()
+        if self.date:
+            self.add_date()
         self.build.append(self.end)
         print("\n".join(self.build))
         return "\n".join(self.build)
@@ -134,7 +137,7 @@ class ZplGenerator:
         :return: ZPL object
         :rtype: str
         """
-        return ZPL(**kwargs, data=True).build_zpl()
+        return ZPL(**kwargs).build_zpl()
 
 
 if __name__ == "__main__":

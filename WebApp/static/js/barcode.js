@@ -15,6 +15,13 @@ const BarcodeState = {
   selectCodeFormat: "B2N",
 };
 
+const LabelSetting = {
+  barcode: true,
+  number: true,
+  mode: true,
+  date: true,
+};
+
 // ===== УТИЛИТЫ ДЛЯ БАРКОДОВ =====
 const BarcodeUtils = {
   getCSRFToken() {
@@ -386,14 +393,22 @@ const BarcodeModule = {
 
     const barcodeObject = {
       type: "barcode",
-      barcode: barcode,
-      number: barcode,
-      mode: BarcodeState.barcodeMode,
       anchor: "h",
       size: "s",
       retry: BarcodeState.retry,
       code: BarcodeState.selectCodeFormat,
+      date: LabelSetting.date,
     };
+    if (LabelSetting.number) {
+      barcodeObject.number = barcode;
+    }
+    if (LabelSetting.barcode) {
+      barcodeObject.barcode = barcode;
+    }
+
+    if (LabelSetting.mode) {
+      barcodeObject.mode = BarcodeState.barcodeMode;
+    }
 
     BarcodeState.barcodeHistory.unshift(barcodeObject);
 
@@ -449,7 +464,7 @@ const BarcodeModule = {
       </div>
       <div class="title-content">
         <span class="title-label">Номер пробы</span>
-        <span class="title-value">${item.number}</span>
+        <span class="title-value">${item.barcode}</span>
       </div>
     </div>
     
@@ -471,7 +486,7 @@ const BarcodeModule = {
       <div class="strip-left"></div>
       <div class="strip-code">
         <i class="fas fa-qrcode"></i>
-        <span>${item.number.substring(0, 10)}</span>
+        <span>${item.barcode.substring(0, 10)}</span>
       </div>
       <div class="strip-right"></div>
     </div>
@@ -688,7 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     console.error("BarcodeModule не найден!");
   }
-
+  enableSettingPrint();
   createViewCustomLabels();
 });
 
@@ -776,29 +791,23 @@ function getCookie(name) {
   return cookieValue;
 }
 
-// // Добавляем метод sendCustomLabel в BarcodeModule (если его еще нет)
-// if (typeof BarcodeModule !== "undefined" && !BarcodeModule.sendCustomLabel) {
-//   BarcodeModule.sendCustomLabel = async function (item) {
-//     console.log("Отправка пользовательской метки:", item);
+function enableSettingPrint() {
+  const modeSetting = document.querySelectorAll(".mode-div");
+  modeSetting.forEach((item) => {
+    item.classList.add("active");
+  });
+}
 
-//     try {
-//       const data = {
-//         type: item.type || "custom",
-//         text: item.text || item.name || "",
-//         barcode: item.barcode || item.text || "",
-//         mode: item.mode || BarcodeState?.barcodeMode || "default",
-//         anchor: item.anchor || "h",
-//         size: item.size || "s",
-//         retry: item.retry || BarcodeState?.retry || 1,
-//         code: item.code || BarcodeState?.selectCodeFormat || "B2N",
-//         ...item,
-//       };
+function disableSettingPrint(select) {
+  const selectElem = document.getElementById(select);
+  let codeElement = selectElem.dataset.attribute;
+  if (!selectElem.className.includes("active")) {
+    selectElem.classList.add("active");
+    LabelSetting[codeElement] = true;
+  } else {
+    selectElem.classList.remove("active");
+    LabelSetting[codeElement] = false;
+  }
 
-//       await BarcodeAPI.sendToDjango(data);
-//       showBarcodeNotification(`✅ Метка "${data.text}" отправлена!`, "success");
-//     } catch (error) {
-//       console.error("Ошибка отправки метки:", error);
-//       showBarcodeNotification(`❌ Ошибка: ${error.message}`, "error");
-//     }
-//   };
-// }
+  console.log(LabelSetting);
+}
