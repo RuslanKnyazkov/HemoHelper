@@ -74,8 +74,13 @@ class ZPL:
             f"^FO30,{self.geometry_item[self.anchor]}^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FD{mode}^FS")
 
     def add_text(self, text):
+        font = None
+        if len(text) > 5:
+            font = self.font['m']
+        elif len(text) > 10:
+            font = self.font['s']
         self.build.append(
-            f"^FO30,{self.geometry_item[self.anchor]}^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FD{text}^FS")
+            f"^FO30,{self.geometry_item[self.anchor]}^ADN,{font},{font}^FB388,1,0,C^FD{text}^FS")
 
     def add_lot(self, lot):
         self.build.append(

@@ -38,29 +38,52 @@
           </div>
         </div>
         <div class="setting-block">
-          <div
-            class="mode-div"
-            id="mode-setting"
-            onclick="disableSettingPrint('mode-setting')"
-            data-attribute="mode"
-          >
-            <div class="fas fa-vial"></div>
+          <div class="user-mode">
+            <div
+              class="mode-div"
+              id="mode-setting"
+              onclick="disableSettingPrint('mode-setting')"
+              data-attribute="mode"
+            >
+              <div class="fas fa-vial">
+                <div class="poput">Печать без режима</div>
+              </div>
+            </div>
+            <div
+              class="mode-div"
+              id="date-setting"
+              onclick="disableSettingPrint('date-setting')"
+              data-attribute="date"
+            >
+              <div class="fas fa-clock">
+                <div class="poput">Печать без даты</div>
+              </div>
+            </div>
+            <div
+              class="mode-div"
+              id="number-setting"
+              onclick="disableSettingPrint('number-setting')"
+              data-attribute="number"
+            >
+              <div class="fa-hashtag">
+                <div class="poput">Печать без номера</div>
+              </div>
+            </div>
           </div>
-          <div
-            class="mode-div"
-            id="date-setting"
-            onclick="disableSettingPrint('date-setting')"
-            data-attribute="date"
-          >
-            <div class="fas fa-clock"></div>
-          </div>
-          <div
-            class="mode-div"
-            id="number-setting"
-            onclick="disableSettingPrint('number-setting')"
-            data-attribute="number"
-          >
-            <div class="fa-hashtag"></div>
+          <div class="button-elements">
+            <button
+              onclick="setDefaultUserPrintSetting()"
+              style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                border-radius: 20px;
+                padding: 5px;
+                color: white;
+                font-family: monospace;
+                border: #fff;
+              "
+            >
+              <i class="fas fa-check"></i>
+            </button>
           </div>
         </div>
 

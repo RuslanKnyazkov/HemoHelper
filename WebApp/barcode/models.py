@@ -14,9 +14,14 @@ class CustomLabel(models.Model):
     description = models.CharField(
         max_length=50, unique=True, verbose_name='описание')
     type_labels = models.CharField(choices=TYPE_CHOICES, default='text')
+    barcode = models.CharField(unique=True, verbose_name='Штрихкод')
 
     def __str__(self):
         return self.name
 
     def get_text_params_labels(self):
-        return {'type': self.type_labels, 'text': self.name, 'description': self.description, 'anchor': 'c', 'size': 'l'}
+        options = {}
+        if self.type_labels == 'barcode':
+            options['barcode'] = self.barcode
+            options['code'] = '128'
+        return {'type': self.type_labels, 'text': self.name, 'description': self.description, 'anchor': 'c', 'size': 'l', **options}

@@ -96,7 +96,7 @@ def turn_state_mouse(request):
 
 def get_custom_labels(request):
     if request.method == "GET":
-        custom_labels = CustomLabel.objects.filter(type_labels='text')
+        custom_labels = CustomLabel.objects.all()
         user_list = [i.get_text_params_labels() for i in custom_labels]
         return JsonResponse({'data': user_list})
 

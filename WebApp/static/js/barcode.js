@@ -671,6 +671,7 @@ const BarcodeModule = {
       type: "serial",
       text: BarcodeState.barcodeMode,
       retry: serial.value,
+      data: true,
     };
 
     try {
@@ -713,7 +714,6 @@ async function createViewCustomLabels() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        // Используем BarcodeUtils вместо Utils
         "X-CSRFToken": BarcodeUtils?.getCSRFToken() || getCookie("csrftoken"),
       },
     });
@@ -810,4 +810,17 @@ function disableSettingPrint(select) {
   }
 
   console.log(LabelSetting);
+}
+
+function setDefaultUserPrintSetting() {
+  selectMode("default");
+  selectRetry("1");
+  setFocusOnInput();
+}
+
+function setFocusOnInput() {
+  const input = document.getElementById("barcode-input");
+  if (input) {
+    input.focus();
+  }
 }
