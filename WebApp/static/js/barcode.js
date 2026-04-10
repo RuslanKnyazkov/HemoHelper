@@ -148,6 +148,156 @@ const BarcodeAPI = {
   },
 };
 
+// ===== УПРАВЛЕНИЕ ПРИНТЕРАМИ (УЛУЧШЕННОЕ) =====
+const PrinterManager = {
+  availablePrinters: [],
+  selectedPrinter: null,
+
+  async loadFromServer() {
+    const select = document.getElementById("printer-select");
+    if (!select) return;
+
+    select.innerHTML = '<option value="">🔍 Поиск принтеров...</option>';
+
+    try {
+      // Пытаемся получить через Electron API
+      if (window.electronAPI && window.electronAPI.getPrinters) {
+        this.availablePrinters = await window.electronAPI.getPrinters();
+      } else {
+        // Fallback на Django API
+        const response = await fetch("/get-printers/");
+        const result = await response.json();
+        this.availablePrinters = result.printers || [];
+      }
+
+      this.renderSelect();
+      this.restoreSelection();
+      this.updatePrinterInfo();
+
+      if (this.availablePrinters.length === 0) {
+        select.innerHTML = '<option value="">⚠️ Принтеры не найдены</option>';
+        showBarcodeNotification(
+          "Принтеры не найдены. Проверьте подключение.",
+          "warning",
+        );
+      } else {
+        showBarcodeNotification(
+          `🖨️ Найдено ${this.availablePrinters.length} принтеров`,
+          "success",
+        );
+      }
+    } catch (err) {
+      console.error("❌ Ошибка загрузки принтеров:", err);
+      select.innerHTML =
+        '<option value="">❌ Ошибка загрузки принтеров</option>';
+      showBarcodeNotification("Не удалось загрузить список принтеров", "error");
+    }
+  },
+
+  renderSelect() {
+    const select = document.getElementById("printer-select");
+    if (!select) return;
+
+    select.innerHTML = '<option value="">📋 Выберите принтер...</option>';
+
+    this.availablePrinters.forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = `🖨️ ${name}`;
+      if (name === this.selectedPrinter) option.selected = true;
+      select.appendChild(option);
+    });
+  },
+
+  restoreSelection() {
+    const saved = localStorage.getItem("selectedPrinter");
+    if (saved && this.availablePrinters.includes(saved)) {
+      this.selectedPrinter = saved;
+    } else if (this.availablePrinters.length > 0) {
+      this.selectedPrinter = this.availablePrinters[0];
+      localStorage.setItem("selectedPrinter", this.selectedPrinter);
+    }
+  },
+
+  updatePrinterInfo() {
+    const infoBlock = document.getElementById("current-printer-info");
+    const nameSpan = document.getElementById("current-printer-name");
+
+    if (infoBlock && nameSpan) {
+      if (this.selectedPrinter) {
+        nameSpan.textContent = this.selectedPrinter;
+        infoBlock.style.display = "flex";
+      } else {
+        infoBlock.style.display = "none";
+      }
+    }
+  },
+
+  selectPrinter(name) {
+    if (!name) return;
+
+    this.selectedPrinter = name;
+    localStorage.setItem("selectedPrinter", name);
+    this.updatePrinterInfo();
+
+    // Сохраняем на сервер/в Electron
+    if (window.electronAPI && window.electronAPI.setDefaultPrinter) {
+      window.electronAPI.setDefaultPrinter(name);
+    }
+
+    showBarcodeNotification(`🖨️ Принтер выбран: ${name}`, "success");
+  },
+
+  async refreshPrinters() {
+    const btn = document.querySelector(".printer-refresh");
+    if (btn) {
+      btn.classList.add("loading");
+      btn.disabled = true;
+    }
+
+    await this.loadFromServer();
+
+    if (btn) {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  },
+
+  async testPrint() {
+    if (!this.selectedPrinter) {
+      showBarcodeNotification("Сначала выберите принтер", "warning");
+      return;
+    }
+
+    showBarcodeNotification("🖨️ Выполняется тестовая печать...", "info");
+
+    try {
+      const testData = {
+        type: "text",
+        text: "Тестовая печать",
+        size: "m",
+        anchor: "c",
+        printer: this.selectedPrinter,
+      };
+
+      if (window.electronAPI && window.electronAPI.printBarcode) {
+        await window.electronAPI.printBarcode(testData);
+        showBarcodeNotification(
+          "✅ Тестовая печать выполнена успешно",
+          "success",
+        );
+      } else {
+        // Fallback на Django
+        await BarcodeAPI.sendToDjango(testData);
+        showBarcodeNotification("✅ Тестовая печать отправлена", "success");
+      }
+    } catch (error) {
+      console.error("Ошибка тестовой печати:", error);
+      showBarcodeNotification(`❌ Ошибка печати: ${error.message}`, "error");
+    }
+  },
+};
+
 // ===== ОСНОВНОЙ МОДУЛЬ БАРКОДОВ =====
 const BarcodeModule = {
   // Конфигурация режимов
@@ -242,9 +392,17 @@ const BarcodeModule = {
         if (e.key === "Enter") this.saveBarcode();
       });
     }
-  },
 
-  // ===== ФУНКЦИИ ДЛЯ РАБОТЫ С КЛАССОМ ACTIVE =====
+    // Обработчик выбора принтера
+    const printerSelect = document.getElementById("printer-select");
+    if (printerSelect) {
+      printerSelect.addEventListener("change", (e) => {
+        if (e.target.value) {
+          PrinterManager.selectPrinter(e.target.value);
+        }
+      });
+    }
+  },
 
   // Активация режима по умолчанию при загрузке
   activateDefaultMode() {
@@ -255,23 +413,16 @@ const BarcodeModule = {
     }, 100);
   },
 
-  // Выбор режима анализа (исправленная версия)
+  // Выбор режима анализа
   selectMode(mode) {
     console.log("Выбран режим:", mode);
     BarcodeState.barcodeMode = mode;
 
-    // Получаем все карточки режимов
     const modeCards = document.querySelectorAll(".mode-card");
+    modeCards.forEach((card) => card.classList.remove("active"));
 
-    // Удаляем класс active у всех карточек
-    modeCards.forEach((card) => {
-      card.classList.remove("active");
-    });
-
-    // Находим и активируем нужную карточку
     const modeConfig = this.modes[mode];
     if (modeConfig) {
-      // Ищем карточку по тексту в h4
       let found = false;
       modeCards.forEach((card) => {
         const h4 = card.querySelector("h4");
@@ -281,19 +432,14 @@ const BarcodeModule = {
         ) {
           card.classList.add("active");
           found = true;
-          console.log("Класс active добавлен к карточке:", h4.textContent);
         }
       });
 
-      // Если не нашли по тексту, пробуем найти по data-атрибуту
       if (!found) {
         const dataCard = document.querySelector(
           `.mode-card[data-mode="${mode}"]`,
         );
-        if (dataCard) {
-          dataCard.classList.add("active");
-          console.log("Класс active добавлен по data-mode");
-        }
+        if (dataCard) dataCard.classList.add("active");
       }
     }
 
@@ -304,25 +450,18 @@ const BarcodeModule = {
     );
   },
 
-  // Выбор количества наклеек (исправленная версия)
+  // Выбор количества наклеек
   selectRetry(count) {
     console.log("Выбрано количество:", count);
     BarcodeState.retry = parseInt(count);
 
-    // Получаем все кнопки количества
     const retryBtns = document.querySelectorAll(".mode-card-btn");
+    retryBtns.forEach((btn) => btn.classList.remove("active"));
 
-    // Удаляем класс active у всех кнопок
-    retryBtns.forEach((btn) => {
-      btn.classList.remove("active");
-    });
-
-    // Добавляем класс active к выбранной кнопке
     retryBtns.forEach((btn, index) => {
       const btnNumber = index + 1;
       if (btnNumber === parseInt(count)) {
         btn.classList.add("active");
-        console.log(`Класс active добавлен к кнопке ${btnNumber}`);
       }
     });
 
@@ -330,24 +469,17 @@ const BarcodeModule = {
     showBarcodeNotification(`Количество наклеек: ${count}`, "info");
   },
 
-  // Выбор формата кода (исправленная версия)
+  // Выбор формата кода
   selectCode(code) {
     console.log("Выбран формат:", code);
 
-    // Удаляем active у всех кнопок формата
     ["128", "2of5"].forEach((id) => {
       const btn = document.getElementById(id);
-      if (btn) {
-        btn.classList.remove("active");
-      }
+      if (btn) btn.classList.remove("active");
     });
 
-    // Добавляем active к выбранной кнопке
     const selectedBtn = document.getElementById(code);
-    if (selectedBtn) {
-      selectedBtn.classList.add("active");
-      console.log(`Класс active добавлен к кнопке ${code}`);
-    }
+    if (selectedBtn) selectedBtn.classList.add("active");
 
     BarcodeState.selectCodeFormat = code === "128" ? "BCN" : "B2N";
     this.saveState();
@@ -398,14 +530,15 @@ const BarcodeModule = {
       retry: BarcodeState.retry,
       code: BarcodeState.selectCodeFormat,
       date: LabelSetting.date,
+      printer: PrinterManager.selectedPrinter, // Добавляем выбранный принтер
     };
+
     if (LabelSetting.number) {
       barcodeObject.number = barcode;
     }
     if (LabelSetting.barcode) {
       barcodeObject.barcode = barcode;
     }
-
     if (LabelSetting.mode) {
       barcodeObject.mode = BarcodeState.barcodeMode;
     }
@@ -451,10 +584,15 @@ const BarcodeModule = {
     historyEl.innerHTML = BarcodeState.barcodeHistory
       .map((item) => this.renderHistoryItem(item))
       .join("");
+
+    this.initHistoryBarcodes();
   },
 
   // Рендер элемента истории
   renderHistoryItem(item) {
+    const barcodeValue = item.barcode || item.text || "";
+    const id = item.barcode || Date.now();
+
     return `
 <div class="history-item">
   <div class="history-item-header">
@@ -464,7 +602,7 @@ const BarcodeModule = {
       </div>
       <div class="title-content">
         <span class="title-label">Номер пробы</span>
-        <span class="title-value">${item.barcode}</span>
+        <span class="title-value">${barcodeValue}</span>
       </div>
     </div>
     
@@ -481,14 +619,14 @@ const BarcodeModule = {
     </div>
   </div>
 
-  <div class="history-item-preview">
-    <div class="preview-strip">
-      <div class="strip-left"></div>
-      <div class="strip-code">
-        <i class="fas fa-qrcode"></i>
-        <span>${item.barcode.substring(0, 10)}</span>
+
+  <div class="history-item-barcode">
+    <div id="history-barcode-${id}" class="history-item-barcode-container" style="text-align: center; margin: 10px 0;">
+      <div class="history-item-barcode-preview" style="display: inline-block; background: white; padding: 8px; border-radius: 4px;">
       </div>
-      <div class="strip-right"></div>
+      <div class="history-item-barcode-value" style="margin-top: 8px; font-family: monospace; font-size: 12px; color: #8b93b0;">
+        ${barcodeValue}
+      </div>
     </div>
   </div>
 
@@ -499,12 +637,12 @@ const BarcodeModule = {
     </div>
     
     <div class="history-item-actions">
-      <button class="btn-action btn-reuse" onclick="BarcodeModule.reuseBarcode('${item.number}')">
+      <button class="btn-action btn-reuse" onclick="BarcodeModule.reuseBarcode('${barcodeValue}')">
         <i class="fas fa-redo-alt"></i>
         <span>Повтор</span>
       </button>
       
-      <button class="btn-action btn-delete" onclick="BarcodeModule.deleteBarcode('${item.number}')">
+      <button class="btn-action btn-delete" onclick="BarcodeModule.deleteBarcode('${barcodeValue}')">
         <i class="fas fa-trash-alt"></i>
         <span>Удалить</span>
       </button>
@@ -514,7 +652,42 @@ const BarcodeModule = {
     `;
   },
 
-  // Получение иконки для режима
+  // Инициализация штрих-кодов в истории
+  initHistoryBarcodes() {
+    if (typeof JsBarcode === "undefined") return;
+
+    setTimeout(() => {
+      document
+        .querySelectorAll(".history-item-barcode-preview")
+        .forEach((container) => {
+          const parent = container.closest(".history-item-barcode-container");
+          if (!parent) return;
+
+          const valueElement = parent.querySelector(
+            ".history-item-barcode-value",
+          );
+          const barcodeValue = valueElement?.textContent.trim();
+          if (!barcodeValue) return;
+
+          container.innerHTML = "";
+          const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+          );
+          container.appendChild(svg);
+
+          JsBarcode(svg, barcodeValue, {
+            format: "CODE128",
+            displayValue: true,
+            fontSize: 12,
+            width: 1.5,
+            height: 50,
+            margin: 5,
+          });
+        });
+    }, 100);
+  },
+
   getModeIcon(mode) {
     const icons = {
       testosterone: "flask",
@@ -529,22 +702,20 @@ const BarcodeModule = {
     return icons[mode] || "barcode";
   },
 
-  // Получение отображаемого имени режима
   getModeDisplayName(mode) {
     return this.modes[mode]?.display || mode;
   },
 
-  // Повторное использование баркода
-  async reuseBarcode(id) {
+  async reuseBarcode(number) {
     const item = BarcodeState.barcodeHistory.find(
-      (item) => item.number.toString() === id,
+      (item) => item.number === number || item.barcode === number,
     );
 
     if (item) {
       try {
         await BarcodeAPI.sendToDjango({ ...item, type: "barcode" });
         showBarcodeNotification(
-          `✅ Проба "${id}" отправлена повторно`,
+          `✅ Проба "${number}" отправлена повторно`,
           "success",
         );
       } catch (error) {
@@ -553,16 +724,14 @@ const BarcodeModule = {
     }
   },
 
-  // Удаление баркода из истории
-  deleteBarcode(id) {
+  deleteBarcode(number) {
     BarcodeState.barcodeHistory = BarcodeState.barcodeHistory.filter(
-      (item) => item.number.toString() !== id,
+      (item) => item.number !== number && item.barcode !== number,
     );
     this.updateDisplay();
     showBarcodeNotification("Проба удалена из текущей сессии", "success");
   },
 
-  // Специальные этикетки
   async specialLabel(type) {
     const templates = {
       saliva: { type: "text", text: "Sluna", anchor: "c", size: "l" },
@@ -613,7 +782,6 @@ const BarcodeModule = {
     }
   },
 
-  // Очистка поля ввода
   clearInput() {
     const input = document.getElementById("barcode-input");
     if (input) {
@@ -623,7 +791,6 @@ const BarcodeModule = {
     showBarcodeNotification("Форма очищена", "info");
   },
 
-  // Симуляция сканирования
   simulateScan() {
     const randomBarcode = Math.floor(
       100000000 + Math.random() * 900000000,
@@ -639,12 +806,9 @@ const BarcodeModule = {
     }
   },
 
-  // Печать серийных наклеек
   async printSerialLabels() {
     const serial = document.getElementById("glp-serial");
     if (!serial) return;
-
-    console.log(serial.value);
 
     if (!serial.value.includes("-")) {
       showBarcodeNotification(
@@ -656,8 +820,6 @@ const BarcodeModule = {
 
     let count_labels = serial.value.split("-");
     let result = Number(count_labels[1]) - Number(count_labels[0]);
-
-    console.log(result);
 
     if (result > 20) {
       showBarcodeNotification(
@@ -672,6 +834,7 @@ const BarcodeModule = {
       text: BarcodeState.barcodeMode,
       retry: serial.value,
       data: true,
+      printer: PrinterManager.selectedPrinter,
     };
 
     try {
@@ -698,16 +861,25 @@ window.printSerialLabelsGLP = () => BarcodeModule.printSerialLabels();
 
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener("DOMContentLoaded", () => {
-  // Проверяем, существует ли BarcodeModule перед инициализацией
+  // Инициализация модуля баркодов
   if (typeof BarcodeModule !== "undefined") {
     BarcodeModule.init();
-  } else {
-    console.error("BarcodeModule не найден!");
   }
+
+  // Инициализация настроек печати
   enableSettingPrint();
+
+  // Загрузка пользовательских меток
   createViewCustomLabels();
+
+  // Загрузка принтеров
+  PrinterManager.loadFromServer();
+
+  // Установка фокуса на input
+  setFocusOnInput();
 });
 
+// ===== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЬСКИХ ЭТИКЕТОК =====
 async function createViewCustomLabels() {
   try {
     const response = await fetch("/custom-labels/", {
@@ -718,26 +890,15 @@ async function createViewCustomLabels() {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const result = await response.json();
-    console.log("Ответ от сервера:", result);
-
     const userElement = document.getElementById("user-labels");
-    if (!userElement) {
-      console.error("Элемент #user-labels не найден!");
-      return;
-    }
+    if (!userElement) return;
 
-    // Берем массив из result.data
     const items = result.data || [];
-
     if (items.length > 0) {
       userElement.innerHTML = items
         .map((item) => {
-          // Экранируем JSON для безопасной вставки
           const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
           return `
             <div class="mode-card" onclick='BarcodeAPI.sendToDjango(${itemJson})'>
@@ -758,16 +919,14 @@ async function createViewCustomLabels() {
         <div class="error-message">
           <i class="fas fa-exclamation-triangle"></i>
           <p>Ошибка загрузки меток</p>
-          <button onclick="createViewCustomLabels()" class="retry-btn">
-            Повторить
-          </button>
+          <button onclick="createViewCustomLabels()" class="retry-btn">Повторить</button>
         </div>
       `;
     }
   }
 }
 
-// Функция для экранирования HTML
+// Экранирование HTML
 function escapeHtml(text) {
   if (!text) return "";
   const div = document.createElement("div");
@@ -775,7 +934,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Резервная функция для получения CSRF токена
+// Получение CSRF токена
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -791,25 +950,23 @@ function getCookie(name) {
   return cookieValue;
 }
 
+// Управление настройками печати
 function enableSettingPrint() {
-  const modeSetting = document.querySelectorAll(".mode-div");
-  modeSetting.forEach((item) => {
-    item.classList.add("active");
-  });
+  document
+    .querySelectorAll(".mode-div")
+    .forEach((item) => item.classList.add("active"));
 }
 
 function disableSettingPrint(select) {
   const selectElem = document.getElementById(select);
-  let codeElement = selectElem.dataset.attribute;
-  if (!selectElem.className.includes("active")) {
-    selectElem.classList.add("active");
-    LabelSetting[codeElement] = true;
-  } else {
+  const codeElement = selectElem.dataset.attribute;
+  if (selectElem.classList.contains("active")) {
     selectElem.classList.remove("active");
     LabelSetting[codeElement] = false;
+  } else {
+    selectElem.classList.add("active");
+    LabelSetting[codeElement] = true;
   }
-
-  console.log(LabelSetting);
 }
 
 function setDefaultUserPrintSetting() {
@@ -820,7 +977,5 @@ function setDefaultUserPrintSetting() {
 
 function setFocusOnInput() {
   const input = document.getElementById("barcode-input");
-  if (input) {
-    input.focus();
-  }
+  if (input) input.focus();
 }

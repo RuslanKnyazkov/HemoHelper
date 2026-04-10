@@ -7,72 +7,57 @@ from .models import CustomLabel
 from django.views.generic import CreateView
 from .forms import LabelCreateForm
 from django.urls import reverse_lazy
+from django.shortcuts import render
+import win32print
+
+
+def enum_local_printers():
+    """Получает список локальных принтеров через win32print"""
+    try:
+        # Получаем все принтеры
+        printers = win32print.EnumPrinters(
+            win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
+        )
+        # Извлекаем имена
+        printer_names = [printer[2]
+                         for printer in printers]  # [2] — это имя принтера
+        return sorted(printer_names)  # Сортируем по алфавиту
+    except Exception as e:
+        print(f"❌ Ошибка при получении принтеров: {e}")
+        return []
+
+
+def get_printers(request):
+    """API: возвращает список доступных принтеров (реальные из Windows)"""
+
+    return JsonResponse({
+        'success': True,
+        'printers': enum_local_printers(),
+        'default': win32print.GetDefaultPrinter(),
+    })
 
 
 @csrf_exempt
 def save_barcode(request):
-    """Принимает штрихкод с фронтенда"""
+    """Обработка сохранения баркода и печати"""
     if request.method == 'POST':
         try:
-            print(f"📨 Получен запрос на /save-barcode/")
-            print(f"📦 Content-Type: {request.content_type}")
-            print(f"📊 Тело запроса (сырое): {request.body}")
+            data = json.loads(request.body)
 
-            # Парсим JSON данные правильно
-            if request.content_type == 'application/json':
-                data = json.loads(request.body)
-            else:
-                # Пробуем получить из POST данных
-                data = request.POST.dict()
-                if not data:
-                    # Пробуем прочитать как raw text
-                    try:
-                        data = json.loads(request.body.decode('utf-8'))
-                    except:
-                        data = {}
+            # ← Вот здесь мы получаем выбранный принтер!
+            printer_name = data.get('printer_name')  # Это ключевой момент
 
-            print(f"📝 Данные после парсинга: {data}")
+            # Передаём в PrintMonitor
+            from .utilite import PrintMonitor
+            monitor = PrintMonitor()
+            result = monitor.process_json_data(data)
 
-            if not data:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Нет данных в запросе'
-                }, status=400)
+            return result
 
-            # Создаем экземпляр PrintMonitor и обрабатываем данные
-            test = PrintMonitor()
-            result = test.process_json_data(data)
-
-            # Если process_json_data возвращает JsonResponse
-            if isinstance(result, JsonResponse):
-                return result
-
-            # Иначе возвращаем успех
-            return JsonResponse({
-                'success': True,
-                'message': 'Штрихкод обработан',
-                'data': data
-            })
-
-        except json.JSONDecodeError as e:
-            print(f"❌ Ошибка JSON: {e}")
-            return JsonResponse({
-                'success': False,
-                'error': f'Неверный формат JSON: {str(e)}'
-            }, status=400)
         except Exception as e:
-            print(f"❌ Общая ошибка: {e}")
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=500)
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-    return JsonResponse({
-        'success': False,
-        'error': 'Только POST запросы'
-    }, status=405)
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
 
 
 mouse_state = PcController()

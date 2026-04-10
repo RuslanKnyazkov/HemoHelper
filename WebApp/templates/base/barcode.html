@@ -1,17 +1,69 @@
-{% extends 'index.html'%} {% load static %}
+{% extends 'index.html' %} {% load static %}
 
-<!-- ///////// -->
-{% block content %} {% include 'modules.html'%}
+<!-- =============== КОНТЕНТ МОДУЛЯ =============== -->
+{% block content %} {% include 'modules.html' %}
+
 <div id="barcode-module">
   <div class="container-content">
     <div class="barcode-container">
+      <!-- ===== ЛЕВАЯ ПАНЕЛЬ (НАСТРОЙКИ) ===== -->
       <div class="barcode-sidebar">
+        <!-- ===== ВЫБОР ПРИНТЕРА (ВВЕРХУ) ===== -->
+        <div class="settings-section printer-section-top">
+          <div class="section-header">
+            <h3>
+              <i class="fas fa-print"></i>
+              Настройки печати
+            </h3>
+          </div>
+          <div class="section-content">
+            <div class="printer-select-wrapper">
+              <select
+                id="printer-select"
+                class="custom-select"
+                title="Выберите принтер"
+              >
+                <option value="">🔍 Поиск принтеров...</option>
+              </select>
+            </div>
+            <button
+              class="printer-refresh"
+              onclick="PrinterManager.refreshPrinters()"
+            >
+              <i class="fas fa-sync-alt"></i>
+              Обновить
+            </button>
+          </div>
+          <!-- Информация о текущем принтере -->
+          <div
+            id="current-printer-info"
+            class="current-printer-info"
+            style="display: none"
+          >
+            <div class="current-printer-label">
+              <i class="fas fa-print"></i>
+              <span>Текущий принтер:</span>
+            </div>
+            <div class="current-printer-name">
+              <i class="fas fa-check-circle"></i>
+              <span id="current-printer-name"></span>
+            </div>
+            <button
+              class="btn-action btn-test-print"
+              onclick="PrinterManager.testPrint()"
+            >
+              <i class="fas fa-print"></i>
+              <span>Тестовая печать</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- === ВВОД НОМЕРА ПРОБЫ === -->
         <div class="input-group">
           <div class="container-stats">
             <span id="barcode-count">0 проб</span>
           </div>
           <label class="input-label">Номер пробы</label>
-
           <div class="input-wrapper">
             <input
               type="text"
@@ -37,6 +89,8 @@
             </div>
           </div>
         </div>
+
+        <!-- === НАСТРОЙКИ ПЕЧАТИ (режим, дата, номер) === -->
         <div class="setting-block">
           <div class="user-mode">
             <div
@@ -79,7 +133,7 @@
                 padding: 5px;
                 color: white;
                 font-family: monospace;
-                border: #fff;
+                border: none;
               "
             >
               <i class="fas fa-check"></i>
@@ -87,6 +141,7 @@
           </div>
         </div>
 
+        <!-- === РЕЖИМЫ АНАЛИЗА === -->
         <div class="input-group">
           <label class="input-label">Режим анализа</label>
           <div class="mode-grid">
@@ -120,10 +175,11 @@
             </div>
           </div>
 
+          <!-- === КОЛИЧЕСТВО НАКЛЕЕК === -->
           <div class="input-group">
-            <label class="input-label">Колличество наклеек</label>
+            <label class="input-label">Количество наклеек</label>
             <div class="mode-grid-btn">
-              <div class="mode-card-btn" onclick="selectRetry('1')">
+              <div class="mode-card-btn active" onclick="selectRetry('1')">
                 <h4>1</h4>
               </div>
               <div class="mode-card-btn" onclick="selectRetry('2')">
@@ -136,33 +192,29 @@
           </div>
         </div>
 
+        <!-- === СПЕЦИАЛЬНЫЕ ЭТИКЕТКИ === -->
         <div class="input-group">
           <label class="input-label">Специальные этикетки</label>
           <div class="quick-actions">
             <button class="quick-btn" onclick="specialLabel('saliva')">
-              <i class="fas fa-tint"></i>
-              Слюна
+              <i class="fas fa-tint"></i> Слюна
             </button>
             <button class="quick-btn" onclick="specialLabel('virtual')">
-              <i class="fas fa-cloud"></i>
-              Вирт архив
+              <i class="fas fa-cloud"></i> Вирт архив
             </button>
             <button class="quick-btn" onclick="specialLabel('duplicate')">
-              <i class="fas fa-copy"></i>
-              Дубликат
+              <i class="fas fa-copy"></i> Дубликат
             </button>
             <button class="quick-btn" onclick="specialLabel('infinity')">
-              <i class="fas fa-infinity"></i>
-              Инфинити
+              <i class="fas fa-infinity"></i> Инфинити
             </button>
             <button class="quick-btn" onclick="specialLabel('sorted')">
-              <i class="fas fa-infinity"></i>
-              Sorted
+              <i class="fas fa-infinity"></i> Sorted
             </button>
           </div>
         </div>
 
-        <!-- ///////////////Special Labels ////////////////////////// -->
+        <!-- === ПОЛЬЗОВАТЕЛЬСКИЕ ЭТИКЕТКИ === -->
         <div class="input-group">
           <label for="user-labels"
             >Пользовательские наклейки
@@ -171,8 +223,8 @@
           <div class="user-actions"></div>
           <div class="mode-grid" id="user-labels"></div>
         </div>
-        <!-- //////////////////END Block Special Labels/////////////////// -->
 
+        <!-- === ПОСЛЕДОВАТЕЛЬНОСТЬ GLP === -->
         <div class="input-group">
           <div class="glp-section">
             <label for="glp-serial">Последовательность наклеек</label>
@@ -197,9 +249,9 @@
         </div>
       </div>
 
+      <!-- ===== ПРАВАЯ ПАНЕЛЬ — ИСТОРИЯ ПЕЧАТИ ===== -->
       <div class="barcode-main">
         <div class="history-list" id="barcode-history">
-          <!-- History items will be added here -->
           <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <h3>Нет сохраненных проб</h3>
@@ -210,7 +262,15 @@
     </div>
   </div>
 </div>
-{% endblock %} {% block script%}
-<script src="{% static 'js/barcode.js'%}"></script>
+
+{% endblock %}
+
+<!-- =============== СКРИПТЫ =============== -->
+{% block script %}
+<!-- Основной JS модуля -->
+<script src="{% static 'js/barcode.js' %}"></script>
+
+<!-- JsBarcode — для генерации штрих-кодов в истории -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 {% endblock %}
