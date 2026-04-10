@@ -2,12 +2,12 @@ name: Build Django EXE
 
 on:
   release:
-    types: [created]  # Запускается при создании релиза
-  workflow_dispatch:   # Можно запустить вручную из интерфейса GitHub
+    types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # Windows для сборки .exe
+    runs-on: windows-latest
     
     steps:
     - name: 📥 Клонирование репозитория
@@ -24,10 +24,15 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
 
-    - name: 🔧 Сборка EXE с помощью PyInstaller
+    - name: 📂 Сбор статических файлов
       run: |
-        pyinstaller --onefile --name MyDjangoApp --add-data "myproject;myproject" run.py
-      # Замени myproject на имя папки твоего проекта
+        python manage.py collectstatic --noinput
+      continue-on-error: false  # Теперь это обязательно
+
+    - name: 🔧 Сборка EXE с помощью PyInstaller
+      shell: bash
+      run: |
+        pyinstaller --onefile --name LAMI_Project --add-data "WebApp;WebApp" --add-data "static;static" run.py
 
     - name: 📎 Прикрепление EXE к релизу
       if: github.event_name == 'release'
@@ -36,12 +41,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist/MyDjangoApp.exe
-        asset_name: MyDjangoApp.exe
+        asset_path: ./dist/LAMI_Project.exe
+        asset_name: LAMI_Project.exe
         asset_content_type: application/vnd.microsoft.portable-executable
 
-    - name: 💾 Сохранение EXE как артефакт (для тестов)
+    - name: 💾 Сохранение EXE как артефакт
       uses: actions/upload-artifact@v4
       with:
-        name: Django-App
-        path: ./dist/MyDjangoApp.exe
+        name: LAMI_Project-App
+        path: ./dist/LAMI_Project.exe
