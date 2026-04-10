@@ -1,4 +1,4 @@
-# run.py
+# run.py (лежит в WebApp/)
 import os
 import sys
 import django
@@ -11,7 +11,6 @@ def main():
     else:
         base_path = os.path.dirname(__file__)
 
-    # ВАЖНО: должно быть WebApp.settings
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "WebApp.settings")
 
     django.setup()

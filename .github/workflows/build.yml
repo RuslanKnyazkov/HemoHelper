@@ -1,52 +1,53 @@
 name: Build Django EXE
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     
     steps:
-    - name: 📥 Клонирование репозитория
+    - name: Клонирование репозитория
       uses: actions/checkout@v4
 
-    - name: 🐍 Установка Python
+    - name: Установка Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: 📦 Установка зависимостей
+    - name: Установка зависимостей
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r WebApp/requirements.txt
         pip install pyinstaller
 
-    - name: 📂 Сбор статических файлов
+    - name: Сбор статических файлов
       run: |
+        cd WebApp
         python manage.py collectstatic --noinput
-      continue-on-error: false  # Теперь это обязательно
+      continue-on-error: true
 
-    - name: 🔧 Сборка EXE с помощью PyInstaller
-      shell: bash
+    - name: Сборка EXE
       run: |
-        pyinstaller --onefile --name LAMI_Project --add-data "WebApp;WebApp" --add-data "static;static" run.py
+        cd WebApp
+        pyinstaller --onefile --name HemoHelper --add-data "WebApp;WebApp" run.py
 
-    - name: 📎 Прикрепление EXE к релизу
+    - name: Загрузка EXE в артефакты
+      uses: actions/upload-artifact@v4
+      with:
+        name: HemoHelper
+        path: ./WebApp/dist/HemoHelper.exe
+
+    - name: Прикрепление к релизу
       if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist/LAMI_Project.exe
-        asset_name: LAMI_Project.exe
+        asset_path: ./WebApp/dist/HemoHelper.exe
+        asset_name: HemoHelper.exe
         asset_content_type: application/vnd.microsoft.portable-executable
-
-    - name: 💾 Сохранение EXE как артефакт
-      uses: actions/upload-artifact@v4
-      with:
-        name: LAMI_Project-App
-        path: ./dist/LAMI_Project.exe
