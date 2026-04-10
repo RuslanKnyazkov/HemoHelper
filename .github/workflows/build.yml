@@ -21,33 +21,23 @@ jobs:
     - name: Установка зависимостей
       run: |
         python -m pip install --upgrade pip
-        pip install -r WebApp/requirements.txt
-        pip install pyinstaller
+        python -m pip install pyinstaller
+        cd WebApp
+        python -m pip install -r requirements.txt
+        python -m pip install django  # явно ставим Django ещё раз
 
-    - name: Сбор статических файлов
+    - name: Проверка установки Django
       run: |
         cd WebApp
-        python manage.py collectstatic --noinput
-      continue-on-error: true
+        python -c "import django; print('Django:', django.__version__)"
 
     - name: Сборка EXE
       run: |
         cd WebApp
-        pyinstaller --onefile --name HemoHelper --add-data "WebApp;WebApp" run.py
+        pyinstaller --onefile --name HemoHelper --add-data "WebApp;WebApp" --hidden-import django --hidden-import django.core.management --collect-all django run.py
 
     - name: Загрузка EXE в артефакты
       uses: actions/upload-artifact@v4
       with:
         name: HemoHelper
         path: ./WebApp/dist/HemoHelper.exe
-
-    - name: Прикрепление к релизу
-      if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./WebApp/dist/HemoHelper.exe
-        asset_name: HemoHelper.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
