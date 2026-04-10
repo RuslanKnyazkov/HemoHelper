@@ -18,10 +18,12 @@ import sys
 if getattr(sys, 'frozen', False):
     # Запущено как EXE
     BASE_DIR = os.path.dirname(sys.executable)
+    BASE_DIR_PATH = Path(BASE_DIR)
     # Путь к статике внутри EXE
     STATIC_ROOT = os.path.join(sys._MEIPASS, 'staticfiles')
 else:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR_PATH = Path(BASE_DIR)
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
@@ -67,10 +69,12 @@ ROOT_URLCONF = 'WebApp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [Path.joinpath(BASE_DIR, 'templates'),
-                 Path.joinpath(BASE_DIR, 'templates/teachbase-templates'),
-                 Path.joinpath(BASE_DIR, 'templates/forms'),
-                 Path.joinpath(BASE_DIR, 'templates/base')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'templates', 'teachbase-templates'),
+            os.path.join(BASE_DIR, 'templates', 'forms'),
+            os.path.join(BASE_DIR, 'templates', 'base'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -91,7 +95,7 @@ WSGI_APPLICATION = 'WebApp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -131,8 +135,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-# Куда collectstatic соберёт всё
+
+# Куда collectstatic соберёт всё (используем STATIC_ROOT объявленный выше)
+# STATIC_ROOT уже определён в начале файла
+
+# Откуда брать JS/CSS
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Откуда брать JS/CSS
+    os.path.join(BASE_DIR, 'static'),
 ]
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
