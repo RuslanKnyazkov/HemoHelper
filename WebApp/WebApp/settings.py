@@ -12,19 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
-import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-if getattr(sys, 'frozen', False):
-    # Запущено как EXE
-    BASE_DIR = os.path.dirname(sys.executable)
-    BASE_DIR_PATH = Path(BASE_DIR)
-    # Путь к статике внутри EXE
-    STATIC_ROOT = os.path.join(sys._MEIPASS, 'staticfiles')
-else:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    BASE_DIR_PATH = Path(BASE_DIR)
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -136,10 +126,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Куда collectstatic соберёт всё (используем STATIC_ROOT объявленный выше)
-# STATIC_ROOT уже определён в начале файла
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Откуда брать JS/CSS
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
