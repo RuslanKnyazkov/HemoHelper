@@ -10,7 +10,7 @@ pyperclip==1.11.0
 PyRect==0.2.0
 PyScreeze==1.0.1
 pytweening==1.2.0
-pywin32==311
+pywin32==308
 soupsieve==2.8
 sqlparse==0.5.5
 typing_extensions==4.15.0
