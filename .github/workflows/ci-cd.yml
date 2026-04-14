@@ -12,53 +12,53 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-      
+      uses: actions/checkout@v4  # Обновлено до v4
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5  # Обновлено до v5
       with:
-        python-version: '3.11'
-        
+        python-version: '3.12'  # Python 3.12 для совместимости с Django 5.2+
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Run Django migrations
       run: |
         cd WebApp
-        python manage.py migrate --settings=WebApp.settings
-        
+        python manage.py migrate
+
     - name: Run tests
       run: |
         cd WebApp
-        python manage.py test --settings=WebApp.settings
-        
+        python manage.py test
+
   deploy:
     needs: test
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-      
+      uses: actions/checkout@v4
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-        
+        python-version: '3.12'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Deploy to production (placeholder)
       run: |
-        echo "Deploying to production..."
-        # Add your deployment commands here
-        # For example, deploying to a server via SSH, or to a cloud platform
-        
+        echo "🚀 Deploying to production..."
+        # Добавьте сюда реальные команды деплоя
+        # Например: scp, rsync, ftp, или вызов API хостинга
+
     - name: Notify deployment success
       run: |
-        echo "Deployment completed successfully"
+        echo "✅ Deployment completed successfully!"
