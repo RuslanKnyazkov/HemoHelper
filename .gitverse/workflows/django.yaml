@@ -1,15 +1,72 @@
-name: Django CI
+name: Build Django EXE
+
 on:
   workflow_dispatch:
+  release:
+    types: [created]
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: windows-latest
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r requirements.txt
-      - run: python manage.py migrate
-      - run: python manage.py test
+    - name: Клонирование репозитория
+      uses: actions/checkout@v4
+
+    - name: Установка Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Установка зависимостей
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pyinstaller
+        python -m pip install -r requirements.txt
+
+    - name: Создание run.py
+      run: |
+        echo @"
+        import os
+        import sys
+        import django
+        from django.core.management import call_command, execute_from_command_line
+
+        def main():
+            if hasattr(sys, '_MEIPASS'):
+                base_path = sys._MEIPASS
+            else:
+                base_path = os.path.dirname(__file__)
+
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebApp.settings')
+            
+            django.setup()
+            call_command('migrate', interactive=False)
+            
+            execute_from_command_line(['run.py', 'runserver', '--noreload', '127.0.0.1:8000'])
+
+        if __name__ == '__main__':
+            main()
+        "@ > WebApp/run.py
+
+    - name: Сборка EXE
+      run: |
+        cd WebApp
+        pyinstaller --onefile --name LAMI_Project --add-data "WebApp;WebApp" --add-data "templates;templates" --add-data "static;static" --hidden-import django --collect-all django run.py
+
+    - name: Загрузка EXE в артефакты
+      uses: actions/upload-artifact@v4
+      with:
+        name: LAMI_Project
+        path: ./WebApp/dist/LAMI_Project.exe
+
+    - name: Прикрепление к релизу
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./WebApp/dist/LAMI_Project.exe
+        asset_name: LAMI_Project.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
