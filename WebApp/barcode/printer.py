@@ -1,6 +1,8 @@
 import win32print
 import win32api
+import logging
 from datetime import datetime as dt
+
 
 class PrintManager():
     def __init__(self):
@@ -31,7 +33,7 @@ class PrintManager():
         max_attempts = len(printers_to_try)
 
         while retry > 0 and attempt < max_attempts:
-            current_printer = printers_to_try[attempt]
+            current_printer = printer_name if not None else printers_to_try[attempt]
 
             try:
                 hPrinter = win32print.OpenPrinter(current_printer)
@@ -46,11 +48,12 @@ class PrintManager():
                 attempt = 0
             except Exception as e:
                 attempt += 1
-                print(f"❌ Ошибка печати на {current_printer}: {e}")
+                logging.error(f"❌ Ошибка печати на {current_printer}: {e}")
                 if attempt >= max_attempts:
-                    print("❗ Все принтеры недоступны.")
+                    logging.error("❗ Все принтеры недоступны.")
                     return False
         return True
+
 
 class ZPL:
     def __init__(self, mode=False, text=False, code="B2N",
@@ -124,6 +127,7 @@ class ZPL:
             self.add_date()
         self.build.append(self.end)
         return "\n".join(self.build)
+
 
 class ZplGenerator:
     @staticmethod

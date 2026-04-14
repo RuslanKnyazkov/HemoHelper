@@ -1,5 +1,9 @@
 # barcode/utilite.py
 from django.http import JsonResponse
+import logging
+
+# Настраиваем логгер для модуля
+logger = logging.getLogger(__name__)
 
 
 class PrintMonitor:
@@ -7,12 +11,11 @@ class PrintMonitor:
         from .printer import PrintManager, ZplGenerator
         self.print_manager = PrintManager()
         self.zpl_generator = ZplGenerator
-        print(
-            f"🎯 Принтер по умолчанию: {self.print_manager.get_default_printer()}")
+        logger.info(f"🎯 Принтер по умолчанию: {self.print_manager.get_default_printer()}")
 
     def process_json_data(self, data):
         """Обработка JSON данных с поддержкой внешнего принтера"""
-        print(f"🔄 Получены данные: {data}")
+        logger.info(f"🔄 Получены данные: {data}")
 
         try:
             if 'type' not in data:
@@ -108,7 +111,5 @@ class PrintMonitor:
                 return JsonResponse({'success': False, 'error': f'Неизвестный тип: {type_label}'}, status=400)
 
         except Exception as e:
-            print(f"❌ Ошибка: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Ошибка при обработке данных")
             return JsonResponse({'success': False, 'error': str(e)}, status=500)

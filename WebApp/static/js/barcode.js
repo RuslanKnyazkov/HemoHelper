@@ -833,7 +833,7 @@ const BarcodeModule = {
       type: "serial",
       text: BarcodeState.barcodeMode,
       retry: serial.value,
-      data: true,
+      date: true,
       printer: PrinterManager.selectedPrinter,
     };
 

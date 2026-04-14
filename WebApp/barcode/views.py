@@ -9,6 +9,9 @@ from .forms import LabelCreateForm
 from django.urls import reverse_lazy
 from django.shortcuts import render
 import win32print
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def enum_local_printers():
@@ -23,8 +26,9 @@ def enum_local_printers():
                          for printer in printers]  # [2] — это имя принтера
         return sorted(printer_names)  # Сортируем по алфавиту
     except Exception as e:
-        print(f"❌ Ошибка при получении принтеров: {e}")
+        logger.error(f"❌ Ошибка при получении принтеров: {e}")
         return []
+
 
 
 def get_printers(request):
@@ -84,7 +88,6 @@ def get_custom_labels(request):
         custom_labels = CustomLabel.objects.all()
         user_list = [i.get_text_params_labels() for i in custom_labels]
         return JsonResponse({'data': user_list})
-
 
 class CreateCustomLabels(CreateView):
     model = CustomLabel
