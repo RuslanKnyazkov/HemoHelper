@@ -5,7 +5,7 @@ call venv\Scripts\activate.bat
 
 echo.
 echo Changing to Webapp directory...
-cd Webapp
+cd WebApp
 
 echo Starting Django development server...
 python manage.py runserver

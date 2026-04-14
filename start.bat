@@ -10,7 +10,10 @@ pip install --no-cache-dir -r requirements.txt
 
 echo.
 echo Changing to Webapp directory...
-cd Webapp
+cd WebApp
+
+echo Applying database migrations...
+python manage.py migrate
 
 echo Starting Django development server...
 python manage.py runserver
