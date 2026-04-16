@@ -28,10 +28,9 @@
             </div>
             <button
               class="printer-refresh"
-              onclick="PrinterManager.refreshPrinters()"
+              onclick="KeyboardShortcuts.showShortcutsHelp()"
             >
-              <i class="fas fa-sync-alt"></i>
-              Обновить
+              <i class="fas fa-keyboard"></i> Горячие клавиши
             </button>
           </div>
           <!-- Информация о текущем принтере -->
@@ -58,126 +57,136 @@
           </div>
         </div>
 
-        <!-- === ВВОД НОМЕРА ПРОБЫ === -->
-        <div class="input-group">
-          <div class="container-stats">
-            <span id="barcode-count">0 проб</span>
-          </div>
-          <label class="input-label">Номер пробы</label>
-          <div class="input-wrapper">
-            <input
-              type="text"
-              class="input-field"
-              id="barcode-input"
-              placeholder="Введите или отсканируйте номер"
-              maxlength="50"
-              autocomplete="off"
-            />
-            <div class="input-actions">
-              <button class="input-btn" id="128" onclick="selectCode('128')">
-                128
-              </button>
-              <button class="input-btn" id="2of5" onclick="selectCode('2of5')">
-                2of5
-              </button>
-              <button class="input-btn" onclick="clearBarcodeInput()">
-                <i class="fas fa-times"></i>
-              </button>
-              <button class="input-btn" onclick="simulateScan()">
-                <i class="fas fa-camera"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- === НАСТРОЙКИ ПЕЧАТИ (режим, дата, номер) === -->
-        <div class="setting-block">
-          <div class="user-mode">
-            <div
-              class="mode-div"
-              id="mode-setting"
-              onclick="disableSettingPrint('mode-setting')"
-              data-attribute="mode"
-            >
-              <div class="fas fa-vial">
-                <div class="poput">Печать без режима</div>
-              </div>
-            </div>
-            <div
-              class="mode-div"
-              id="date-setting"
-              onclick="disableSettingPrint('date-setting')"
-              data-attribute="date"
-            >
-              <div class="fas fa-clock">
-                <div class="poput">Печать без даты</div>
-              </div>
-            </div>
-            <div
-              class="mode-div"
-              id="number-setting"
-              onclick="disableSettingPrint('number-setting')"
-              data-attribute="number"
-            >
-              <div class="fa-hashtag">
-                <div class="poput">Печать без номера</div>
-              </div>
-            </div>
-          </div>
-          <div class="button-elements">
-            <button
-              onclick="setDefaultUserPrintSetting()"
-              style="
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                border-radius: 20px;
-                padding: 5px;
-                color: white;
-                font-family: monospace;
-                border: none;
-              "
-            >
-              <i class="fas fa-check"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- === РЕЖИМЫ АНАЛИЗА === -->
-        <div class="input-group">
-          <label class="input-label">Режим анализа</label>
-          <div class="mode-grid">
-            <div class="mode-card" onclick="selectMode('testosterone')">
-              <h4>Testosterone 1:10</h4>
-              <p>Разведение 1:10</p>
-            </div>
-            <div class="mode-card active" onclick="selectMode('default')">
-              <h4>Обычная наклейка</h4>
-              <p>Default</p>
-            </div>
-            <div class="mode-card" onclick="selectMode('a-tpo')">
-              <h4>A-TPO 1:5</h4>
-              <p>Антитела к тиреопероксидазе</p>
-            </div>
-            <div class="mode-card" onclick="selectMode('prog')">
-              <h4>Progesterone 1:10</h4>
-              <p>Прогестерон</p>
-            </div>
-            <div class="mode-card" onclick="selectMode('a-thsr')">
-              <h4>A-THSR 1:10</h4>
-              <p>Антитела к рецепторам ТТГ</p>
-            </div>
-            <div class="mode-card" onclick="selectMode('dhea')">
-              <h4>DHEA 1:10</h4>
-              <p>Дегидроэпиандростерон сульфат</p>
-            </div>
-            <div class="mode-card" onclick="selectMode('PRL_Macro')">
-              <h4>Prolactin 1:1</h4>
-              <p>Макро пролактин</p>
-            </div>
-          </div>
-
-          <!-- === КОЛИЧЕСТВО НАКЛЕЕК === -->
+        <!-- ===== БЛОК: ВВОД НОМЕРА ПРОБЫ + НАСТРОЙКИ ПЕЧАТИ ===== -->
+        <div class="double-block-col">
           <div class="input-group">
-            <label class="input-label">Количество наклеек</label>
+            <div class="container-stats">
+              <span id="barcode-count">0 проб</span>
+            </div>
+            <label class="input-label">
+              <i class="fas fa-barcode"></i> Номер пробы
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="input-field"
+                id="barcode-input"
+                placeholder="Введите или отсканируйте номер"
+                maxlength="50"
+                autocomplete="off"
+              />
+              <div class="input-actions">
+                <button class="input-btn" id="128" onclick="selectCode('128')">
+                  128
+                </button>
+                <button
+                  class="input-btn"
+                  id="2of5"
+                  onclick="selectCode('2of5')"
+                >
+                  2of5
+                </button>
+                <button class="input-btn" onclick="clearBarcodeInput()">
+                  <i class="fas fa-times"></i>
+                </button>
+                <button class="input-btn" onclick="simulateScan()">
+                  <i class="fas fa-camera"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Настройки печати (компактный блок внутри) -->
+          <div class="compact-print-settings">
+            <div class="compact-settings-header">
+              <i class="fas fa-sliders-h"></i>
+              <span>Настройки печати</span>
+            </div>
+            <div class="compact-settings-buttons">
+              <div
+                class="compact-setting-item active"
+                id="mode-setting"
+                onclick="disableSettingPrint('mode-setting')"
+                data-attribute="mode"
+                title="Печать без режима"
+              >
+                <i class="fas fa-vial"></i>
+              </div>
+              <div
+                class="compact-setting-item active"
+                id="date-setting"
+                onclick="disableSettingPrint('date-setting')"
+                data-attribute="date"
+                title="Печать без даты"
+              >
+                <i class="fas fa-clock"></i>
+              </div>
+              <div
+                class="compact-setting-item active"
+                id="number-setting"
+                onclick="disableSettingPrint('number-setting')"
+                data-attribute="number"
+                title="Печать без номера"
+              >
+                <i class="fas fa-hashtag"></i>
+              </div>
+              <div class="compact-setting-reset">
+                <button
+                  onclick="setDefaultUserPrintSetting()"
+                  title="Сбросить настройки"
+                >
+                  <i class="fas fa-check"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== БЛОК: РЕЖИМЫ АНАЛИЗА ===== -->
+        <div class="double-block-col">
+          <div class="input-group">
+            <label class="input-label">
+              <i class="fas fa-flask"></i> Режим анализа
+            </label>
+            <div class="mode-grid">
+              <div class="mode-card" onclick="selectMode('testosterone')">
+                <h4>Testosterone 1:10</h4>
+                <p>Разведение 1:10</p>
+              </div>
+              <div class="mode-card active" onclick="selectMode('default')">
+                <h4>Обычная наклейка</h4>
+                <p>Default</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('a-tpo')">
+                <h4>A-TPO 1:5</h4>
+                <p>Антитела к тиреопероксидазе</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('prog')">
+                <h4>Progesterone 1:10</h4>
+                <p>Прогестерон</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('a-thsr')">
+                <h4>A-THSR 1:10</h4>
+                <p>Антитела к рецепторам ТТГ</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('dhea')">
+                <h4>DHEA 1:10</h4>
+                <p>Дегидроэпиандростерон сульфат</p>
+              </div>
+              <div class="mode-card" onclick="selectMode('PRL_Macro')">
+                <h4>Prolactin 1:1</h4>
+                <p>Макро пролактин</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== БЛОК: КОЛИЧЕСТВО НАКЛЕЕК ===== -->
+        <div class="double-block-col">
+          <div class="input-group">
+            <label class="input-label">
+              <i class="fas fa-copy"></i> Количество наклеек
+            </label>
             <div class="mode-grid-btn">
               <div class="mode-card-btn active" onclick="selectRetry('1')">
                 <h4>1</h4>
@@ -192,59 +201,81 @@
           </div>
         </div>
 
-        <!-- === СПЕЦИАЛЬНЫЕ ЭТИКЕТКИ === -->
-        <div class="input-group">
-          <label class="input-label">Специальные этикетки</label>
-          <div class="quick-actions">
-            <button class="quick-btn" onclick="specialLabel('saliva')">
-              <i class="fas fa-tint"></i> Слюна
-            </button>
-            <button class="quick-btn" onclick="specialLabel('virtual')">
-              <i class="fas fa-cloud"></i> Вирт архив
-            </button>
-            <button class="quick-btn" onclick="specialLabel('duplicate')">
-              <i class="fas fa-copy"></i> Дубликат
-            </button>
-            <button class="quick-btn" onclick="specialLabel('infinity')">
-              <i class="fas fa-infinity"></i> Инфинити
-            </button>
-            <button class="quick-btn" onclick="specialLabel('sorted')">
-              <i class="fas fa-infinity"></i> Sorted
-            </button>
+        <!-- ===== БЛОК: СПЕЦИАЛЬНЫЕ ЭТИКЕТКИ ===== -->
+        <div class="double-block-col">
+          <div class="input-group">
+            <label class="input-label">
+              <i class="fas fa-tag"></i> Специальные этикетки
+            </label>
+            <div class="quick-actions">
+              <button class="quick-btn" onclick="specialLabel('saliva')">
+                <i class="fas fa-tint"></i> Слюна
+              </button>
+              <button class="quick-btn" onclick="specialLabel('virtual')">
+                <i class="fas fa-cloud"></i> Вирт архив
+              </button>
+              <button class="quick-btn" onclick="specialLabel('duplicate')">
+                <i class="fas fa-copy"></i> Дубликат
+              </button>
+              <button class="quick-btn" onclick="specialLabel('infinity')">
+                <i class="fas fa-infinity"></i> Инфинити
+              </button>
+              <button class="quick-btn" onclick="specialLabel('sorted')">
+                <i class="fas fa-infinity"></i> Sorted
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- === ПОЛЬЗОВАТЕЛЬСКИЕ ЭТИКЕТКИ === -->
-        <div class="input-group">
-          <label for="user-labels"
-            >Пользовательские наклейки
-            <a href="{% url 'create-labels' %}">+</a></label
-          >
-          <div class="user-actions"></div>
-          <div class="mode-grid" id="user-labels"></div>
-        </div>
-
-        <!-- === ПОСЛЕДОВАТЕЛЬНОСТЬ GLP === -->
-        <div class="input-group">
-          <div class="glp-section">
-            <label for="glp-serial">Последовательность наклеек</label>
-            <input
-              class="input-field"
-              type="text"
-              id="glp-serial"
-              placeholder="Укажите серию наклеек знаком '-' "
-            />
-            <div class="mode-grid">
-              <div class="mode-card" onclick="selectMode('Alinity')">
-                <h4>Alinity</h4>
-                <p>Архив для сыворотки</p>
-              </div>
-              <div class="mode-card" onclick="selectMode('HbA1c')">
-                <h4>Arhive Arhitect</h4>
-                <p>Архив для ЭДТА</p>
+        <!-- ===== ДВОЙНОЙ БЛОК: ПОЛЬЗОВАТЕЛЬСКИЕ НАКЛЕЙКИ И GLP ===== -->
+        <div class="double-block">
+          <!-- Левая колонка - Пользовательские наклейки -->
+          <div class="double-block-col">
+            <div class="input-group">
+              <label for="user-labels">
+                <i class="fas fa-tags"></i> Пользовательские наклейки
+                <a href="{% url 'create-labels' %}" class="add-link">+</a>
+              </label>
+              <div class="custom-labels-container" id="user-labels">
+                <!-- Загружается динамически -->
               </div>
             </div>
-            <button class="btn" onclick="printSerialLabelsGLP()">Печать</button>
+          </div>
+
+          <!-- Правая колонка - Последовательность GLP -->
+          <div class="double-block-col">
+            <div class="input-group">
+              <label for="glp-serial">
+                <i class="fas fa-layer-group"></i> Последовательность наклеек
+                GLP
+              </label>
+              <div class="glp-section">
+                <div class="glp-mode-selector">
+                  <div class="mode-card" onclick="selectMode('Alinity')">
+                    <h4>Alinity</h4>
+                    <p>Архив для сыворотки</p>
+                  </div>
+                  <div class="mode-card" onclick="selectMode('HbA1c')">
+                    <h4>Arhive Arhitect</h4>
+                    <p>Архив для ЭДТА</p>
+                  </div>
+                </div>
+                <div class="glp-input-wrapper">
+                  <input
+                    class="input-field"
+                    type="text"
+                    id="glp-serial"
+                    placeholder="Укажите серию наклеек знаком '-' (например: 1-10)"
+                  />
+                  <button
+                    class="btn glp-print-btn"
+                    onclick="printSerialLabelsGLP()"
+                  >
+                    <i class="fas fa-print"></i> Печать серии
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

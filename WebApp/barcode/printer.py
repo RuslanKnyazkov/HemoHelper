@@ -23,17 +23,11 @@ class PrintManager():
         if isinstance(retry, str):
             retry = int(retry)
 
-        printers_to_try = []
-
-        if printer_name:
-            printers_to_try.append(printer_name)
-        printers_to_try.extend(self.default_printers)
-
         attempt = 0
-        max_attempts = len(printers_to_try)
+        max_attempts = len(self.default_printers)
 
-        while retry > 0 and attempt < max_attempts:
-            current_printer = printer_name if not None else printers_to_try[attempt]
+        while retry > 0:
+            current_printer = printer_name
 
             try:
                 hPrinter = win32print.OpenPrinter(current_printer)

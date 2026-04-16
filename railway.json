@@ -1,9 +1,0 @@
-{
-  "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "cd WebApp && pip install -r ../requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
-  },
-  "deploy": {
-    "startCommand": "cd WebApp && gunicorn WebApp.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4"
-  }
-}
