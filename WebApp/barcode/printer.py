@@ -2,35 +2,35 @@ import win32print
 import win32api
 import logging
 from datetime import datetime as dt
+import json
+import os
 
 
 class PrintManager():
-    def __init__(self):
-        self.default_printers = [
-            "ZDesigner ZD410-203dpi ZPL",
-            "ZDesigner ZD410-203dpi ZPL (копия 1)",
-            "ZDesigner ZD410-203dpi ZPL (копия 2)",
-            "ZDesigner ZD410-203dpi ZPL (копия 3)"
-        ]
-
-    def get_default_printer(self, index: int = 0) -> str:
+    @staticmethod
+    def get_default_printer():
         try:
-            return self.default_printers[index]
-        except IndexError:
-            return self.default_printers[0] if self.default_printers else None
+            with open("printer_config.json", "r") as file:
+                printer = json.load(file)
+                return printer['printer-name']
+        except FileNotFoundError:
+            print("Файл config.json не найден")
+            return None
+        except json.JSONDecodeError:
+            print("Ошибка: файл printer_config.json пуст или содержит неверный JSON")
+            return None
+        except KeyError:
+            print("Ошибка: в JSON нет ключа 'printer-name'")
+            return None
 
     def print_barcode(self, zpl: str, printer_name: str = None, retry: int = 1):
         if isinstance(retry, str):
             retry = int(retry)
 
-        attempt = 0
-        max_attempts = len(self.default_printers)
-
         while retry > 0:
-            current_printer = printer_name
 
             try:
-                hPrinter = win32print.OpenPrinter(current_printer)
+                hPrinter = win32print.OpenPrinter(printer_name)
                 job_info = ("Barcode Print", None, "RAW")
                 job_id = win32print.StartDocPrinter(hPrinter, 1, job_info)
                 win32print.StartPagePrinter(hPrinter)
@@ -39,13 +39,9 @@ class PrintManager():
                 win32print.EndDocPrinter(hPrinter)
                 win32print.ClosePrinter(hPrinter)
                 retry -= 1
-                attempt = 0
             except Exception as e:
-                attempt += 1
-                logging.error(f"❌ Ошибка печати на {current_printer}: {e}")
-                if attempt >= max_attempts:
-                    logging.error("❗ Все принтеры недоступны.")
-                    return False
+                logging.error(f"❌ Ошибка печати на {printer_name}: {e}")
+                return False
         return True
 
 
@@ -127,3 +123,9 @@ class ZplGenerator:
     @staticmethod
     def create_simple_text_zpl(**kwargs) -> str:
         return ZPL(**kwargs).build_zpl()
+
+
+if __name__ == "__main__":
+
+    test = PrintManager()
+    print(test.get_default_printer())

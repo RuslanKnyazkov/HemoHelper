@@ -13,6 +13,7 @@ const BarcodeState = {
   barcodeHistory: [],
   retry: 1,
   selectCodeFormat: "B2N",
+  glpMode: "Alinity",
 };
 
 const LabelSetting = {
@@ -161,17 +162,14 @@ const PrinterManager = {
     select.innerHTML = '<option value="">🔍 Поиск принтеров...</option>';
 
     try {
-      this.useElectronAPI = !!(
-        window.electronAPI && window.electronAPI.getPrinters
-      );
+      this.useElectronAPI = !!window.electronAPI?.getPrinters;
 
       let printers = [];
+      let defaultPrinter = null;
 
       if (this.useElectronAPI) {
-        console.log("🖨️ Используем Electron API для получения принтеров");
         printers = await window.electronAPI.getPrinters();
       } else {
-        console.log("🖨️ Используем Django API для получения принтеров");
         const response = await fetch("/get-printers/", {
           method: "GET",
           headers: {
@@ -180,44 +178,45 @@ const PrinterManager = {
           },
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const result = await response.json();
         printers = result.printers || [];
-
-        if (printers.length > 0 && typeof printers[0] === "object") {
-          printers = printers.map((p) => p.name || p);
-        }
+        defaultPrinter = result.default; // ← ключ "default" из вашего API
       }
 
-      this.availablePrinters = printers;
+      this.availablePrinters = printers.map((p) =>
+        typeof p === "object" ? p.name : p,
+      );
       this.renderSelect();
-      this.restoreSelection();
-      this.updatePrinterInfo();
 
-      if (this.availablePrinters.length === 0) {
-        select.innerHTML = '<option value="">⚠️ Принтеры не найдены</option>';
+      // Приоритет выбора: default с сервера > localStorage > первый в списке
+      this.selectedPrinter =
+        defaultPrinter && this.availablePrinters.includes(defaultPrinter)
+          ? defaultPrinter
+          : localStorage.getItem("selectedPrinter") &&
+              this.availablePrinters.includes(
+                localStorage.getItem("selectedPrinter"),
+              )
+            ? localStorage.getItem("selectedPrinter")
+            : this.availablePrinters[0] || null;
+
+      if (this.selectedPrinter) {
+        localStorage.setItem("selectedPrinter", this.selectedPrinter);
+        this.updatePrinterInfo();
+        if (select.querySelector(`option[value="${this.selectedPrinter}"]`)) {
+          select.value = this.selectedPrinter;
+        }
         showBarcodeNotification(
-          "Принтеры не найдены. Проверьте подключение к серверу.",
-          "warning",
-        );
-      } else {
-        showBarcodeNotification(
-          `🖨️ Найдено ${this.availablePrinters.length} принтеров`,
+          `🖨️ Принтер: ${this.selectedPrinter}`,
           "success",
         );
       }
-    } catch (err) {
-      console.error("❌ Ошибка загрузки принтеров:", err);
-      select.innerHTML =
-        '<option value="">❌ Ошибка загрузки принтеров</option>';
-      showBarcodeNotification(
-        `Не удалось загрузить список принтеров: ${err.message}`,
-        "error",
-      );
 
+      if (this.availablePrinters.length === 0) {
+        select.innerHTML = '<option value="">⚠️ Принтеры не найдены</option>';
+      }
+    } catch (err) {
+      select.innerHTML = '<option value="">❌ Ошибка загрузки</option>';
+      showBarcodeNotification(`Ошибка: ${err.message}`, "error");
       this.showRetryButton(select);
     }
   },
@@ -1748,7 +1747,7 @@ const BarcodeModule = {
     console.log("Выбрано количество:", count);
     BarcodeState.retry = parseInt(count);
 
-    const retryBtns = document.querySelectorAll(".mode-card-btn");
+    const retryBtns = document.querySelectorAll(".quantity-card");
     retryBtns.forEach((btn) => btn.classList.remove("active"));
 
     retryBtns.forEach((btn, index) => {
@@ -2140,10 +2139,19 @@ const BarcodeModule = {
   },
 
   async printSerialLabels() {
-    const serial = document.getElementById("glp-serial");
-    if (!serial) return;
+    const serialInput = document.getElementById("glp-serial");
+    if (!serialInput) return;
 
-    if (!serial.value.includes("-")) {
+    const serial = serialInput.value.trim();
+    if (!serial) {
+      showBarcodeNotification(
+        "Введите серию наклеек (например: 1-10)",
+        "warning",
+      );
+      return;
+    }
+
+    if (!serial.includes("-")) {
       showBarcodeNotification(
         "Отсутствует знак '-' для определения последовательности",
         "error",
@@ -2151,34 +2159,85 @@ const BarcodeModule = {
       return;
     }
 
-    let count_labels = serial.value.split("-");
-    let result = Number(count_labels[1]) - Number(count_labels[0]);
+    const parts = serial.split("-");
+    const start = parseInt(parts[0]);
+    const end = parseInt(parts[1]);
 
-    if (result > 20) {
+    if (isNaN(start) || isNaN(end)) {
       showBarcodeNotification(
-        `Слишком много наклеек ${result}. Максимум 20 наклеек`,
+        "Неверный формат серии. Используйте числа через дефис",
         "error",
       );
       return;
     }
 
-    let param = {
+    const count = end - start + 1;
+
+    if (count > 20) {
+      showBarcodeNotification(
+        `Слишком много наклеек (${count}). Максимум 20 наклеек`,
+        "error",
+      );
+      return;
+    }
+
+    const param = {
       type: "serial",
-      text: BarcodeState.barcodeMode,
-      retry: serial.value,
+      text: BarcodeState.glpMode || "Alinity",
+      retry: serial,
       date: true,
       printer: PrinterManager.selectedPrinter,
+      glpMode: BarcodeState.glpMode || "Alinity",
     };
 
     try {
       await BarcodeAPI.sendToDjango(param);
-      showBarcodeNotification("Печать успешно отправлена на сервер", "success");
+      showBarcodeNotification(
+        `✅ Печать серии GLP (${start}-${end}) отправлена`,
+        "success",
+      );
+      serialInput.value = "";
     } catch (error) {
-      showBarcodeNotification("Ошибка: " + error.message, "error");
-      console.error("Детали ошибки:", error);
+      console.error("Ошибка печати GLP:", error);
+      showBarcodeNotification(`❌ Ошибка печати: ${error.message}`, "error");
     }
   },
 };
+
+// ===== УПРАВЛЕНИЕ GLP РЕЖИМАМИ =====
+function selectGLPMode(mode) {
+  console.log("🎯 Выбран GLP режим:", mode);
+
+  BarcodeState.glpMode = mode;
+
+  const glpCards = document.querySelectorAll(".glp-mode-selector .mode-card");
+  glpCards.forEach((card) => {
+    card.classList.remove("active");
+  });
+
+  let selectedCard = null;
+  if (mode === "Alinity") {
+    selectedCard = Array.from(glpCards).find((card) =>
+      card.querySelector("h4")?.textContent.includes("Alinity"),
+    );
+  } else if (mode === "HbA1c") {
+    selectedCard = Array.from(glpCards).find(
+      (card) =>
+        card.querySelector("h4")?.textContent.includes("Archive") ||
+        card.querySelector("h4")?.textContent.includes("Arhive"),
+    );
+  }
+
+  if (selectedCard) {
+    selectedCard.classList.add("active");
+  }
+
+  const modeName =
+    mode === "Alinity"
+      ? "Alinity (Архив для сыворотки)"
+      : "Archive Architect (Архив для ЭДТА)";
+  showBarcodeNotification(`🎯 Выбран GLP режим: ${modeName}`, "success");
+}
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 const debounce = (fn, delay) => {
@@ -2201,6 +2260,7 @@ window.reuseBarcode = (id) => BarcodeModule.reuseBarcode(id);
 window.deleteBarcode = (id) => BarcodeModule.deleteBarcode(id);
 window.printSerialLabelsGLP = () => BarcodeModule.printSerialLabels();
 window.clearHistory = () => BarcodeModule.clearHistory();
+window.selectGLPMode = selectGLPMode;
 
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener("DOMContentLoaded", () => {

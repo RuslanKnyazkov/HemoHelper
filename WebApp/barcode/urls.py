@@ -10,5 +10,7 @@ urlpatterns = [
     path('custom-labels/', views.get_custom_labels, name='custom-labels'),
     path('create-labels/', views.CreateCustomLabels.as_view(), name='create-labels'),
     path('get-printers/', views.get_printers, name='get_printers'),
+    path('set-default-printer/', views.set_default_printer,
+         name='set_default_printer')
 
 ]

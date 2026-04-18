@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 import json
+from .printer import PrintManager
 from .utilite import PrintMonitor
 from django.views.decorators.csrf import csrf_exempt
 from utility.controller import PcController
@@ -16,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 def enum_local_printers():
     """Получает список локальных принтеров через win32print"""
+
+    # if PrintManager.get_default_printer():
+    # return [PrintManager.get_default_printer()]
+    # else:
     try:
         # Получаем все принтеры
         printers = win32print.EnumPrinters(
@@ -23,12 +28,12 @@ def enum_local_printers():
         )
         # Извлекаем имена
         printer_names = [printer[2]
-                         for printer in printers]  # [2] — это имя принтера
+                         # [2] — это имя принтера
+                         for printer in printers]
         return sorted(printer_names)  # Сортируем по алфавиту
     except Exception as e:
         logger.error(f"❌ Ошибка при получении принтеров: {e}")
         return []
-
 
 
 def get_printers(request):
@@ -37,8 +42,35 @@ def get_printers(request):
     return JsonResponse({
         'success': True,
         'printers': enum_local_printers(),
-        'default': win32print.GetDefaultPrinter(),
+        'default': PrintManager.get_default_printer(),
     })
+
+
+def set_default_printer(request):
+    if request.method == 'POST':
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                if 'printer' in data or 'printer_name' in data:
+                    printer_name = data.get(
+                        'printer') or data.get('printer_name')
+                    printer_setting = {'printer-name': printer_name}
+
+                    with open("printer_config.json", 'w', encoding='utf-8') as f:
+                        json.dump(printer_setting, f,
+                                  ensure_ascii=False, indent=2)
+
+                    return JsonResponse({'success': True, 'printer': printer_name})
+                else:
+                    return JsonResponse({'success': False, 'error': 'Ключ "printer" не найден'}, status=400)
+            else:
+                return JsonResponse({'success': False, 'error': 'Неверный Content-Type'}, status=400)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'success': False, 'error': f'Ошибка JSON: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'error': 'Метод не разрешен'}, status=405)
 
 
 @csrf_exempt
@@ -88,6 +120,7 @@ def get_custom_labels(request):
         custom_labels = CustomLabel.objects.all()
         user_list = [i.get_text_params_labels() for i in custom_labels]
         return JsonResponse({'data': user_list})
+
 
 class CreateCustomLabels(CreateView):
     model = CustomLabel

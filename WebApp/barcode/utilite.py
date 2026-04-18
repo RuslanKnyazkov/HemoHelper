@@ -11,7 +11,8 @@ class PrintMonitor:
         from .printer import PrintManager, ZplGenerator
         self.print_manager = PrintManager()
         self.zpl_generator = ZplGenerator
-        logger.info(f"🎯 Принтер по умолчанию: {self.print_manager.get_default_printer()}")
+        logger.info(
+            f"🎯 Принтер по умолчанию: {self.print_manager.get_default_printer()}")
 
     def process_json_data(self, data):
         """Обработка JSON данных с поддержкой внешнего принтера"""
@@ -81,7 +82,7 @@ class PrintMonitor:
                 retry = int(data.pop("count", 1))
                 for name in names:
                     zpl_code = self.zpl_generator.create_simple_text_zpl(
-                        text=name, **data)
+                        text=name, date=True, **data)
                     self.print_manager.print_barcode(
                         zpl=zpl_code,
                         printer_name=printer_name,

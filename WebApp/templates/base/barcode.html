@@ -76,12 +76,16 @@
                 autocomplete="off"
               />
               <div class="input-actions">
-                <button class="input-btn" id="128" onclick="selectCode('128')">
+                <button
+                  class="input-btn"
+                  id="btn-128"
+                  onclick="selectCode('128')"
+                >
                   128
                 </button>
                 <button
                   class="input-btn"
-                  id="2of5"
+                  id="btn-2of5"
                   onclick="selectCode('2of5')"
                 >
                   2of5
@@ -142,60 +146,103 @@
           </div>
         </div>
 
-        <!-- ===== БЛОК: РЕЖИМЫ АНАЛИЗА ===== -->
+        <!-- ===== ОБЪЕДИНЕННЫЙ БЛОК: РЕЖИМ АНАЛИЗА + КОЛИЧЕСТВО НАКЛЕЕК ===== -->
         <div class="double-block-col">
           <div class="input-group">
             <label class="input-label">
-              <i class="fas fa-flask"></i> Режим анализа
+              <i class="fas fa-flask"></i> Режим анализа и количество наклеек
             </label>
+
+            <!-- Режимы анализа -->
             <div class="mode-grid">
-              <div class="mode-card" onclick="selectMode('testosterone')">
+              <div
+                class="mode-card"
+                onclick="selectMode('testosterone')"
+                data-mode="testosterone"
+              >
                 <h4>Testosterone 1:10</h4>
                 <p>Разведение 1:10</p>
               </div>
-              <div class="mode-card active" onclick="selectMode('default')">
+              <div
+                class="mode-card active"
+                onclick="selectMode('default')"
+                data-mode="default"
+              >
                 <h4>Обычная наклейка</h4>
                 <p>Default</p>
               </div>
-              <div class="mode-card" onclick="selectMode('a-tpo')">
+              <div
+                class="mode-card"
+                onclick="selectMode('a-tpo')"
+                data-mode="a-tpo"
+              >
                 <h4>A-TPO 1:5</h4>
                 <p>Антитела к тиреопероксидазе</p>
               </div>
-              <div class="mode-card" onclick="selectMode('prog')">
+              <div
+                class="mode-card"
+                onclick="selectMode('prog')"
+                data-mode="prog"
+              >
                 <h4>Progesterone 1:10</h4>
                 <p>Прогестерон</p>
               </div>
-              <div class="mode-card" onclick="selectMode('a-thsr')">
+              <div
+                class="mode-card"
+                onclick="selectMode('a-thsr')"
+                data-mode="a-thsr"
+              >
                 <h4>A-THSR 1:10</h4>
                 <p>Антитела к рецепторам ТТГ</p>
               </div>
-              <div class="mode-card" onclick="selectMode('dhea')">
+              <div
+                class="mode-card"
+                onclick="selectMode('dhea')"
+                data-mode="dhea"
+              >
                 <h4>DHEA 1:10</h4>
                 <p>Дегидроэпиандростерон сульфат</p>
               </div>
-              <div class="mode-card" onclick="selectMode('PRL_Macro')">
+              <div
+                class="mode-card"
+                onclick="selectMode('PRL_Macro')"
+                data-mode="PRL_Macro"
+              >
                 <h4>Prolactin 1:1</h4>
                 <p>Макро пролактин</p>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- ===== БЛОК: КОЛИЧЕСТВО НАКЛЕЕК ===== -->
-        <div class="double-block-col">
-          <div class="input-group">
-            <label class="input-label">
-              <i class="fas fa-copy"></i> Количество наклеек
-            </label>
-            <div class="mode-grid-btn">
-              <div class="mode-card-btn active" onclick="selectRetry('1')">
-                <h4>1</h4>
+            <!-- Разделитель -->
+            <div class="mode-divider">
+              <span><i class="fas fa-copy"></i> Количество копий</span>
+            </div>
+
+            <!-- Количество наклеек -->
+            <div class="quantity-grid">
+              <div
+                class="quantity-card active"
+                onclick="selectRetry('1')"
+                data-retry="1"
+              >
+                <div class="quantity-number">1</div>
+                <div class="quantity-label">Одна</div>
               </div>
-              <div class="mode-card-btn" onclick="selectRetry('2')">
-                <h4>2</h4>
+              <div
+                class="quantity-card"
+                onclick="selectRetry('2')"
+                data-retry="2"
+              >
+                <div class="quantity-number">2</div>
+                <div class="quantity-label">Две</div>
               </div>
-              <div class="mode-card-btn" onclick="selectRetry('3')">
-                <h4>3</h4>
+              <div
+                class="quantity-card"
+                onclick="selectRetry('3')"
+                data-retry="3"
+              >
+                <div class="quantity-number">3</div>
+                <div class="quantity-label">Три</div>
               </div>
             </div>
           </div>
@@ -221,7 +268,7 @@
                 <i class="fas fa-infinity"></i> Инфинити
               </button>
               <button class="quick-btn" onclick="specialLabel('sorted')">
-                <i class="fas fa-infinity"></i> Sorted
+                <i class="fas fa-sort-amount-down"></i> Sorted
               </button>
             </div>
           </div>
@@ -251,12 +298,12 @@
               </label>
               <div class="glp-section">
                 <div class="glp-mode-selector">
-                  <div class="mode-card" onclick="selectMode('Alinity')">
+                  <div class="mode-card" onclick="selectGLPMode('Alinity')">
                     <h4>Alinity</h4>
                     <p>Архив для сыворотки</p>
                   </div>
-                  <div class="mode-card" onclick="selectMode('HbA1c')">
-                    <h4>Arhive Arhitect</h4>
+                  <div class="mode-card" onclick="selectGLPMode('HbA1c')">
+                    <h4>Archive Architect</h4>
                     <p>Архив для ЭДТА</p>
                   </div>
                 </div>
@@ -293,7 +340,6 @@
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 <!-- =============== СКРИПТЫ =============== -->
@@ -303,5 +349,4 @@
 
 <!-- JsBarcode — для генерации штрих-кодов в истории -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
-{% endblock %}
+{% endblock%}
