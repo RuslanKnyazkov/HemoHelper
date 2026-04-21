@@ -749,3 +749,94 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => showGuideModule("immuno"));
   });
 });
+// =============== ДЛЯ ROCHE COBAS 8000 МАППИНГА ===============
+// Функция для загрузки данных маппинга (пока заглушка, потом через API)
+async function loadRocheMapping() {
+  // TODO: Потом заменить на реальный API запрос
+  // const response = await fetch('/api/roche-mapping/');
+  // return await response.json();
+
+  // Пока возвращаем статические данные
+  console.log("Roche Cobas 8000 маппинг загружен");
+  return true;
+}
+
+// Функция для фильтрации реагентов по каналу (если нужно)
+function filterReagentsByChannel(channel) {
+  const rows = document.querySelectorAll(".mapping-table tbody tr");
+  rows.forEach((row) => {
+    if (channel === "all") {
+      row.style.display = "";
+    } else {
+      const ch1 = row.querySelector(".ch1");
+      const ch2 = row.querySelector(".ch2");
+      if (channel === "ch1" && ch1 && ch1.textContent !== "—") {
+        row.style.display = "";
+      } else if (channel === "ch2" && ch2 && ch2.textContent !== "—") {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    }
+  });
+}
+
+// Функция для подсветки реагентов (поиск)
+function searchReagentsInMapping(searchTerm) {
+  if (!searchTerm || searchTerm.length < 2) {
+    // Показать все строки
+    document.querySelectorAll(".mapping-table tbody tr").forEach((row) => {
+      row.style.display = "";
+    });
+    return;
+  }
+
+  const term = searchTerm.toLowerCase();
+  document.querySelectorAll(".mapping-table tbody tr").forEach((row) => {
+    const reagentName =
+      row.querySelector(".reagent-name")?.textContent.toLowerCase() || "";
+    if (reagentName.includes(term)) {
+      row.style.display = "";
+      row.style.backgroundColor = "#fef3c7";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+
+// =============== ДЛЯ ROCHE COBAS 8000 ===============
+// Инициализация анализатора
+function initRocheAnalyzer() {
+  console.log("Roche Cobas 8000 анализатор загружен");
+
+  // Добавляем возможность клика по индикаторам каналов (для демо)
+  const dots = document.querySelectorAll(".channel-dot.active");
+  dots.forEach((dot) => {
+    dot.addEventListener("click", function (e) {
+      e.stopPropagation();
+      // Тут потом будет переключение статуса через API
+      console.log("Канал кликнут");
+    });
+  });
+
+  // Подсветка строки при наведении на индикатор
+  const rows = document.querySelectorAll(".module-table tbody tr");
+  rows.forEach((row) => {
+    const dots = row.querySelectorAll(".channel-dot");
+    dots.forEach((dot) => {
+      dot.addEventListener("mouseenter", () => {
+        row.style.backgroundColor = "#f0fdf4";
+      });
+      dot.addEventListener("mouseleave", () => {
+        row.style.backgroundColor = "";
+      });
+    });
+  });
+}
+
+// Запускаем после загрузки DOM
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initRocheAnalyzer);
+} else {
+  initRocheAnalyzer();
+}
