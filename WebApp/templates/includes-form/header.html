@@ -1,10 +1,15 @@
 <!doctype html>
 {% load static %}
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Гемотест Хелпер - Лабораторная система</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   </head>
   <body>
     <header class="header">
@@ -16,24 +21,31 @@
           <h1>Гемотест Хелпер</h1>
           <span>Лабораторная система</span>
         </div>
-        <div class="doombass-block" onclick="turnStateMouse()">
-          <img
-            src="{% static 'images/images-other/doombass.jpeg'%}"
-            alt=""
-            width="50"
-            height="50"
-          />
-        </div>
+      </div>
+
+      <!-- Doombass блок в шапке -->
+      <div
+        class="doombass-block"
+        onclick="turnStateMouse()"
+        title="Кликер (раз в 5 минут)"
+      >
+        <img
+          src="{% static 'images/images-other/doombass.jpeg' %}"
+          alt="Doombass"
+          width="40"
+          height="40"
+        />
+        <span class="doombass-status"></span>
       </div>
 
       <nav class="header__nav">
-        <button class="nav-btn active" onclick="showModule('home')">
+        <button class="nav-btn" onclick="location.href='{% url 'home' %}'">
           <i class="fas fa-home"></i>
-          <span><a href="{% url 'home'%}">Главная</a></span>
+          <span>Главная</span>
         </button>
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="location.href='{% url 'barcode' %}'">
           <i class="fas fa-barcode"></i>
-          <span><a href="{% url 'barcode' %}">Баркоды</a></span>
+          <span>Баркоды</span>
         </button>
         <button class="nav-btn" onclick="showModule('reagent')">
           <i class="fas fa-vial"></i>
@@ -47,9 +59,12 @@
           <i class="fas fa-calculator"></i>
           <span>Расчеты</span>
         </button>
-        <button class="nav-btn">
+        <button
+          class="nav-btn"
+          onclick="location.href='{% url 'teach-home' %}'"
+        >
           <i class="fas fa-vial-virus"></i>
-          <a href="{% url 'teach-home' %}">Тесты</a>
+          <span>Тесты</span>
         </button>
       </nav>
 
@@ -57,5 +72,8 @@
         <i class="fas fa-bars"></i>
       </button>
     </header>
+
+    <!-- Основной контент -->
+    <main class="main">{% block content %} {% endblock %}</main>
   </body>
 </html>

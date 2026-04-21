@@ -1,154 +1,105 @@
-{% extends 'index.html' %} {% load static %}
-<!-- Основа для тестирования -->
-{% block content %} {% include 'modules.html'%}
-
-<div class="main-content">
-  <!-- Заголовок разделов -->
-  <div class="sections-header">
-    <h1><i class="fas fa-flask"></i> Профессиональные модули обучения</h1>
-    <p class="subtitle">
-      Выберите направление для изучения материалов и тренировки
-    </p>
-  </div>
-
-  <!-- Контейнер для динамического контента -->
-  <div class="sections-container">
-    <!-- Раздел Иммунохимия (активный по умолчанию) -->
-    <div class="section-content active" id="immunochemistry-section">
-      <!-- Видео материалы -->
-      <div class="video-section">
-        <h2>
-          <i class="fas fa-play-circle"></i> Видео материалы по иммунохимии
-        </h2>
-        <div class="video-grid">
-          <div class="video-card">
-            <div class="video-thumbnail">
-              <img
-                src="{% static 'images/images-base-learn/machine-holl.avif' %}"
-                alt="Принципы иммунохимии"
-              />
-              <div class="video-overlay">
-                <i class="fas fa-play"></i>
-              </div>
-            </div>
-            <div class="video-info">
-              <h3>Основные принципы иммунохимии</h3>
-              <p>Введение в методы иммунохимического анализа</p>
-              <div class="video-meta">
-                <span><i class="far fa-clock"></i> 25 мин</span>
-                <span><i class="fas fa-chart-line"></i> Начальный</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="video-card">
-            <div class="video-thumbnail">
-              <img
-                src="{% static 'images/images-base-learn/cobas-pro.avif' %}"
-                alt="Иммуноферментный анализ"
-              />
-              <div class="video-overlay">
-                <i class="fas fa-play"></i>
-              </div>
-            </div>
-            <div class="video-info">
-              <h3>Иммуноферментный анализ (ИФА)</h3>
-              <p>Технологии и применение ИФА в лаборатории</p>
-              <div class="video-meta">
-                <span><i class="far fa-clock"></i> 32 мин</span>
-                <span><i class="fas fa-chart-line"></i> Средний</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="video-card">
-            <div class="video-thumbnail">
-              <img
-                src="{% static 'images/immuno-video3.jpg' %}"
-                alt="Иммунохемилюминесценция"
-              />
-              <div class="video-overlay">
-                <i class="fas fa-play"></i>
-              </div>
-            </div>
-            <div class="video-info">
-              <h3>Иммунохемилюминесценция</h3>
-              <p>Метод ИХЛ и его преимущества</p>
-              <div class="video-meta">
-                <span><i class="far fa-clock"></i> 28 мин</span>
-                <span><i class="fas fa-chart-line"></i> Средний</span>
-              </div>
-            </div>
-          </div>
-        </div>
+<!doctype html>
+{% load static %} {% block content %} {% include 'modules.html'%}
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Профессиональные модули | Анализатор лабораторных проб</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/teach.css' %}" />
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="sections-header">
+        <h1><i class="fas fa-flask"></i> Профессиональные модули обучения</h1>
+        <p class="subtitle">
+          Выберите направление для изучения материалов и тренировки
+        </p>
       </div>
-
-      <!-- Тесты и тренировки -->
-      <div class="tests-section">
-        <h2><i class="fas fa-brain"></i> Тренировка тестов по иммунохимии</h2>
-        <div class="test-cards">
-          <div class="test-card">
-            <div class="test-icon">
-              <i class="fas fa-vial"></i>
+      <div class="sections-container">
+        <div class="tests-section">
+          <h2><i class="fas fa-brain"></i> Справочники и анализатор проб</h2>
+          <div class="test-cards">
+            <div class="test-card">
+              <div class="test-icon"><i class="fas fa-chart-line"></i></div>
+              <h3>Справочник тестов иммунохимии</h3>
+              <p>Тесты для линий ЕЕЕЕ1, ЕЕЕЕ2, СЕЕЕ</p>
+              <button class="start-test-btn" data-guide="immuno">
+                <i class="fas fa-book-open"></i> Перейти к списку
+              </button>
             </div>
-            <h3>Гормональные исследования</h3>
-            <p>Тесты на TSH, FT4, FT3, Cortisol, Testosterone</p>
-            <div class="test-stats">
-              <span><i class="fas fa-question-circle"></i> 25 вопросов</span>
-              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
+            <div class="test-card">
+              <div class="test-icon"><i class="fas fa-vial"></i></div>
+              <h3>Анализатор проб (пациенты + маркеры)</h3>
+              <p>20+ пациентов. Маркеры: 🔄 повтор, ❌ потеря, ✏️ отписана</p>
+              <button class="start-test-btn" id="openRandomPopupBtn">
+                <i class="fas fa-random"></i> Открыть анализатор
+              </button>
             </div>
-            <button class="start-test-btn" data-test="immuno_hormones">
-              <i class="fas fa-play"></i> Начать тренировку
-            </button>
-          </div>
-
-          <div class="test-card">
-            <div class="test-icon">
-              <i class="fas fa-dna"></i>
-            </div>
-            <h3>Онкомаркеры</h3>
-            <p>CA-125, CA-15-3, CA-19-9, AFP, CEA</p>
-            <div class="test-stats">
-              <span><i class="fas fa-question-circle"></i> 20 вопросов</span>
-              <span><i class="fas fa-trophy"></i> Высокая сложность</span>
-            </div>
-            <button class="start-test-btn" data-test="immuno_onco">
-              <i class="fas fa-play"></i> Начать тренировку
-            </button>
-          </div>
-
-          <div class="test-card">
-            <div class="test-icon">
-              <i class="fas fa-allergies"></i>
-            </div>
-            <h3>Аутоиммунные антитела</h3>
-            <p>A-CCP, Anti-TPO, ревматоидный фактор</p>
-            <div class="test-stats">
-              <span><i class="fas fa-question-circle"></i> 15 вопросов</span>
-              <span><i class="fas fa-trophy"></i> Средняя сложность</span>
-            </div>
-            <button class="start-test-btn" data-test="immuno_autoimmune">
-              <i class="fas fa-play"></i> Начать тренировку
-            </button>
-          </div>
-
-          <div class="test-card">
-            <div class="test-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <h3>Справочник тестов иммунохимии</h3>
-            <p>Тесты для линий ЕЕЕЕ1, ЕЕЕЕ2, СЕЕЕ</p>
-            <button class="start-test-btn" onclick="showGuideModule('immuno')">
-              <i class="fas fa-play"></i> Перейти к списку
-            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="test-informer"></div>
-{% block script%}
-<script src="{% static 'js/teach.js'%}"></script>
-{% endblock %} {% endblock %}
+    <!-- Всплывающее окно анализатора -->
+    <div id="analysisPopup" class="floating-overlay">
+      <div class="popup-card">
+        <div class="popup-header">
+          <h3>
+            <i class="fas fa-clinic-medical"></i> Лабораторный анализатор проб
+            (пациенты)
+          </h3>
+          <button class="close-popup" id="closePopupBtn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="popup-body">
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">
+              Все пациенты (<span id="totalCountSpan">0</span>)
+            </button>
+            <button class="filter-btn" data-filter="immunochemistry">
+              Иммунохимия
+            </button>
+            <button class="filter-btn" data-filter="biochemistry">
+              Биохимия
+            </button>
+            <button class="randomize-btn" id="refreshAnalysesBtn">
+              <i class="fas fa-sync-alt"></i> Перемешать пробы
+            </button>
+          </div>
+          <div id="analysisTableContainer">
+            <div class="empty-message">Загрузка данных...</div>
+          </div>
+          <div class="legend-block">
+            <i class="fas fa-info-circle"></i> <strong>Маркеры:</strong>
+            <span class="legend-icon"
+              ><i class="fas fa-sync-alt"></i> Повтор</span
+            >
+            <span class="legend-icon"
+              ><i class="fas fa-times-circle"></i> Потеря</span
+            >
+            <span class="legend-icon"
+              ><i class="fas fa-pencil-alt"></i> Отписана</span
+            >
+            <span class="legend-icon"
+              ><i class="fas fa-check-circle"></i> Без отметки</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-informer" id="testInformer"></div>
+
+    <script src="{% static 'js/teach.js' %}"></script>
+  </body>
+</html>
+{% endblock %}
