@@ -147,12 +147,11 @@ body {
   cursor: pointer;
 }
 
-/* ===== Doombass блок в шапке ===== */
+/* ===== Doombass Ð±Ð»Ð¾Ðº Ð² ÑˆÐ°Ð¿ÐºÐµ ===== */
 .doombass-block {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: auto;
   margin-right: 15px;
   cursor: pointer;
   border-radius: 50%;
