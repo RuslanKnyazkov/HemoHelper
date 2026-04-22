@@ -23,5 +23,6 @@ class CustomLabel(models.Model):
         options = {}
         if self.type_labels == 'barcode':
             options['barcode'] = self.barcode
+            options['number'] = self.barcode
             options['code'] = '128'
         return {'type': self.type_labels, 'text': self.name, 'description': self.description, 'anchor': 'c', 'size': 'l', **options}

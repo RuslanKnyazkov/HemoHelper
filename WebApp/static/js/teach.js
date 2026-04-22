@@ -1,5 +1,126 @@
-// БАЗА ТЕСТОВ (иммунохимия + биохимия) - для анализатора проб
-const FULL_ANALYSES_SET = [
+// ============================================================================
+// 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================================================
+
+// Получение CSRF токена из cookies
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === name + "=") {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Экранирование HTML
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Показ уведомлений
+function showNotification(message, type = "success") {
+  const old = document.querySelector(".custom-notification");
+  if (old) old.remove();
+
+  const notif = document.createElement("div");
+  notif.className = `custom-notification notification-${type}`;
+  notif.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i><span>${message}</span><button class="notification-close"><i class="fas fa-times"></i></button>`;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.classList.add("show"), 10);
+
+  const closeBtn = notif.querySelector(".notification-close");
+  closeBtn.addEventListener("click", () => {
+    notif.classList.remove("show");
+    setTimeout(() => notif.remove(), 300);
+  });
+
+  setTimeout(() => {
+    if (notif.parentNode) {
+      notif.classList.remove("show");
+      setTimeout(() => notif.remove(), 300);
+    }
+  }, 4000);
+}
+
+// ============================================================================
+// 2. АНАЛИЗАТОР ПРОБ (ПАЦИЕНТЫ + МАРКЕРЫ)
+// ============================================================================
+
+// Генерация списка пациентов (25 уникальных пациентов)
+function generatePatients() {
+  const surnames = [
+    "Иванов",
+    "Петров",
+    "Сидоров",
+    "Кузнецов",
+    "Смирнов",
+    "Васильев",
+    "Попов",
+    "Михайлов",
+    "Фёдоров",
+    "Морозов",
+    "Волков",
+    "Алексеев",
+    "Лебедев",
+    "Семёнов",
+    "Егоров",
+    "Павлов",
+    "Козлов",
+    "Степанов",
+    "Николаев",
+    "Дмитриев",
+    "Андреев",
+    "Макаров",
+    "Соловьёв",
+    "Зайцев",
+    "Борисов",
+  ];
+  const names = [
+    "Александр",
+    "Дмитрий",
+    "Максим",
+    "Сергей",
+    "Андрей",
+    "Алексей",
+    "Иван",
+    "Евгений",
+    "Владимир",
+    "Павел",
+  ];
+  const patronymics = [
+    "Викторович",
+    "Алексеевич",
+    "Сергеевич",
+    "Владимирович",
+    "Иванович",
+  ];
+
+  return surnames.slice(0, 25).map((surname, idx) => ({
+    id: idx + 1,
+    fullName: `${surname} ${names[idx % names.length]} ${patronymics[idx % 5]}`,
+    initials: `${surname.charAt(0)}${names[idx % names.length].charAt(0)}`,
+    barcode: Math.floor(1000000000 + Math.random() * 9000000000).toString(),
+  }));
+}
+
+const PATIENTS = generatePatients();
+let currentSamples = [];
+let activeFilter = "all";
+
+// Локальные тесты для демо
+const localTests = [
   {
     id: 1,
     name: "Тиреотропный гормон (ТТГ)",
@@ -212,74 +333,12 @@ const FULL_ANALYSES_SET = [
   },
 ];
 
-// Генерация списка пациентов (25 уникальных пациентов)
-function generatePatients() {
-  const surnames = [
-    "Иванов",
-    "Петров",
-    "Сидоров",
-    "Кузнецов",
-    "Смирнов",
-    "Васильев",
-    "Попов",
-    "Михайлов",
-    "Фёдоров",
-    "Морозов",
-    "Волков",
-    "Алексеев",
-    "Лебедев",
-    "Семёнов",
-    "Егоров",
-    "Павлов",
-    "Козлов",
-    "Степанов",
-    "Николаев",
-    "Дмитриев",
-    "Андреев",
-    "Макаров",
-    "Соловьёв",
-    "Зайцев",
-    "Борисов",
-  ];
-  const names = [
-    "Александр",
-    "Дмитрий",
-    "Максим",
-    "Сергей",
-    "Андрей",
-    "Алексей",
-    "Иван",
-    "Евгений",
-    "Владимир",
-    "Павел",
-  ];
-
-  return surnames.slice(0, 25).map((surname, idx) => {
-    const name = names[idx % names.length];
-    const patronymic = [
-      "Викторович",
-      "Алексеевич",
-      "Сергеевич",
-      "Владимирович",
-      "Иванович",
-    ][idx % 5];
-    return {
-      id: idx + 1,
-      fullName: `${surname} ${name} ${patronymic}`,
-      initials: `${surname.charAt(0)}${name.charAt(0)}`,
-      barcode: Math.floor(1000000000 + Math.random() * 9000000000).toString(),
-    };
-  });
-}
-
-const PATIENTS = generatePatients();
-
 // Генерация 30 проб
 function generateThirtySamples() {
   let samples = [];
   for (let i = 0; i < 30; i++) {
     const patient = PATIENTS[i % PATIENTS.length];
-    const analysis = FULL_ANALYSES_SET[i % FULL_ANALYSES_SET.length];
+    const analysis = localTests[i % localTests.length];
     samples.push({
       ...analysis,
       patientId: patient.id,
@@ -300,9 +359,6 @@ function generateThirtySamples() {
   });
   return samples;
 }
-
-let currentSamples = [];
-let activeFilter = "all";
 
 function getStatusInfo(markType) {
   switch (markType) {
@@ -345,6 +401,7 @@ function renderAnalysisTable() {
   if (activeFilter !== "all")
     filtered = filtered.filter((s) => s.category === activeFilter);
   if (totalSpan) totalSpan.textContent = currentSamples.length;
+
   if (!filtered.length) {
     container.innerHTML = `<div class="empty-message" style="padding: 40px; text-align:center;">Нет проб в выбранной категории</div>`;
     return;
@@ -408,42 +465,17 @@ function setFilter(filterValue) {
   renderAnalysisTable();
 }
 
-function showNotification(message, type = "success") {
-  const old = document.querySelector(".custom-notification");
-  if (old) old.remove();
-  const notif = document.createElement("div");
-  notif.className = `custom-notification notification-${type}`;
-  notif.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : "info-circle"}"></i><span>${message}</span><button class="notification-close" style="background:none; border:none; color:white; margin-left:12px;"><i class="fas fa-times"></i></button>`;
-  document.body.appendChild(notif);
-  setTimeout(() => notif.classList.add("show"), 10);
-  const closeBtn = notif.querySelector(".notification-close");
-  closeBtn.addEventListener("click", () => {
-    notif.classList.remove("show");
-    setTimeout(() => notif.remove(), 300);
-  });
-  setTimeout(() => {
-    if (notif.parentNode) {
-      notif.classList.remove("show");
-      setTimeout(() => notif.remove(), 300);
-    }
-  }, 4000);
-}
+// ============================================================================
+// 3. СПРАВОЧНИК ТЕСТОВ (ИЗ DJANGO API)
+// ============================================================================
 
-// Функция для загрузки справочника из API Django
 async function loadGuideFromAPI(typeTest = "immuno") {
   try {
-    let testTypeParam = "";
-
-    if (typeTest === "immuno" || typeTest === "immuno") {
-      testTypeParam = "immuno";
-    } else if (typeTest === "biochemistry") {
-      testTypeParam = "biochemistry";
-    } else {
-      testTypeParam = typeTest;
-    }
-
+    let testTypeParam =
+      typeTest === "immuno" || typeTest === "immunochemistry"
+        ? "immuno"
+        : "biochemistry";
     const url = `/teach/guide/${testTypeParam}`;
-
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -452,13 +484,8 @@ async function loadGuideFromAPI(typeTest = "immuno") {
       },
       credentials: "same-origin",
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-
     if (data.list && Array.isArray(data.list)) {
       return data.list.map((item) => ({
         code: item.code,
@@ -467,102 +494,26 @@ async function loadGuideFromAPI(typeTest = "immuno") {
         lines: item.lines || [],
       }));
     }
-
     return [];
   } catch (error) {
     console.error("Ошибка загрузки справочника:", error);
     showNotification("Ошибка загрузки данных справочника", "info");
-    return getLocalGuideData();
+    return [];
   }
-}
-
-// Локальные данные справочника (fallback)
-function getLocalGuideData() {
-  return [
-    {
-      code: "TSH-01",
-      name: "Тиреотропный гормон",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE1" }, { code: "CEEE" }],
-    },
-    {
-      code: "FT4-02",
-      name: "Свободный T4",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE2" }, { code: "CEEE" }],
-    },
-    {
-      code: "CORT-03",
-      name: "Кортизол",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE1" }],
-    },
-    {
-      code: "CA125-11",
-      name: "CA-125",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE2" }],
-    },
-    {
-      code: "TPOab-08",
-      name: "Anti-TPO",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE1" }],
-    },
-    {
-      code: "RF-07",
-      name: "Ревматоидный фактор",
-      sample_type: "Сыворотка",
-      lines: [{ code: "CEEE" }],
-    },
-    {
-      code: "PSA-12",
-      name: "ПСА общий",
-      sample_type: "Сыворотка",
-      lines: [{ code: "EEEE1" }, { code: "EEEE2" }],
-    },
-  ];
-}
-
-// Функция для получения CSRF токена из cookies
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
 }
 
 window.showGuideModule = async function (direction) {
   const informerDiv = document.getElementById("testInformer");
   if (!informerDiv) return;
 
-  // Показываем загрузку
-  informerDiv.innerHTML = `
-    <div class="informer-card">
-      <div class="informer-header">
-        <h2><i class="fas fa-spinner fa-pulse"></i> Загрузка справочника...</h2>
-        <button class="close-informer" onclick="window.closeGuide()">Закрыть</button>
-      </div>
-      <div class="loading-state">
-        <i class="fas fa-spinner fa-pulse"></i>
-        <p>Загрузка данных...</p>
-      </div>
-    </div>
-  `;
+  informerDiv.innerHTML = `<div class="informer-card"><div class="informer-header"><h2><i class="fas fa-spinner fa-pulse"></i> Загрузка справочника...</h2><button class="close-informer" onclick="window.closeGuide()">Закрыть</button></div><div class="loading-state"><i class="fas fa-spinner fa-pulse"></i><p>Загрузка данных...</p></div></div>`;
   informerDiv.classList.add("active");
 
-  // Загружаем данные
   let tests = await loadGuideFromAPI(direction);
   if (!tests || tests.length === 0) {
-    tests = getLocalGuideData();
+    showNotification("Нет данных справочника", "info");
+    informerDiv.classList.remove("active");
+    return;
   }
 
   const typeName =
@@ -572,7 +523,6 @@ window.showGuideModule = async function (direction) {
   const typeIcon =
     direction === "immuno" || direction === "immunochemistry" ? "🧬" : "⚗️";
 
-  // Формируем аккуратную таблицу
   const rows = tests
     .map((test, index) => {
       const linesHtml = (test.lines || [])
@@ -581,71 +531,22 @@ window.showGuideModule = async function (direction) {
             `<span class="line-badge"><i class="fas fa-microchip"></i> ${line.code || line}</span>`,
         )
         .join("");
-
-      return `
-      <tr style="animation-delay: ${index * 0.02}s">
-        <td><span class="test-code">${escapeHtml(test.code || test.id)}</span></td>
-        <td class="test-name">${escapeHtml(test.name)}</td>
-        <td>
-          <span class="sample-type-badge">
-            <i class="fas fa-tint"></i> ${escapeHtml(test.sample_type || "Сыворотка")}
-          </span>
-        </td>
-        <td>
-          <div class="lines-container">
-            ${linesHtml || '<span style="color: #94a3b8; font-size: 12px;">—</span>'}
-          </div>
-        </td>
-      </tr>
-    `;
+      return `<tr style="animation-delay: ${index * 0.02}s"><td><span class="test-code">${escapeHtml(test.code || test.id)}</span></td><td class="test-name">${escapeHtml(test.name)}</span></td><td><span class="sample-type-badge"><i class="fas fa-tint"></i> ${escapeHtml(test.sample_type || "Сыворотка")}</span></td><td><div class="lines-container">${linesHtml || '<span style="color: #94a3b8;">—</span>'}</div></td></tr>`;
     })
     .join("");
 
   informerDiv.innerHTML = `
-    <div class="informer-card">
-      <div class="informer-header">
-        <h2>
-          <i class="fas fa-table-list"></i> 
-          Справочник тестов ${typeIcon} ${escapeHtml(typeName)}
-          <span style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px;">${tests.length} тестов</span>
-        </h2>
-        <button class="close-informer" onclick="window.closeGuide()">
-          <i class="fas fa-times"></i> Закрыть
-        </button>
-      </div>
-      
-      <div class="search-wrapper">
-        <div class="search-container">
-          <i class="fas fa-search"></i>
-          <input type="text" id="guideSearch" placeholder="Поиск по названию, коду или типу материала...">
+        <div class="informer-card">
+            <div class="informer-header">
+                <h2><i class="fas fa-table-list"></i> Справочник тестов ${typeIcon} ${escapeHtml(typeName)}<span style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px;">${tests.length} тестов</span></h2>
+                <button class="close-informer" onclick="window.closeGuide()"><i class="fas fa-times"></i> Закрыть</button>
+            </div>
+            <div class="search-wrapper"><div class="search-container"><i class="fas fa-search"></i><input type="text" id="guideSearch" placeholder="Поиск по названию, коду или типу материала..."></div></div>
+            <div class="table-wrapper"><table class="guide-table"><thead><tr><th style="width: 20%">Код теста</th><th style="width: 40%">Название</th><th style="width: 20%">Материал</th><th style="width: 20%">Линии анализаторов</th></tr></thead><tbody id="guideTbody">${rows}</tbody></table></div>
+            <div class="info-footer"><span><i class="fas fa-database"></i> Лабораторная информационная система</span><span><i class="fas fa-microchip"></i> Поддерживаемые линии: EEEE1, EEEE2, CEEE</span><span><i class="fas fa-chart-simple"></i> Актуальные данные</span></div>
         </div>
-      </div>
-      
-      <div class="table-wrapper">
-        <table class="guide-table">
-          <thead>
-            <tr>
-              <th style="width: 20%">Код теста</th>
-              <th style="width: 40%">Название</th>
-              <th style="width: 20%">Материал</th>
-              <th style="width: 20%">Линии анализаторов</th>
-            </tr>
-          </thead>
-          <tbody id="guideTbody">
-            ${rows}
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="info-footer">
-        <span><i class="fas fa-database"></i> Лабораторная информационная система</span>
-        <span><i class="fas fa-microchip"></i> Поддерживаемые линии: EEEE1, EEEE2, CEEE</span>
-        <span><i class="fas fa-chart-simple"></i> Актуальные данные</span>
-      </div>
-    </div>
-  `;
+    `;
 
-  // Поиск
   const searchInput = document.getElementById("guideSearch");
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
@@ -656,7 +557,6 @@ window.showGuideModule = async function (direction) {
           (test.code && test.code.toLowerCase().includes(term)) ||
           (test.sample_type && test.sample_type.toLowerCase().includes(term)),
       );
-
       const filteredRows = filtered
         .map((test, index) => {
           const linesHtml = (test.lines || [])
@@ -665,161 +565,388 @@ window.showGuideModule = async function (direction) {
                 `<span class="line-badge"><i class="fas fa-microchip"></i> ${line.code || line}</span>`,
             )
             .join("");
-
-          return `
-          <tr style="animation-delay: ${index * 0.02}s">
-            <td><span class="test-code">${escapeHtml(test.code || test.id)}</span></td>
-            <td class="test-name">${escapeHtml(test.name)}</td>
-            <td><span class="sample-type-badge"><i class="fas fa-tint"></i> ${escapeHtml(test.sample_type || "Сыворотка")}</span></td>
-            <td><div class="lines-container">${linesHtml || '<span style="color: #94a3b8;">—</span>'}</div></td>
-          </tr>
-        `;
+          return `<tr style="animation-delay: ${index * 0.02}s"><td><span class="test-code">${escapeHtml(test.code || test.id)}</span></td><td class="test-name">${escapeHtml(test.name)}</span><td><td><span class="sample-type-badge"><i class="fas fa-tint"></i> ${escapeHtml(test.sample_type || "Сыворотка")}</span></td><td><div class="lines-container">${linesHtml || '<span style="color: #94a3b8;">—</span>'}</div></td></tr>`;
         })
         .join("");
-
       const tbody = document.getElementById("guideTbody");
-      if (filtered.length > 0) {
-        tbody.innerHTML = filteredRows;
-      } else {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="4" class="empty-state">
-              <i class="fas fa-search"></i>
-              <p>Ничего не найдено</p>
-              <small>Попробуйте изменить поисковый запрос</small>
-            </td>
-          </tr>
-        `;
-      }
+      if (filtered.length > 0) tbody.innerHTML = filteredRows;
+      else
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="fas fa-search"></i><p>Ничего не найдено</p><small>Попробуйте изменить поисковый запрос</small></td></tr>`;
     });
   }
 };
-
-// Вспомогательная функция для экранирования HTML
-function escapeHtml(str) {
-  if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 window.closeGuide = function () {
   const informer = document.getElementById("testInformer");
   if (informer) informer.classList.remove("active");
 };
 
-// ИНИЦИАЛИЗАЦИЯ
-document.addEventListener("DOMContentLoaded", () => {
-  currentSamples = generateThirtySamples();
+// ============================================================================
+// 4. API ДЛЯ ROCHE ANALYZER
+// ============================================================================
 
-  const openBtn = document.getElementById("openRandomPopupBtn");
-  if (openBtn) {
-    openBtn.addEventListener("click", () => {
-      renderAnalysisTable();
-      document.getElementById("analysisPopup").classList.add("active");
-    });
-  }
+const RocheAPI = {
+  baseUrl: "/teach/api/roche/",
 
-  const closePopupBtn = document.getElementById("closePopupBtn");
-  const popup = document.getElementById("analysisPopup");
-  if (closePopupBtn)
-    closePopupBtn.addEventListener("click", () =>
-      popup.classList.remove("active"),
-    );
-  if (popup)
-    popup.addEventListener("click", (e) => {
-      if (e.target === popup) popup.classList.remove("active");
-    });
-
-  document.querySelectorAll(".filter-btn").forEach((btn) => {
-    btn.addEventListener("click", () =>
-      setFilter(btn.getAttribute("data-filter")),
-    );
-  });
-
-  const refreshBtn = document.getElementById("refreshAnalysesBtn");
-  if (refreshBtn)
-    refreshBtn.addEventListener("click", () => refreshThirtySamples());
-
-  const guideBtns = document.querySelectorAll(".start-test-btn[data-guide]");
-  guideBtns.forEach((btn) => {
-    btn.addEventListener("click", () => showGuideModule("immuno"));
-  });
-});
-// =============== ДЛЯ ROCHE COBAS 8000 МАППИНГА ===============
-// Функция для загрузки данных маппинга (пока заглушка, потом через API)
-async function loadRocheMapping() {
-  // TODO: Потом заменить на реальный API запрос
-  // const response = await fetch('/api/roche-mapping/');
-  // return await response.json();
-
-  // Пока возвращаем статические данные
-  console.log("Roche Cobas 8000 маппинг загружен");
-  return true;
-}
-
-// Функция для фильтрации реагентов по каналу (если нужно)
-function filterReagentsByChannel(channel) {
-  const rows = document.querySelectorAll(".mapping-table tbody tr");
-  rows.forEach((row) => {
-    if (channel === "all") {
-      row.style.display = "";
-    } else {
-      const ch1 = row.querySelector(".ch1");
-      const ch2 = row.querySelector(".ch2");
-      if (channel === "ch1" && ch1 && ch1.textContent !== "—") {
-        row.style.display = "";
-      } else if (channel === "ch2" && ch2 && ch2.textContent !== "—") {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
+  getCsrfToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === "csrftoken=") {
+          cookieValue = decodeURIComponent(cookie.substring(10));
+          break;
+        }
       }
     }
-  });
-}
+    return cookieValue;
+  },
 
-// Функция для подсветки реагентов (поиск)
-function searchReagentsInMapping(searchTerm) {
-  if (!searchTerm || searchTerm.length < 2) {
-    // Показать все строки
-    document.querySelectorAll(".mapping-table tbody tr").forEach((row) => {
-      row.style.display = "";
+  async getAllAnalyzers() {
+    try {
+      const response = await fetch(`${this.baseUrl}analyzer/all_analyzers/`, {
+        headers: { "X-CSRFToken": this.getCsrfToken() },
+      });
+      if (!response.ok) throw new Error("Ошибка загрузки анализаторов");
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+
+  async getAnalyzerById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}analyzer/${id}/`, {
+        headers: { "X-CSRFToken": this.getCsrfToken() },
+      });
+      if (!response.ok) throw new Error(`Анализатор с ID ${id} не найден`);
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return null;
+    }
+  },
+
+  async getAnalyzerModules(analyzerId) {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}analyzer/${analyzerId}/modules/`,
+        { headers: { "X-CSRFToken": this.getCsrfToken() } },
+      );
+      if (!response.ok) throw new Error("Ошибка загрузки модулей");
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+
+  async getModuleReagents(moduleId) {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}modules/${moduleId}/reagents/`,
+        { headers: { "X-CSRFToken": this.getCsrfToken() } },
+      );
+      if (!response.ok) throw new Error("Ошибка загрузки реагентов");
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+
+  async getAllReagents() {
+    try {
+      const response = await fetch(`${this.baseUrl}reagents/`, {
+        headers: { "X-CSRFToken": this.getCsrfToken() },
+      });
+      if (!response.ok) throw new Error("Ошибка загрузки реагентов");
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+
+  async createReagent(data) {
+    const response = await fetch(`${this.baseUrl}reagents/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify(data),
     });
+    if (!response.ok) throw new Error("Ошибка создания реагента");
+    return await response.json();
+  },
+
+  async updateReagent(id, data) {
+    const response = await fetch(`${this.baseUrl}reagents/${id}/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Ошибка обновления реагента");
+    return await response.json();
+  },
+
+  async deleteReagent(id) {
+    const response = await fetch(`${this.baseUrl}reagents/${id}/`, {
+      method: "DELETE",
+      headers: { "X-CSRFToken": this.getCsrfToken() },
+    });
+    if (!response.ok) throw new Error("Ошибка удаления реагента");
+    return await response.json();
+  },
+
+  async getAllModuleReagents() {
+    try {
+      const response = await fetch(`${this.baseUrl}module-reagents/`, {
+        headers: { "X-CSRFToken": this.getCsrfToken() },
+      });
+      if (!response.ok) throw new Error("Ошибка загрузки связей");
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return [];
+    }
+  },
+
+  async addReagentToModule(moduleId, reagentId, channel, isActive = true) {
+    const response = await fetch(`${this.baseUrl}module-reagents/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify({
+        module: parseInt(moduleId),
+        reagent: parseInt(reagentId),
+        channel: channel === "BOTH" ? "BOTH" : channel || null,
+        is_active: isActive,
+      }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Ошибка добавления реагента");
+    }
+    return await response.json();
+  },
+
+  async deleteModuleReagent(connectionId) {
+    const response = await fetch(
+      `${this.baseUrl}module-reagents/${connectionId}/`,
+      {
+        method: "DELETE",
+        headers: { "X-CSRFToken": this.getCsrfToken() },
+      },
+    );
+    if (!response.ok) throw new Error("Ошибка удаления связи");
+    return await response.json();
+  },
+};
+
+// ============================================================================
+// 5. УПРАВЛЕНИЕ НЕСКОЛЬКИМИ АНАЛИЗАТОРАМИ
+// ============================================================================
+
+let currentAnalyzer = null;
+let allAnalyzers = [];
+
+async function loadAnalyzersSelect() {
+  allAnalyzers = await RocheAPI.getAllAnalyzers();
+  const select = document.getElementById("analyzer-select");
+  if (!select) return;
+  if (allAnalyzers.length === 0) {
+    select.innerHTML = '<option value="">Нет доступных анализаторов</option>';
     return;
   }
-
-  const term = searchTerm.toLowerCase();
-  document.querySelectorAll(".mapping-table tbody tr").forEach((row) => {
-    const reagentName =
-      row.querySelector(".reagent-name")?.textContent.toLowerCase() || "";
-    if (reagentName.includes(term)) {
-      row.style.display = "";
-      row.style.backgroundColor = "#fef3c7";
-    } else {
-      row.style.display = "none";
-    }
-  });
+  select.innerHTML = allAnalyzers
+    .map(
+      (analyzer) =>
+        `<option value="${analyzer.id}">${analyzer.name} (${analyzer.code})</option>`,
+    )
+    .join("");
+  if (allAnalyzers[0]) await switchAnalyzer(allAnalyzers[0].id);
+  return allAnalyzers;
 }
 
-// =============== ДЛЯ ROCHE COBAS 8000 ===============
-// Инициализация анализатора
-function initRocheAnalyzer() {
-  console.log("Roche Cobas 8000 анализатор загружен");
+async function switchAnalyzer(analyzerId) {
+  const analyzer = await RocheAPI.getAnalyzerById(analyzerId);
+  if (!analyzer) return null;
 
-  // Добавляем возможность клика по индикаторам каналов (для демо)
+  currentAnalyzer = analyzer;
+
+  // Обновляем заголовок
+  const analyzerNameEl = document.getElementById("analyzer-name");
+  const analyzerDescEl = document.getElementById("analyzer-description");
+  const modulesCountEl = document.getElementById("modules-count");
+
+  if (analyzerNameEl) analyzerNameEl.textContent = analyzer.name;
+  if (analyzerDescEl)
+    analyzerDescEl.textContent =
+      analyzer.description || "Модульная аналитическая система";
+
+  // Обновляем отображение модулей
+  await renderRocheModules();
+
+  if (modulesCountEl && currentAnalyzer.modules) {
+    modulesCountEl.innerHTML = `<i class="fas fa-microchip"></i> ${currentAnalyzer.modules.length} модулей`;
+  }
+
+  // Очищаем select с модулями при смене анализатора
+  const select = document.getElementById("module-select");
+  if (select) {
+    select.innerHTML = '<option value="">Загрузка модулей...</option>';
+  }
+
+  console.log(`Переключено на анализатор: ${analyzer.name}`);
+  return analyzer;
+}
+
+function getModuleIcon(moduleType) {
+  const icons = {
+    e801: "fa-microchip",
+    e601: "fa-microchip",
+    c702: "fa-flask",
+  };
+  return icons[moduleType] || "fa-cube";
+}
+
+function updateChannelIndicators(moduleId, reagents) {
+  const card = document.querySelector(
+    `.module-card[data-module-id="${moduleId}"]`,
+  );
+  if (!card) return;
+  const hasCH1 = reagents.some(
+    (r) => r.channel === "CH1" || r.channel === "BOTH",
+  );
+  const hasCH2 = reagents.some(
+    (r) => r.channel === "CH2" || r.channel === "BOTH",
+  );
+  const ch1Led = card.querySelector(".channel-status:first-child .channel-led");
+  const ch2Led = card.querySelector(".channel-status:last-child .channel-led");
+  if (ch1Led) ch1Led.className = `channel-led ${hasCH1 ? "green" : "gray"}`;
+  if (ch2Led) ch2Led.className = `channel-led ${hasCH2 ? "green" : "gray"}`;
+}
+
+async function loadModuleReagents(moduleId, hasChannels) {
+  try {
+    const reagents = await RocheAPI.getModuleReagents(moduleId);
+    const tbody = document.getElementById(`module-reagents-${moduleId}`);
+    const countSpan = document.getElementById(`reagent-count-${moduleId}`);
+    if (!tbody) return;
+    if (reagents.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Нет реагентов</td></tr>';
+      if (countSpan)
+        countSpan.innerHTML = `<i class="fas fa-vial"></i> 0 реагентов`;
+      return;
+    }
+    const rows = reagents
+      .map((reagent) => {
+        const isOnCH1 = reagent.channel === "CH1" || reagent.channel === "BOTH";
+        const isOnCH2 = reagent.channel === "CH2" || reagent.channel === "BOTH";
+        const isBoth = reagent.channel === "BOTH";
+        const channelHtml = hasChannels
+          ? `<td class="channel-cell"><div style="display: flex; gap: 8px; justify-content: center;"><span class="channel-dot ${isOnCH1 ? "active" : "inactive"}" style="${isBoth ? "background: #10b981;" : ""}"></span><span class="channel-dot ${isOnCH2 ? "active" : "inactive"}" style="${isBoth ? "background: #10b981;" : ""}"></span></div></td>`
+          : "";
+        const bothIcon = isBoth
+          ? '<span class="both-icon" title="Работает на обоих каналах">⚡</span>'
+          : "";
+        return `<tr><td class="reagent-name">${escapeHtml(reagent.reagent.name)} ${bothIcon}</td><td class="reagent-code">${escapeHtml(reagent.reagent.code)}</td>${channelHtml}</tr>`;
+      })
+      .join("");
+    tbody.innerHTML = rows;
+    updateChannelIndicators(moduleId, reagents);
+    if (countSpan)
+      countSpan.innerHTML = `<i class="fas fa-vial"></i> ${reagents.length} реагентов`;
+  } catch (error) {
+    console.error("Ошибка загрузки реагентов:", error);
+    const tbody = document.getElementById(`module-reagents-${moduleId}`);
+    if (tbody)
+      tbody.innerHTML =
+        '<tr><td colspan="3" style="text-align:center; color:#ef4444;">Ошибка загрузки</td></tr>';
+  }
+}
+
+function createModuleCard(module) {
+  const card = document.createElement("div");
+  card.className = "module-card";
+  card.dataset.moduleId = module.id;
+  card.dataset.moduleType = module.module_type;
+  const moduleIcon = getModuleIcon(module.module_type);
+  const hasChannels = module.has_channels;
+  card.innerHTML = `
+        <div class="module-header">
+            <div class="module-number">${String(module.module_number).padStart(2, "0")}</div>
+            <div class="module-title"><i class="fas ${moduleIcon}"></i><h3>${escapeHtml(module.name)}</h3><span class="module-type">${escapeHtml(module.module_type_display)}</span></div>
+            ${hasChannels ? `<div class="module-channels"><div class="channel-status"><span class="channel-led gray"></span><span class="channel-label">CH1</span></div><div class="channel-status"><span class="channel-led gray"></span><span class="channel-label">CH2</span></div></div>` : ""}
+        </div>
+        <div class="module-body">
+            <table class="module-table">
+                <thead><tr><th>Реагент</th><th>Код</th>${hasChannels ? '<th width="100">Каналы</th>' : ""}</thead>
+                <tbody id="module-reagents-${module.id}"><tr><td colspan="3" style="text-align:center">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="module-footer"><span class="reagent-count" id="reagent-count-${module.id}"><i class="fas fa-vial"></i> 0 реагентов</span></div>
+    `;
+  loadModuleReagents(module.id, hasChannels);
+  return card;
+}
+
+async function renderRocheModules() {
+  const container = document.querySelector(".analyzer-modules");
+  if (!container) return;
+  if (!currentAnalyzer) {
+    container.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;">Выберите анализатор</div>';
+    return;
+  }
+  container.innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;padding:40px;"><i class="fas fa-spinner fa-pulse"></i> Загрузка модулей...</div>';
+  try {
+    const modules = await RocheAPI.getAnalyzerModules(currentAnalyzer.id);
+    if (!modules.length) {
+      container.innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:40px;">Нет модулей для этого анализатора</div>';
+      return;
+    }
+    container.innerHTML = "";
+    for (const module of modules) {
+      const reagents = await RocheAPI.getModuleReagents(module.id);
+      module.reagents_data = reagents;
+      container.appendChild(createModuleCard(module));
+    }
+    const modulesCountEl = document.getElementById("modules-count");
+    if (modulesCountEl)
+      modulesCountEl.innerHTML = `<i class="fas fa-microchip"></i> ${modules.length} модулей`;
+  } catch (error) {
+    console.error("Ошибка:", error);
+    container.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">Ошибка загрузки модулей</div>';
+  }
+}
+
+// ============================================================================
+// 6. ИНИЦИАЛИЗАЦИЯ ROCHE АНАЛИЗАТОРА (для обратной совместимости)
+// ============================================================================
+
+function initRocheAnalyzer() {
+  console.log("Roche Cobas 8000 анализатор инициализирован");
   const dots = document.querySelectorAll(".channel-dot.active");
   dots.forEach((dot) => {
     dot.addEventListener("click", function (e) {
       e.stopPropagation();
-      // Тут потом будет переключение статуса через API
       console.log("Канал кликнут");
     });
   });
-
-  // Подсветка строки при наведении на индикатор
   const rows = document.querySelectorAll(".module-table tbody tr");
   rows.forEach((row) => {
     const dots = row.querySelectorAll(".channel-dot");
@@ -834,9 +961,347 @@ function initRocheAnalyzer() {
   });
 }
 
-// Запускаем после загрузки DOM
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initRocheAnalyzer);
-} else {
-  initRocheAnalyzer();
+// ============================================================================
+// 7. CRUD УПРАВЛЕНИЕ РЕАГЕНТАМИ
+// ============================================================================
+
+class ReagentCRUD {
+  constructor() {
+    this.init();
+  }
+  async init() {
+    this.bindEvents();
+    await this.loadReagentsList();
+    await this.loadModulesForSelect();
+    this.initTabs();
+  }
+  bindEvents() {
+    const addForm = document.getElementById("add-reagent-form");
+    if (addForm)
+      addForm.addEventListener("submit", (e) => this.createReagent(e));
+    const editForm = document.getElementById("edit-reagent-form");
+    if (editForm)
+      editForm.addEventListener("submit", (e) => this.updateReagent(e));
+    const moduleForm = document.getElementById("add-to-module-form");
+    if (moduleForm)
+      moduleForm.addEventListener("submit", (e) => this.addReagentToModule(e));
+    document.querySelectorAll(".close-modal").forEach((btn) => {
+      btn.addEventListener("click", () => this.closeModal(btn.dataset.modal));
+    });
+    const addReagentBtn = document.querySelector(".btn-add-reagent");
+    if (addReagentBtn)
+      addReagentBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.showAddReagentModal();
+      });
+  }
+  initTabs() {
+    const tabs = document.querySelectorAll(".tab-btn");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const tabName = tab.dataset.tab;
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((content) => content.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        document.getElementById(`tab-${tabName}`).classList.add("active");
+        tab.classList.add("active");
+        if (tabName === "assignments") this.loadAssignments();
+      });
+    });
+  }
+  getCategoryName(category) {
+    const names = {
+      hormones: "Гормоны",
+      oncomarkers: "Онкомаркеры",
+      autoimmune: "Аутоиммунные",
+      vitamins: "Витамины",
+      special: "Специальные",
+      biochemistry: "Биохимия",
+      hepatitis: "Гепатиты",
+    };
+    return names[category] || category;
+  }
+  showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = "flex";
+  }
+  closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = "none";
+  }
+  showAddReagentModal() {
+    document.getElementById("add-reagent-form")?.reset();
+    this.showModal("add-reagent-modal");
+  }
+  async loadReagentsList() {
+    try {
+      const reagents = await RocheAPI.getAllReagents();
+      this.renderAdminTable(reagents);
+    } catch (error) {
+      console.error("Ошибка загрузки:", error);
+    }
+  }
+  renderAdminTable(reagents) {
+    const container = document.getElementById("reagents-admin-table");
+    if (!container) return;
+    if (!reagents.length) {
+      container.innerHTML = '<tr><td colspan="5">Нет реагентов</td></tr>';
+      return;
+    }
+    container.innerHTML = reagents
+      .map(
+        (reagent) => `
+            <tr><td>${escapeHtml(reagent.code)}</td><td>${escapeHtml(reagent.name)}</td><td>${escapeHtml(reagent.short_name)}</td><td>${this.getCategoryName(reagent.category)}</td>
+            <td><button onclick="reagentCRUD.editReagent(${reagent.id})" class="btn-edit"><i class="fas fa-edit"></i></button>
+            <button onclick="reagentCRUD.deleteReagent(${reagent.id})" class="btn-delete"><i class="fas fa-trash"></i></button>
+            <button onclick="reagentCRUD.showAddToModule(${reagent.id}, '${escapeHtml(reagent.code)}')" class="btn-add"><i class="fas fa-plus-circle"></i></button></td></tr>
+        `,
+      )
+      .join("");
+  }
+  async loadModulesForSelect() {
+    try {
+      // Проверяем, есть ли выбранный анализатор
+      if (!currentAnalyzer) {
+        console.warn("Анализатор не выбран");
+        const select = document.getElementById("module-select");
+        if (select) {
+          select.innerHTML =
+            '<option value="">Сначала выберите анализатор</option>';
+        }
+        return;
+      }
+
+      // Загружаем модули для текущего анализатора
+      const modules = await RocheAPI.getAnalyzerModules(currentAnalyzer.id);
+      const select = document.getElementById("module-select");
+
+      if (select) {
+        if (modules.length === 0) {
+          select.innerHTML =
+            '<option value="">Нет модулей для этого анализатора</option>';
+        } else {
+          select.innerHTML =
+            '<option value="">Выберите модуль</option>' +
+            modules
+              .map(
+                (m) =>
+                  `<option value="${m.id}">Модуль ${m.module_number}: ${escapeHtml(m.name)} (${escapeHtml(m.module_type)})</option>`,
+              )
+              .join("");
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки модулей:", error);
+      const select = document.getElementById("module-select");
+      if (select) {
+        select.innerHTML = '<option value="">Ошибка загрузки модулей</option>';
+      }
+    }
+  }
+  async createReagent(event) {
+    event.preventDefault();
+    const formData = {
+      code: document.getElementById("reagent-code").value,
+      name: document.getElementById("reagent-name").value,
+      short_name: document.getElementById("reagent-short-name").value,
+      category: document.getElementById("reagent-category").value,
+      description: document.getElementById("reagent-description").value || "",
+    };
+    try {
+      await RocheAPI.createReagent(formData);
+      showNotification("Реагент успешно добавлен", "success");
+      this.closeModal("add-reagent-modal");
+      await this.loadReagentsList();
+      document.getElementById("add-reagent-form").reset();
+    } catch (error) {
+      showNotification("Ошибка при добавлении реагента", "error");
+    }
+  }
+  async editReagent(id) {
+    try {
+      const reagent = await RocheAPI.getReagentById(id);
+      document.getElementById("edit-reagent-id").value = reagent.id;
+      document.getElementById("edit-reagent-code").value = reagent.code;
+      document.getElementById("edit-reagent-name").value = reagent.name;
+      document.getElementById("edit-reagent-short-name").value =
+        reagent.short_name;
+      document.getElementById("edit-reagent-category").value = reagent.category;
+      document.getElementById("edit-reagent-description").value =
+        reagent.description || "";
+      this.showModal("edit-reagent-modal");
+    } catch (error) {
+      showNotification("Ошибка загрузки данных", "error");
+    }
+  }
+  async updateReagent(event) {
+    event.preventDefault();
+    const id = document.getElementById("edit-reagent-id").value;
+    const formData = {
+      code: document.getElementById("edit-reagent-code").value,
+      name: document.getElementById("edit-reagent-name").value,
+      short_name: document.getElementById("edit-reagent-short-name").value,
+      category: document.getElementById("edit-reagent-category").value,
+      description:
+        document.getElementById("edit-reagent-description").value || "",
+    };
+    try {
+      await RocheAPI.updateReagent(id, formData);
+      showNotification("Реагент обновлен", "success");
+      this.closeModal("edit-reagent-modal");
+      await this.loadReagentsList();
+    } catch (error) {
+      showNotification("Ошибка при обновлении", "error");
+    }
+  }
+  async deleteReagent(id) {
+    if (!confirm("Вы уверены, что хотите удалить этот реагент?")) return;
+    try {
+      await RocheAPI.deleteReagent(id);
+      showNotification("Реагент удален", "success");
+      await this.loadReagentsList();
+    } catch (error) {
+      showNotification("Ошибка при удалении", "error");
+    }
+  }
+  showAddToModule(reagentId, reagentCode) {
+    document.getElementById("add-reagent-id").value = reagentId;
+    document.getElementById("add-reagent-name").value = reagentCode;
+
+    // Обновляем список модулей перед показом модального окна
+    this.loadModulesForSelect();
+
+    this.showModal("add-to-module-modal");
+  }
+  async addReagentToModule(event) {
+    if (event) event.preventDefault();
+    const reagentId = document.getElementById("add-reagent-id")?.value;
+    const moduleId = document.getElementById("module-select")?.value;
+    const channel = document.querySelector(
+      'input[name="channel"]:checked',
+    )?.value;
+    if (!moduleId) {
+      showNotification("Выберите модуль", "error");
+      return;
+    }
+    if (!reagentId) {
+      showNotification("ID реагента не найден", "error");
+      return;
+    }
+    try {
+      await RocheAPI.addReagentToModule(
+        moduleId,
+        reagentId,
+        channel === "" ? null : channel,
+      );
+      showNotification("Реагент добавлен в модуль", "success");
+      this.closeModal("add-to-module-modal");
+      await renderRocheModules();
+      if (
+        document.querySelector(".tab-btn.active")?.dataset.tab === "assignments"
+      )
+        await this.loadAssignments();
+    } catch (error) {
+      showNotification(error.message || "Ошибка при добавлении", "error");
+    }
+  }
+  async loadAssignments() {
+    try {
+      const assignments = await RocheAPI.getAllModuleReagents();
+      this.renderAssignmentsTable(assignments);
+    } catch (error) {
+      console.error("Ошибка загрузки назначений:", error);
+    }
+  }
+  renderAssignmentsTable(assignments) {
+    const tbody = document.querySelector("#assignments-table tbody");
+    if (!tbody) return;
+    if (!assignments.length) {
+      tbody.innerHTML = '<tr><td colspan="5">Нет назначений</td></tr>';
+      return;
+    }
+    tbody.innerHTML = assignments
+      .map(
+        (assignment) => `
+            <tr><td>Модуль ${assignment.module?.module_number || "?"}: ${escapeHtml(assignment.module?.name || "?")}</td>
+            <td>${escapeHtml(assignment.reagent?.name || "?")} (${escapeHtml(assignment.reagent?.code || "?")})</td>
+            <td>${assignment.channel === "BOTH" ? "CH1+CH2" : assignment.channel || "—"}</td>
+            <td>${assignment.is_active ? "✅ Активен" : "❌ Неактивен"}</td>
+            <td><button onclick="reagentCRUD.deleteAssignment(${assignment.id})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>
+        `,
+      )
+      .join("");
+  }
+  async deleteAssignment(id) {
+    if (!confirm("Удалить реагент из модуля?")) return;
+    try {
+      await RocheAPI.deleteModuleReagent(id);
+      showNotification("Реагент удален из модуля", "success");
+      await this.loadAssignments();
+      await renderRocheModules();
+    } catch (error) {
+      showNotification("Ошибка при удалении", "error");
+    }
+  }
 }
+
+// ============================================================================
+// 8. ПОЛНАЯ ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+// ============================================================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("🚀 Инициализация страницы...");
+
+  currentSamples = generateThirtySamples();
+
+  const openBtn = document.getElementById("openRandomPopupBtn");
+  if (openBtn)
+    openBtn.addEventListener("click", () => {
+      renderAnalysisTable();
+      document.getElementById("analysisPopup").classList.add("active");
+    });
+
+  const closePopupBtn = document.getElementById("closePopupBtn");
+  const popup = document.getElementById("analysisPopup");
+  if (closePopupBtn)
+    closePopupBtn.addEventListener("click", () =>
+      popup.classList.remove("active"),
+    );
+  if (popup)
+    popup.addEventListener("click", (e) => {
+      if (e.target === popup) popup.classList.remove("active");
+    });
+
+  document
+    .querySelectorAll(".filter-btn")
+    .forEach((btn) =>
+      btn.addEventListener("click", () =>
+        setFilter(btn.getAttribute("data-filter")),
+      ),
+    );
+
+  const refreshBtn = document.getElementById("refreshAnalysesBtn");
+  if (refreshBtn)
+    refreshBtn.addEventListener("click", () => refreshThirtySamples());
+
+  const guideBtns = document.querySelectorAll(".start-test-btn[data-guide]");
+  guideBtns.forEach((btn) =>
+    btn.addEventListener("click", () => showGuideModule("immuno")),
+  );
+
+  await loadAnalyzersSelect();
+
+  const analyzerSelect = document.getElementById("analyzer-select");
+  if (analyzerSelect)
+    analyzerSelect.addEventListener("change", async (e) => {
+      if (e.target.value) await switchAnalyzer(parseInt(e.target.value));
+    });
+
+  window.reagentCRUD = new ReagentCRUD();
+  initRocheAnalyzer();
+
+  console.log("✅ Инициализация завершена!");
+});

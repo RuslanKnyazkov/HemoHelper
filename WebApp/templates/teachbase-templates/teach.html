@@ -23,6 +23,7 @@
           Выберите направление для изучения материалов и тренировки
         </p>
       </div>
+
       <div class="sections-container">
         <div class="tests-section">
           <h2><i class="fas fa-brain"></i> Справочники и анализатор проб</h2>
@@ -48,7 +49,7 @@
       </div>
     </div>
 
-    <!-- Всплывающее окно анализатора -->
+    <!-- Всплывающее окно анализатора проб -->
     <div id="analysisPopup" class="floating-overlay">
       <div class="popup-card">
         <div class="popup-header">
@@ -96,7 +97,8 @@
         </div>
       </div>
     </div>
-    <!-- Блок анализатора Roche Cobas 8000 - 4 модуля -->
+
+    <!-- Блок анализатора Roche Cobas 8000 -->
     <div class="roche-analyzer">
       <div class="analyzer-header">
         <div class="analyzer-title">
@@ -104,425 +106,319 @@
             <i class="fas fa-microscope"></i>
           </div>
           <div class="analyzer-info">
-            <h2>Roche Cobas 8000 EEEE2</h2>
-            <p>Модульная аналитическая система | 4 модуля: e801</p>
+            <div class="analyzer-selector">
+              <label for="analyzer-select">Анализатор:</label>
+              <select id="analyzer-select" class="analyzer-select">
+                <option value="">Загрузка...</option>
+              </select>
+            </div>
+            <h2 id="analyzer-name">Roche Cobas 8000</h2>
+            <p id="analyzer-description">Модульная аналитическая система</p>
           </div>
         </div>
         <div class="analyzer-status">
           <span class="status-badge online"
             ><i class="fas fa-circle"></i> Онлайн</span
           >
-          <span class="status-badge"
-            ><i class="fas fa-microchip"></i> 4 модуля</span
+          <span class="status-badge" id="modules-count"
+            ><i class="fas fa-microchip"></i> 0 модулей</span
           >
         </div>
       </div>
 
-      <!-- 4 МОДУЛЯ АНАЛИЗАТОРА -->
       <div class="analyzer-modules">
-        <!-- Модуль 1: Гормоны -->
-        <div class="module-card">
-          <div class="module-header">
-            <div class="module-number">01</div>
-            <div class="module-title">
-              <i class="fas fa-dharmachakra"></i>
-              <h3>Модуль 1</h3>
-              <span class="module-type">Гормоны</span>
-            </div>
-            <div class="module-channels">
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH1</span>
-              </div>
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH2</span>
-              </div>
-            </div>
-          </div>
-          <div class="module-body">
-            <table class="module-table">
-              <thead>
-                <tr>
-                  <th>Реагент</th>
-                  <th width="80">CH1</th>
-                  <th width="80">CH2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="reagent-name">ТТГ (TSH)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Свободный Т4 (FT4)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Кортизол</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Тестостерон</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Прогестерон</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Эстрадиол (E2)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="module-footer">
-            <span class="reagent-count"
-              ><i class="fas fa-vial"></i> 6 реагентов</span
-            >
-            <span class="channel-stats"
-              ><i class="fas fa-chart-line"></i> CH1: 6/6 | CH2: 3/6</span
-            >
-          </div>
-        </div>
-
-        <!-- Модуль 2: Онкомаркеры -->
-        <div class="module-card">
-          <div class="module-header">
-            <div class="module-number">02</div>
-            <div class="module-title">
-              <i class="fas fa-chart-simple"></i>
-              <h3>Модуль 2</h3>
-              <span class="module-type">Онкомаркеры</span>
-            </div>
-            <div class="module-channels">
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH1</span>
-              </div>
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH2</span>
-              </div>
-            </div>
-          </div>
-          <div class="module-body">
-            <table class="module-table">
-              <thead>
-                <tr>
-                  <th>Реагент</th>
-                  <th width="80">CH1</th>
-                  <th width="80">CH2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="reagent-name">CA-125</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">CA-19-9</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">ПСА общий</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">ПСА свободный</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">РЭА (CEA)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">AFP</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="module-footer">
-            <span class="reagent-count"
-              ><i class="fas fa-vial"></i> 6 реагентов</span
-            >
-            <span class="channel-stats"
-              ><i class="fas fa-chart-line"></i> CH1: 6/6 | CH2: 3/6</span
-            >
-          </div>
-        </div>
-
-        <!-- Модуль 3: Аутоиммунные / Витамины -->
-        <div class="module-card">
-          <div class="module-header">
-            <div class="module-number">03</div>
-            <div class="module-title">
-              <i class="fas fa-shield-virus"></i>
-              <h3>Модуль 3</h3>
-              <span class="module-type">Аутоиммунные / Витамины</span>
-            </div>
-            <div class="module-channels">
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH1</span>
-              </div>
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH2</span>
-              </div>
-            </div>
-          </div>
-          <div class="module-body">
-            <table class="module-table">
-              <thead>
-                <tr>
-                  <th>Реагент</th>
-                  <th width="80">CH1</th>
-                  <th width="80">CH2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="reagent-name">Anti-TPO</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Anti-TG</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Ревматоидный фактор (RF)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Витамин B12</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Ферритин</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Витамин D (25-OH)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="module-footer">
-            <span class="reagent-count"
-              ><i class="fas fa-vial"></i> 6 реагентов</span
-            >
-            <span class="channel-stats"
-              ><i class="fas fa-chart-line"></i> CH1: 6/6 | CH2: 4/6</span
-            >
-          </div>
-        </div>
-
-        <!-- Модуль 4: Специальные тесты -->
-        <div class="module-card">
-          <div class="module-header">
-            <div class="module-number">04</div>
-            <div class="module-title">
-              <i class="fas fa-flask"></i>
-              <h3>Модуль 4</h3>
-              <span class="module-type">Специальные тесты</span>
-            </div>
-            <div class="module-channels">
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH1</span>
-              </div>
-              <div class="channel-status">
-                <span class="channel-led green"></span>
-                <span class="channel-label">CH2</span>
-              </div>
-            </div>
-          </div>
-          <div class="module-body">
-            <table class="module-table">
-              <thead>
-                <tr>
-                  <th>Реагент</th>
-                  <th width="80">CH1</th>
-                  <th width="80">CH2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="reagent-name">DHEA-S</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Инсулин</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">С-пептид</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">IGF-1</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Кальцитонин</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot inactive"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="reagent-name">Паратгормон (PTH)</td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                  <td class="channel-cell">
-                    <span class="channel-dot active"></span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="module-footer">
-            <span class="reagent-count"
-              ><i class="fas fa-vial"></i> 6 реагентов</span
-            >
-            <span class="channel-stats"
-              ><i class="fas fa-chart-line"></i> CH1: 6/6 | CH2: 4/6</span
-            >
-          </div>
-        </div>
+        <!-- Модули будут загружаться динамически -->
       </div>
 
-      <!-- Легенда -->
       <div class="analyzer-legend">
         <div class="legend-title">
           <i class="fas fa-info-circle"></i> Состояние каналов:
         </div>
         <div class="legend-items">
           <div class="legend-item">
-            <span class="channel-dot active"></span>
-            <span>Активен - реагент работает на канале</span>
+            <span class="channel-dot active"></span><span>Активен</span>
           </div>
           <div class="legend-item">
-            <span class="channel-dot inactive"></span>
-            <span>Неактивен - реагент отключен на канале</span>
+            <span class="channel-dot inactive"></span><span>Неактивен</span>
           </div>
+          <div class="legend-item">
+            <span class="both-icon">⚡</span
+            ><span>Работает на обоих каналах</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Панель управления реагентами -->
+    <div class="reagents-management">
+      <div class="management-header">
+        <h3><i class="fas fa-database"></i> Управление реагентами</h3>
+        <button class="btn-add-reagent" type="button">
+          <i class="fas fa-plus-circle"></i> Добавить реагент
+        </button>
+      </div>
+
+      <div class="management-tabs">
+        <button class="tab-btn active" data-tab="reagents">
+          📋 Список реагентов
+        </button>
+        <button class="tab-btn" data-tab="assignments">
+          🔗 Назначения в модулях
+        </button>
+      </div>
+
+      <div class="tab-content active" id="tab-reagents">
+        <div class="table-responsive">
+          <table class="admin-table" id="reagents-admin-table">
+            <thead>
+              <tr>
+                <th>Код</th>
+                <th>Название</th>
+                <th>Краткое имя</th>
+                <th>Категория</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5">Загрузка...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-assignments">
+        <div class="table-responsive">
+          <table class="admin-table" id="assignments-table">
+            <thead>
+              <tr>
+                <th>Модуль</th>
+                <th>Реагент</th>
+                <th>Канал</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5">Загрузка...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно: Добавление реагента -->
+    <div id="add-reagent-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-plus-circle"></i> Добавить реагент</h3>
+          <button class="close-modal" data-modal="add-reagent-modal">
+            &times;
+          </button>
+        </div>
+        <form id="add-reagent-form">
+          <div class="form-group">
+            <label>Код реагента *</label
+            ><input
+              type="text"
+              id="reagent-code"
+              required
+              placeholder="Например: TSH-01"
+            />
+          </div>
+          <div class="form-group">
+            <label>Название *</label
+            ><input
+              type="text"
+              id="reagent-name"
+              required
+              placeholder="Тиреотропный гормон"
+            />
+          </div>
+          <div class="form-group">
+            <label>Краткое название *</label
+            ><input
+              type="text"
+              id="reagent-short-name"
+              required
+              placeholder="ТТГ"
+            />
+          </div>
+          <div class="form-group">
+            <label>Категория *</label>
+            <select id="reagent-category" required>
+              <option value="">Выберите категорию</option>
+              <option value="hormones">🏥 Гормоны</option>
+              <option value="oncomarkers">🎗️ Онкомаркеры</option>
+              <option value="autoimmune">🛡️ Аутоиммунные</option>
+              <option value="vitamins">💊 Витамины</option>
+              <option value="special">🔬 Специальные</option>
+              <option value="biochemistry">🧪 Биохимия</option>
+              <option value="hepatitis">🦠 Гепатиты</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Описание</label
+            ><textarea
+              id="reagent-description"
+              rows="3"
+              placeholder="Дополнительная информация..."
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              onclick="reagentCRUD.closeModal('add-reagent-modal')"
+            >
+              Отмена
+            </button>
+            <button type="submit" class="btn-save">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно: Редактирование реагента -->
+    <div id="edit-reagent-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-edit"></i> Редактировать реагент</h3>
+          <button class="close-modal" data-modal="edit-reagent-modal">
+            &times;
+          </button>
+        </div>
+        <form id="edit-reagent-form">
+          <input type="hidden" id="edit-reagent-id" />
+          <div class="form-group">
+            <label>Код реагента *</label
+            ><input type="text" id="edit-reagent-code" required />
+          </div>
+          <div class="form-group">
+            <label>Название *</label
+            ><input type="text" id="edit-reagent-name" required />
+          </div>
+          <div class="form-group">
+            <label>Краткое название *</label
+            ><input type="text" id="edit-reagent-short-name" required />
+          </div>
+          <div class="form-group">
+            <label>Категория *</label>
+            <select id="edit-reagent-category" required>
+              <option value="hormones">🏥 Гормоны</option>
+              <option value="oncomarkers">🎗️ Онкомаркеры</option>
+              <option value="autoimmune">🛡️ Аутоиммунные</option>
+              <option value="vitamins">💊 Витамины</option>
+              <option value="special">🔬 Специальные</option>
+              <option value="biochemistry">🧪 Биохимия</option>
+              <option value="hepatitis">🦠 Гепатиты</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Описание</label
+            ><textarea id="edit-reagent-description" rows="3"></textarea>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              onclick="reagentCRUD.closeModal('edit-reagent-modal')"
+            >
+              Отмена
+            </button>
+            <button type="submit" class="btn-save">Обновить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно: Добавление реагента в модуль -->
+    <div id="add-to-module-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-link"></i> Добавить реагент в модуль</h3>
+          <button class="close-modal" data-modal="add-to-module-modal">
+            &times;
+          </button>
+        </div>
+        <form id="add-to-module-form">
+          <input type="hidden" id="add-reagent-id" />
+          <div class="form-group">
+            <label>Реагент</label
+            ><input type="text" id="add-reagent-name" readonly disabled />
+          </div>
+          <div class="form-group">
+            <label>Выберите модуль *</label>
+            <select id="module-select" required>
+              <option value="">Загрузка модулей...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Канал</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="channel" value="CH1" /> Только CH1
+              </label>
+              <label>
+                <input type="radio" name="channel" value="CH2" /> Только CH2
+              </label>
+              <label>
+                <input type="radio" name="channel" value="BOTH" /> Оба канала
+              </label>
+            </div>
+            <small style="color: #64748b; display: block; margin-top: 8px">
+              <i class="fas fa-info-circle"></i> "Оба канала" - реагент будет
+              работать на CH1 и CH2 одновременно
+            </small>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              onclick="reagentCRUD.closeModal('add-to-module-modal')"
+            >
+              Отмена
+            </button>
+            <button type="submit" class="btn-save">Добавить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно: Подтверждение удаления -->
+    <div id="delete-confirm-modal" class="modal">
+      <div class="modal-content modal-small">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+          </h3>
+          <button class="close-modal" data-modal="delete-confirm-modal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Вы уверены, что хотите удалить этот реагент?</p>
+          <p class="warning-text">
+            Внимание! Если реагент используется в модулях, удаление будет
+            невозможно.
+          </p>
+        </div>
+        <div class="form-actions">
+          <button
+            class="btn-cancel"
+            onclick="reagentCRUD.closeModal('delete-confirm-modal')"
+          >
+            Отмена
+          </button>
+          <button
+            class="btn-delete-confirm"
+            onclick="reagentCRUD.confirmDelete()"
+          >
+            Удалить
+          </button>
         </div>
       </div>
     </div>
