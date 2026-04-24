@@ -20,6 +20,10 @@ class TeachView(TemplateView):
     template_name = 'teach.html'
 
 
+class MappingView(TemplateView):
+    template_name = 'roche-mapping.html'
+
+
 @csrf_exempt
 def get_guide_info(request, type_test):
     if request.method == "GET":

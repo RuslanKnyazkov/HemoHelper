@@ -2013,3 +2013,102 @@ button {
 .analyzer-select:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+/* ============ МИНИ ССЫЛКИ / БЫСТРЫЙ ДОСТУП ============ */
+.quick-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  padding: 8px;
+  background: white;
+  border-radius: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 40px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.quick-link i {
+  font-size: 16px;
+}
+
+.quick-link:hover {
+  background: #f1f5f9;
+  color: #667eea;
+}
+
+.quick-link.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+/* Навигация на странице маппинга */
+.mapping-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2edf2;
+}
+
+.nav-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 30px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.nav-back:hover {
+  background: #e2e8f0;
+  color: #667eea;
+}
+
+.mapping-nav h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .quick-links {
+    border-radius: 20px;
+    flex-direction: column;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .quick-link {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .mapping-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
