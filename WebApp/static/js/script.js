@@ -1015,128 +1015,6 @@ class Carousel {
   }
 }
 
-// ===== Плавающие тесты =====
-const FloatingTests = {
-  tests: [
-    ...[
-      "АЛТ",
-      "АСТ",
-      "Глюкоза",
-      "Креатинин",
-      "Мочевина",
-      "Билирубин",
-      "Холестерин",
-      "Триглицериды",
-      "Калий",
-      "Натрий",
-      "Кальций",
-      "Альбумин",
-      "ЛДГ",
-      "ЩФ",
-      "ГГТ",
-      "Амилаза",
-      "СРБ",
-      "Мочевая кислота",
-      "Железо",
-      "Ферритин",
-    ].map((name) => ({ name, type: "biochem" })),
-    ...[
-      "ТТГ",
-      "Т4 свободный",
-      "Т3 свободный",
-      "АТ-ТПО",
-      "Кортизол",
-      "Инсулин",
-      "С-пептид",
-      "Пролактин",
-      "ФСГ",
-      "ЛГ",
-      "Прогестерон",
-      "Эстрадиол",
-      "Тестостерон",
-      "ПСА",
-      "Витамин D",
-      "В12",
-      "ХГЧ",
-      "Иммуноглобулин E",
-      "Ревматоидный фактор",
-      "Анти-ЦЦП",
-    ].map((name) => ({ name, type: "immuno" })),
-    ...[
-      "Гемоглобин",
-      "Лейкоциты",
-      "Тромбоциты",
-      "СОЭ",
-      "Гликозилированный Hb",
-      "МНО",
-      "АЧТВ",
-      "Протромбин",
-      "Фибриноген",
-    ].map((name) => ({ name, type: "special" })),
-  ],
-
-  instance: null,
-  speed: "fast",
-  speedSettings: { slow: 20, normal: 15, fast: 10 },
-
-  init() {
-    this.container = document.querySelector(".floating-container");
-    if (!this.container) return;
-
-    this.tests.forEach((test, i) => {
-      const bubble = document.createElement("div");
-      bubble.className = `test-bubble ${test.type}`;
-      bubble.textContent = test.name;
-      bubble.style.cssText = `
-        left: ${Math.random() * 90}%;
-        animation-duration: ${this.speedSettings[this.speed] + Math.random() * 5}s;
-        animation-delay: ${Math.random() * 10}s;
-        transform: scale(${0.8 + Math.random() * 0.4});
-      `;
-      bubble.addEventListener("click", (e) =>
-        this.showTestInfo(test.name, e.target),
-      );
-      this.container.appendChild(bubble);
-    });
-  },
-
-  showTestInfo(name, target) {
-    showNotification(`Тест: ${name}`, "info");
-    target.style.transform = "scale(1.3)";
-    target.style.boxShadow = "0 15px 30px rgba(255, 255, 255, 0.5)";
-    setTimeout(() => {
-      target.style.transform = "";
-      target.style.boxShadow = "";
-    }, 300);
-  },
-
-  changeSpeed(newSpeed) {
-    this.speed = newSpeed;
-    document.querySelectorAll(".test-bubble").forEach((b) => {
-      b.style.animationDuration = `${this.speedSettings[newSpeed] + Math.random() * 5}s`;
-    });
-    document
-      .querySelectorAll(".control-btn")
-      .forEach((btn) => btn.classList.remove("active"));
-    document
-      .querySelector(`[onclick="changeTestSpeed('${newSpeed}')"]`)
-      ?.classList.add("active");
-  },
-
-  toggleAnimation() {
-    this.isPlaying = !this.isPlaying;
-    document.querySelectorAll(".test-bubble").forEach((b) => {
-      b.style.animationPlayState = this.isPlaying ? "running" : "paused";
-    });
-    document.getElementById("pauseIcon").className = this.isPlaying
-      ? "fas fa-pause"
-      : "fas fa-play";
-    document.getElementById("pauseText").textContent = this.isPlaying
-      ? "Пауза"
-      : "Продолжить";
-  },
-};
-
 // ===== Аликвоты =====
 const AliquotModule = {
   generateContainer(name) {
@@ -1321,9 +1199,6 @@ window.closeAllContainers = () => Navigation.closeAllContainers();
 window.generateAlictoveContainer = (name) =>
   AliquotModule.generateContainer(name);
 window.PrintAliquotsForm = () => AliquotModule.print();
-window.changeTestSpeed = (speed) => FloatingTests.changeSpeed(speed);
-window.toggleTestsAnimation = () => FloatingTests.toggleAnimation();
-window.initFloatingTests = () => FloatingTests.init();
 
 // ===== Инициализация =====
 document.addEventListener("DOMContentLoaded", () => {
@@ -1372,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Карусели
   setTimeout(() => {
-    ["carousel1", "carousel2"].forEach((id, i) => {
+    ["carousel2"].forEach((id, i) => {
       carousels.push(
         new Carousel(id, {
           autoplay: true,
@@ -1385,24 +1260,4 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
   });
-
-  setTimeout(() => FloatingTests.init(), 1500);
 });
-
-// ===== Тестовая система =====
-class TestQuizSystem {
-  constructor() {
-    this.resetTimer();
-    this.generateNewTest();
-  }
-
-  resetTimer() {
-    // Реализация таймера
-  }
-
-  generateNewTest() {
-    // Генерация нового теста
-  }
-}
-
-// Убрана функция printSerialLabelsGLP

@@ -1,9 +1,6 @@
 # barcode/utilite.py
 from django.http import JsonResponse
-import logging
-
-# Настраиваем логгер для модуля
-logger = logging.getLogger(__name__)
+from utility.logging import logger
 
 
 class PrintMonitor:
@@ -25,7 +22,7 @@ class PrintMonitor:
                     'error': 'Отсутствует поле "type"'
                 }, status=400)
 
-            printer_name = data.get('printer_name')
+            printer_name = data.get('printer')
             type_label = data.get('type')
 
             # --- Тип: text ---
