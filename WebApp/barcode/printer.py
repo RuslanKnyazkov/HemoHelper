@@ -1,6 +1,6 @@
 import win32print
 import win32api
-import logging
+from utility.logging import logger
 from datetime import datetime as dt
 import json
 import os
@@ -27,10 +27,14 @@ class PrintManager():
         if isinstance(retry, str):
             retry = int(retry)
 
+        current_printer = printer_name or self.get_default_printer()
+        logger.info(
+            f"Текущий принтер {current_printer}. Отправил заявку на печать {zpl}")
+
         while retry > 0:
 
             try:
-                hPrinter = win32print.OpenPrinter(printer_name)
+                hPrinter = win32print.OpenPrinter(current_printer)
                 job_info = ("Barcode Print", None, "RAW")
                 job_id = win32print.StartDocPrinter(hPrinter, 1, job_info)
                 win32print.StartPagePrinter(hPrinter)
@@ -40,7 +44,7 @@ class PrintManager():
                 win32print.ClosePrinter(hPrinter)
                 retry -= 1
             except Exception as e:
-                logging.error(f"❌ Ошибка печати на {printer_name}: {e}")
+                logger.error(f"❌ Ошибка печати на {printer_name}: {e}")
                 return False
         return True
 

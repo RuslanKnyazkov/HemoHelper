@@ -1,0 +1,55 @@
+{% load static %}
+<header class="header">
+  <div class="header__logo">
+    <div class="logo-icon">
+      <i class="fas fa-flask"></i>
+    </div>
+    <div class="logo-text">
+      <h1>Гемотест Хелпер</h1>
+      <span>Лабораторная система</span>
+    </div>
+  </div>
+
+  <!-- Doombass блок -->
+  <div
+    class="doombass-block"
+    onclick="turnStateMouse()"
+    title="Кликер (раз в 5 минут)"
+  >
+    <img
+      src="{% static 'images/images-other/doombass.jpeg' %}"
+      alt="Doombass"
+      width="40"
+      height="40"
+    />
+    <span class="doombass-status"></span>
+  </div>
+
+  <!-- Навигация -->
+  <nav class="header__nav">
+    <button class="nav-btn" onclick="location.href = '/'">
+      <i class="fas fa-home"></i>
+      <span>Главная</span>
+    </button>
+    <button class="nav-btn" onclick="location.href = '/barcode/'">
+      <i class="fas fa-barcode"></i>
+      <span>Баркоды</span>
+    </button>
+    <button class="nav-btn" onclick="location.href = '/aliquots/'">
+      <i class="fas fa-layer-group"></i>
+      <span>Аликвоты</span>
+    </button>
+    <button class="nav-btn" onclick="location.href = '/teach/mapping/'">
+      <i class="fas fa-microscope"></i>
+      <span>Roche</span>
+    </button>
+    <button class="nav-btn" onclick="location.href = '/teach/'">
+      <i class="fas fa-vial-virus"></i>
+      <span>Тесты</span>
+    </button>
+  </nav>
+
+  <button class="mobile-menu-btn">
+    <i class="fas fa-bars"></i>
+  </button>
+</header>

@@ -1,5 +1,7 @@
+{% extends 'teach.html' %}
 <!doctype html>
-{% load static %} {% block content %} {% include 'modules.html'%}
+
+{% load static %} {% block content %}
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -141,13 +143,254 @@
 
       <!-- Модальные окна (такие же как в teach.html) -->
       <!-- Модальное окно: Добавление реагента -->
-      <div id="add-reagent-modal" class="modal">...</div>
-      <div id="edit-reagent-modal" class="modal">...</div>
-      <div id="add-to-module-modal" class="modal">...</div>
-      <div id="delete-confirm-modal" class="modal">...</div>
-    </div>
+      <div id="add-reagent-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Добавить реагент</h3>
+            <button
+              class="close-modal"
+              onclick="this.closest('.modal').style.display = 'none'"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="add-reagent-form">
+              <div class="form-group">
+                <label>Код реагента</label>
+                <input
+                  type="text"
+                  id="reagent-code"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Название реагента</label>
+                <input
+                  type="text"
+                  id="reagent-name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Краткое имя</label>
+                <input
+                  type="text"
+                  id="reagent-short-name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Категория</label>
+                <select id="reagent-category" class="form-control">
+                  <option value="hormones">Гормоны</option>
+                  <option value="oncomarkers">Онкомаркеры</option>
+                  <option value="autoimmune">Аутоиммунные</option>
+                  <option value="vitamins">Витамины</option>
+                  <option value="biochemistry">Биохимия</option>
+                  <option value="hepatitis">Гепатиты</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Описание</label>
+                <textarea
+                  id="reagent-description"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-save"></i> Сохранить
+                </button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="this.closest('.modal').style.display = 'none'"
+                >
+                  <i class="fas fa-times"></i> Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-    <script src="{% static 'js/teach.js' %}"></script>
+      <div id="edit-reagent-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Редактировать реагент</h3>
+            <button
+              class="close-modal"
+              onclick="this.closest('.modal').style.display = 'none'"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="edit-reagent-form">
+              <input type="hidden" id="edit-reagent-id" />
+              <div class="form-group">
+                <label>Код реагента</label>
+                <input
+                  type="text"
+                  id="edit-reagent-code"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Название реагента</label>
+                <input
+                  type="text"
+                  id="edit-reagent-name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Краткое имя</label>
+                <input
+                  type="text"
+                  id="edit-reagent-short-name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Категория</label>
+                <select id="edit-reagent-category" class="form-control">
+                  <option value="hormones">Гормоны</option>
+                  <option value="oncomarkers">Онкомаркеры</option>
+                  <option value="autoimmune">Аутоиммунные</option>
+                  <option value="vitamins">Витамины</option>
+                  <option value="biochemistry">Биохимия</option>
+                  <option value="hepatitis">Гепатиты</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Описание</label>
+                <textarea
+                  id="edit-reagent-description"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-save"></i> Сохранить
+                </button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="this.closest('.modal').style.display = 'none'"
+                >
+                  <i class="fas fa-times"></i> Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="add-to-module-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-microchip"></i> Добавить реагент в модуль</h3>
+            <button
+              class="close-modal"
+              onclick="this.closest('.modal').style.display = 'none'"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="add-to-module-form">
+              <input type="hidden" id="add-reagent-id" />
+              <div class="form-group">
+                <label>Реагент</label>
+                <input
+                  type="text"
+                  id="add-reagent-name"
+                  class="form-control"
+                  readonly
+                />
+              </div>
+              <div class="form-group">
+                <label>Модуль анализатора</label>
+                <select id="module-select" class="form-control" required>
+                  <option value="">Загрузка модулей...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Канал</label>
+                <div class="radio-group">
+                  <label
+                    ><input type="radio" name="channel" value="CH1" />
+                    CH1</label
+                  >
+                  <label
+                    ><input type="radio" name="channel" value="CH2" />
+                    CH2</label
+                  >
+                  <label
+                    ><input type="radio" name="channel" value="BOTH" /> Оба
+                    канала</label
+                  >
+                  <label
+                    ><input type="radio" name="channel" value="" checked /> Без
+                    канала</label
+                  >
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-plus"></i> Добавить
+                </button>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  onclick="this.closest('.modal').style.display = 'none'"
+                >
+                  <i class="fas fa-times"></i> Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+          <div class="modal-header">
+            <h3><i class="fas fa-trash-alt"></i> Подтверждение удаления</h3>
+            <button
+              class="close-modal"
+              onclick="this.closest('.modal').style.display = 'none'"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Вы уверены, что хотите удалить этот элемент?</p>
+            <div class="form-actions">
+              <button class="btn-delete-confirm">
+                <i class="fas fa-trash"></i> Удалить
+              </button>
+              <button
+                class="btn-cancel"
+                onclick="this.closest('.modal').style.display = 'none'"
+              >
+                <i class="fas fa-times"></i> Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
 {% endblock %}

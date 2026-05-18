@@ -80,10 +80,6 @@ def save_barcode(request):
         try:
             data = json.loads(request.body)
 
-            # ← Вот здесь мы получаем выбранный принтер!
-            printer_name = data.get('printer_name')  # Это ключевой момент
-
-            # Передаём в PrintMonitor
             from .utilite import PrintMonitor
             monitor = PrintMonitor()
             result = monitor.process_json_data(data)
@@ -126,7 +122,7 @@ class CreateCustomLabels(CreateView):
     model = CustomLabel
     form_class = LabelCreateForm
     template_name = 'labels-forms.html'
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('barcode')
 
     def form_valid(self, form):
         form.save()

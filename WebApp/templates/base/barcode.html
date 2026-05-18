@@ -1,7 +1,7 @@
-{% extends 'index.html' %} {% load static %}
+{% extends 'base.html' %} {% load static %}
 
 <!-- =============== КОНТЕНТ МОДУЛЯ =============== -->
-{% block content %} {% include 'modules.html'%}
+{% block content %}
 
 <div id="barcode-module">
   <div class="container-content">
@@ -133,6 +133,15 @@
                 title="Печать без номера"
               >
                 <i class="fas fa-hashtag"></i>
+              </div>
+              <div
+                class="compact-setting-item active"
+                id="validate-setting"
+                onclick="disableSettingPrint('validate-setting')"
+                data-attribute="validate"
+                title="Отключение валидации"
+              >
+                <i class="fas fa-check-double"></i>
               </div>
               <div class="compact-setting-reset">
                 <button
@@ -343,7 +352,7 @@
 {% endblock %}
 
 <!-- =============== СКРИПТЫ =============== -->
-{% block script %}
+{% block extra_js %}
 <!-- Основной JS модуля -->
 <script src="{% static 'js/barcode.js' %}"></script>
 

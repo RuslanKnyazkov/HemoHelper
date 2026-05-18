@@ -166,3 +166,6 @@ local_settings.py
 
 # Development-specific environment variables
 .env.local
+
+#Logging
+/logs

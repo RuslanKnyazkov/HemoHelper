@@ -21,6 +21,7 @@ const LabelSetting = {
   number: true,
   mode: true,
   date: true,
+  validate: true,
 };
 
 // ===== УТИЛИТЫ ДЛЯ БАРКОДОВ =====
@@ -1794,7 +1795,11 @@ const BarcodeModule = {
 
     await AutoFormatDetector.autoSelectAndPrint(barcode);
 
-    if (barcode.length !== 10 && BarcodeState.selectCodeFormat === "B2N") {
+    if (
+      LabelSetting.validate &&
+      barcode.length !== 10 &&
+      BarcodeState.selectCodeFormat === "B2N"
+    ) {
       showBarcodeNotification(
         "Внимание: длина номера не равна 10 цифрам",
         "error",
@@ -2087,6 +2092,7 @@ const BarcodeModule = {
     };
 
     const template = templates[type];
+    template.date = true;
     if (!template) return;
 
     if (type === "virtual") {
@@ -2095,7 +2101,7 @@ const BarcodeModule = {
         showBarcodeNotification("Сначала введите номер для штатива!", "error");
         return;
       }
-      template.text = `LAMI\n${input.value}`;
+      template.text = `LAMI\n ${input.value}`;
       showBarcodeNotification(
         `Виртуальный штатив с номером ${input.value} отправлен`,
         "success",
@@ -2403,6 +2409,7 @@ function disableSettingPrint(select) {
     selectElem.classList.add("active");
     LabelSetting[codeElement] = true;
   }
+  console.log(LabelSetting[codeElement]);
 }
 
 function setDefaultUserPrintSetting() {

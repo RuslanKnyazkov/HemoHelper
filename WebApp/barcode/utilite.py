@@ -1,9 +1,6 @@
 # barcode/utilite.py
 from django.http import JsonResponse
-import logging
-
-# Настраиваем логгер для модуля
-logger = logging.getLogger(__name__)
+from utility.logging import logger
 
 
 class PrintMonitor:
@@ -25,7 +22,7 @@ class PrintMonitor:
                     'error': 'Отсутствует поле "type"'
                 }, status=400)
 
-            printer_name = data.get('printer_name')
+            printer_name = data.get('printer')
             type_label = data.get('type')
 
             # --- Тип: text ---
@@ -55,16 +52,13 @@ class PrintMonitor:
                 if not barcode:
                     return JsonResponse({'success': False, 'error': 'Нет штрих-кода'}, status=400)
 
-                # ← используется при генерации ZPL
-                mode = data.get('mode', False)
                 retry = int(data.get('retry', 1))
 
-                # Передаём mode в ZPL-генератор, а не в print_barcode
                 zpl_code = self.zpl_generator.create_simple_text_zpl(**data)
                 success = self.print_manager.print_barcode(
                     zpl=zpl_code,
                     printer_name=printer_name,
-                    retry=retry  # ← только retry, без mode!
+                    retry=retry
                 )
 
                 return JsonResponse({
@@ -78,15 +72,14 @@ class PrintMonitor:
 
             # --- Тип: aliquote ---
             elif type_label == "aliquote":
-                names = data.pop("text")
-                retry = int(data.pop("count", 1))
+                names = data.pop("levels")
                 for name in names:
                     zpl_code = self.zpl_generator.create_simple_text_zpl(
-                        text=name, date=True, **data)
+                        text=name['text'], date=True, lot=name['lot'])
                     self.print_manager.print_barcode(
                         zpl=zpl_code,
                         printer_name=printer_name,
-                        retry=retry
+                        retry=name.get('retry', 1)
                     )
                 return JsonResponse({'success': True, 'message': 'Пакетная печать завершена'})
 

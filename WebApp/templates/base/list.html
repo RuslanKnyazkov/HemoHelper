@@ -1,0 +1,967 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Управление
+аликвотами - многоуровневая система{% endblock %} {% block extra_css %}
+<style>
+  /* ========== ОСНОВНЫЕ СТИЛИ ========== */
+  .aliquots-container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .aliquots-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .aliquots-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-normal);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-secondary {
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    color: #a5b4fc;
+    cursor: pointer;
+    transition: var(--transition-normal);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.3);
+  }
+
+  /* ========== КАРТОЧКИ ШАБЛОНОВ ========== */
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .template-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition-normal);
+  }
+
+  .template-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(102, 126, 234, 0.4);
+    box-shadow: var(--shadow-md);
+  }
+
+  .template-header {
+    padding: 20px;
+    background: linear-gradient(
+      135deg,
+      rgba(102, 126, 234, 0.1),
+      rgba(118, 75, 162, 0.05)
+    );
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .template-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .template-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .template-levels {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .level-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .level-item:last-child {
+    border-bottom: none;
+  }
+
+  .level-info {
+    flex: 1;
+  }
+
+  .level-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .level-details {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 16px;
+  }
+
+  .level-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+
+  .template-actions {
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ========== МОДАЛЬНЫЕ ОКНА ========== */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: inherit;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+
+  .close-modal:hover {
+    color: #ef4444;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  /* ========== ФОРМЫ ========== */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .levels-list-editor {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin: 16px 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .level-editor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+
+  .level-editor-info {
+    flex: 1;
+  }
+
+  .level-editor-info strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .level-editor-info small {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .level-editor-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .add-level-btn {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* ========== ВСПОМОГАТЕЛЬНЫЕ ========== */
+  .empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-secondary);
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="aliquots-container">
+  <div class="aliquots-header">
+    <h1><i class="fas fa-layer-group"></i> Многоуровневые аликвоты</h1>
+    <div>
+      <button class="btn-primary" id="openLevelModalBtn">
+        <i class="fas fa-plus"></i> Уровень
+      </button>
+      <button
+        class="btn-primary"
+        id="openTemplateModalBtn"
+        style="margin-left: 12px"
+      >
+        <i class="fas fa-folder-plus"></i> Шаблон
+      </button>
+    </div>
+  </div>
+
+  <div id="templatesContainer" class="templates-grid">
+    <!-- шаблоны загружаются через JS -->
+    <div class="empty-state">
+      <i class="fas fa-spinner fa-pulse"></i> Загрузка...
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО: УРОВЕНЬ АЛИКВОТЫ -->
+<div id="levelModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="levelModalTitle"><i class="fas fa-plus"></i> Добавить уровень</h3>
+      <button class="close-modal" onclick="closeLevelModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="levelForm">
+        <input type="hidden" id="levelId" value="" />
+        <div class="form-group">
+          <label>Название уровня</label>
+          <input
+            type="text"
+            id="levelName"
+            class="input-field"
+            placeholder="Например: Аликвот 1"
+            required
+          />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Номер лота</label>
+            <input
+              type="text"
+              id="levelLot"
+              class="input-field"
+              placeholder="Уникальный номер"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Объем (мкл)</label>
+            <input
+              type="number"
+              id="levelVolume"
+              class="input-field"
+              placeholder="Объем"
+              min="1"
+              required
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Порядок</label>
+          <input
+            type="number"
+            id="levelOrder"
+            class="input-field"
+            placeholder="0"
+            min="0"
+            value="0"
+          />
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            onclick="closeLevelModal()"
+          >
+            Отмена
+          </button>
+          <button type="submit" class="btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО: ШАБЛОН АЛИКВОТЫ -->
+<div id="templateModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="templateModalTitle">
+        <i class="fas fa-folder-plus"></i> Создать шаблон
+      </h3>
+      <button class="close-modal" onclick="closeTemplateModal()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="templateForm">
+        <input type="hidden" id="templateId" value="" />
+        <div class="form-group">
+          <label>Название шаблона</label>
+          <input
+            type="text"
+            id="templateName"
+            class="input-field"
+            placeholder="Например: Стандартные аликвоты"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Описание</label>
+          <textarea
+            id="templateDescription"
+            class="input-field"
+            rows="2"
+            placeholder="Описание шаблона"
+          ></textarea>
+        </div>
+
+        <label>Уровни аликвот</label>
+        <div id="selectedLevels" class="levels-list-editor">
+          <div class="empty-state" style="padding: 20px">
+            <i class="fas fa-plus-circle"></i>
+            <p>Нажмите "Добавить уровень" чтобы выбрать уровни</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn-secondary add-level-btn"
+          id="addLevelToTemplateBtn"
+        >
+          <i class="fas fa-plus"></i> Добавить уровень
+        </button>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            onclick="closeTemplateModal()"
+          >
+            Отмена
+          </button>
+          <button type="submit" class="btn-primary">Сохранить шаблон</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО: ВЫБОР УРОВНЯ ДЛЯ ШАБЛОНА -->
+<div id="selectLevelModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-list"></i> Выберите уровень</h3>
+      <button class="close-modal" onclick="closeSelectLevelModal()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="availableLevelsList" style="max-height: 400px; overflow-y: auto">
+        <!-- уровни загружаются через JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allLevels = [];
+  let templateLevels = []; // {level_id, level_name, lot_number, volume, count}
+
+  // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+  function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === "csrftoken=") {
+          cookieValue = decodeURIComponent(cookie.substring(10));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function showNotification(message, type = "info") {
+    if (typeof window.showNotification === "function") {
+      window.showNotification(message, type);
+    } else {
+      alert(message);
+    }
+  }
+
+  // ========== ЗАГРУЗКА ШАБЛОНОВ ==========
+  async function loadTemplates() {
+    try {
+      const response = await fetch("/aliquots/template/list/");
+      const data = await response.json();
+      if (data.success) {
+        renderTemplates(data.templates);
+      }
+    } catch (error) {
+      document.getElementById("templatesContainer").innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Ошибка загрузки</h3>
+          <p>${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  async function renderTemplates(templates) {
+    const container = document.getElementById("templatesContainer");
+    if (templates.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>Нет шаблонов</h3>
+          <p>Создайте первый шаблон аликвот</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = "";
+    for (const t of templates) {
+      // Загружаем детали шаблона
+      const detailResponse = await fetch(`/aliquots/template/get/${t.id}/`);
+      const detail = await detailResponse.json();
+
+      html += `
+        <div class="template-card" data-id="${t.id}">
+          <div class="template-header">
+            <h3>${escapeHtml(t.name)}</h3>
+            <p class="template-description">${escapeHtml(t.description) || "Нет описания"}</p>
+          </div>
+          <div class="template-levels">
+            ${
+              detail.success &&
+              detail.template.levels
+                .map(
+                  (l) => `
+              <div class="level-item">
+                <div class="level-info">
+                  <div class="level-name">${escapeHtml(l.level_name)}</div>
+                  <div class="level-details">
+                    <span><i class="fas fa-hashtag"></i> ${escapeHtml(l.lot_number)}</span>
+                    <span><i class="fas fa-tint"></i> ${l.volume} мкл</span>
+                    <span class="level-badge"><i class="fas fa-copy"></i> ${l.count} этик.</span>
+                  </div>
+                </div>
+              </div>
+            `,
+                )
+                .join("")
+            }
+          </div>
+          <div class="template-actions">
+            <button class="btn-primary btn-sm" onclick="printTemplate(${t.id})">
+              <i class="fas fa-print"></i> Печать
+            </button>
+            <button class="btn-secondary btn-sm" onclick="editTemplate(${t.id})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-secondary btn-danger btn-sm" onclick="deleteTemplate(${t.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+  }
+
+  // ========== УРОВНИ АЛИКВОТ ==========
+  async function loadLevels() {
+    const response = await fetch("/aliquots/level/list/");
+    const data = await response.json();
+    if (data.success) {
+      allLevels = data.levels;
+      renderAvailableLevels();
+    }
+  }
+
+  function renderAvailableLevels() {
+    const container = document.getElementById("availableLevelsList");
+    if (!allLevels.length) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding: 20px;">
+          <i class="fas fa-info-circle"></i>
+          <p>Нет созданных уровней. Сначала создайте уровень через "Уровень"</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = allLevels
+      .map(
+        (level) => `
+      <div class="level-editor-item">
+        <div class="level-editor-info">
+          <strong>${escapeHtml(level.name)}</strong>
+          <small>Лот: ${escapeHtml(level.lot_number)} | Объем: ${level.volume} мкл</small>
+        </div>
+        <div class="level-editor-actions">
+          <button class="btn-secondary btn-sm" onclick="selectLevelForTemplate(${level.id})">
+            <i class="fas fa-check"></i> Выбрать
+          </button>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  }
+
+  async function selectLevelForTemplate(levelId) {
+    const level = allLevels.find((l) => l.id === levelId);
+    if (level && !templateLevels.find((tl) => tl.level_id === levelId)) {
+      const count = prompt(
+        "Введите количество этикеток для этого уровня (1-10):",
+        "1",
+      );
+      if (count && parseInt(count) >= 1 && parseInt(count) <= 10) {
+        templateLevels.push({
+          level_id: level.id,
+          level_name: level.name,
+          lot_number: level.lot_number,
+          volume: level.volume,
+          count: parseInt(count),
+        });
+        renderTemplateLevels();
+        closeSelectLevelModal();
+      }
+    }
+  }
+
+  function renderTemplateLevels() {
+    const container = document.getElementById("selectedLevels");
+    if (templateLevels.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding: 20px;">
+          <i class="fas fa-plus-circle"></i>
+          <p>Нажмите "Добавить уровень" чтобы выбрать уровни</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = templateLevels
+      .map(
+        (tl, idx) => `
+      <div class="level-editor-item">
+        <div class="level-editor-info">
+          <strong>${escapeHtml(tl.level_name)}</strong>
+          <small>Лот: ${escapeHtml(tl.lot_number)} | Объем: ${tl.volume} мкл | Этикеток: ${tl.count}</small>
+        </div>
+        <div class="level-editor-actions">
+          <button class="btn-secondary btn-sm" onclick="editLevelCount(${idx})">
+            <i class="fas fa-copy"></i>
+          </button>
+          <button class="btn-danger btn-sm" onclick="removeLevelFromTemplate(${idx})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  }
+
+  function editLevelCount(index) {
+    const newCount = prompt(
+      "Введите количество этикетек (1-10):",
+      templateLevels[index].count,
+    );
+    if (newCount && parseInt(newCount) >= 1 && parseInt(newCount) <= 10) {
+      templateLevels[index].count = parseInt(newCount);
+      renderTemplateLevels();
+    }
+  }
+
+  function removeLevelFromTemplate(index) {
+    templateLevels.splice(index, 1);
+    renderTemplateLevels();
+  }
+
+  // ========== CRUD УРОВНЕЙ ==========
+  async function saveLevel() {
+    const id = document.getElementById("levelId").value;
+    const data = {
+      name: document.getElementById("levelName").value,
+      lot_number: document.getElementById("levelLot").value,
+      volume: parseInt(document.getElementById("levelVolume").value),
+      order: parseInt(document.getElementById("levelOrder").value) || 0,
+    };
+
+    const url = id ? `/aliquots/level/edit/${id}/` : "/aliquots/level/create/";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (result.success) {
+        showNotification(id ? "Уровень обновлен" : "Уровень создан", "success");
+        closeLevelModal();
+        await loadLevels();
+      } else {
+        showNotification("Ошибка: " + result.error, "error");
+      }
+    } catch (error) {
+      showNotification("Ошибка: " + error.message, "error");
+    }
+  }
+
+  async function editLevel(id) {
+    const response = await fetch(`/aliquots/level/get/${id}/`);
+    const data = await response.json();
+    if (data.success) {
+      document.getElementById("levelId").value = data.level.id;
+      document.getElementById("levelName").value = data.level.name;
+      document.getElementById("levelLot").value = data.level.lot_number;
+      document.getElementById("levelVolume").value = data.level.volume;
+      document.getElementById("levelOrder").value = data.level.order;
+      document.getElementById("levelModalTitle").innerHTML =
+        '<i class="fas fa-edit"></i> Редактировать уровень';
+      openLevelModal();
+    }
+  }
+
+  async function deleteLevel(id) {
+    if (
+      !confirm(
+        "Удалить этот уровень? Все шаблоны, использующие его, будут затронуты.",
+      )
+    )
+      return;
+    const response = await fetch(`/aliquots/level/delete/${id}/`, {
+      method: "DELETE",
+      headers: { "X-CSRFToken": getCSRFToken() },
+    });
+    const result = await response.json();
+    if (result.success) {
+      showNotification("Уровень удален", "success");
+      await loadLevels();
+      await loadTemplates();
+    }
+  }
+
+  // ========== CRUD ШАБЛОНОВ ==========
+  async function saveTemplate() {
+    const id = document.getElementById("templateId").value;
+    const data = {
+      name: document.getElementById("templateName").value,
+      description: document.getElementById("templateDescription").value,
+      levels: templateLevels.map((tl) => ({
+        level_id: tl.level_id,
+        count: tl.count,
+      })),
+    };
+
+    const url = id
+      ? `/aliquots/template/edit/${id}/`
+      : "/aliquots/template/create/";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (result.success) {
+        showNotification(id ? "Шаблон обновлен" : "Шаблон создан", "success");
+        closeTemplateModal();
+        await loadTemplates();
+      } else {
+        showNotification("Ошибка: " + result.error, "error");
+      }
+    } catch (error) {
+      showNotification("Ошибка: " + error.message, "error");
+    }
+  }
+
+  async function editTemplate(id) {
+    const response = await fetch(`/aliquots/template/get/${id}/`);
+    const data = await response.json();
+    if (data.success) {
+      document.getElementById("templateId").value = data.template.id;
+      document.getElementById("templateName").value = data.template.name;
+      document.getElementById("templateDescription").value =
+        data.template.description;
+      templateLevels = data.template.levels.map((l) => ({
+        level_id: l.level_id,
+        level_name: l.level_name,
+        lot_number: l.lot_number,
+        volume: l.volume,
+        retry: data.retry?.count || 1,
+      }));
+      renderTemplateLevels();
+      document.getElementById("templateModalTitle").innerHTML =
+        '<i class="fas fa-edit"></i> Редактировать шаблон';
+      openTemplateModal();
+    }
+  }
+
+  async function deleteTemplate(id) {
+    if (!confirm("Удалить этот шаблон?")) return;
+    const response = await fetch(`/aliquots/template/delete/${id}/`, {
+      method: "DELETE",
+      headers: { "X-CSRFToken": getCSRFToken() },
+    });
+    const result = await response.json();
+    if (result.success) {
+      showNotification("Шаблон удален", "success");
+      await loadTemplates();
+    }
+  }
+
+  async function printTemplate(id) {
+    try {
+      const response = await fetch("/aliquots/print/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify({ template_id: id }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        showNotification(result.message, "success");
+      } else {
+        showNotification("Ошибка печати: " + result.error, "error");
+      }
+    } catch (error) {
+      showNotification("Ошибка: " + error.message, "error");
+    }
+  }
+
+  // ========== МОДАЛЬНЫЕ ОКНА ==========
+  function openLevelModal() {
+    document.getElementById("levelModal").classList.add("active");
+  }
+  function closeLevelModal() {
+    document.getElementById("levelModal").classList.remove("active");
+    document.getElementById("levelForm").reset();
+    document.getElementById("levelId").value = "";
+    document.getElementById("levelModalTitle").innerHTML =
+      '<i class="fas fa-plus"></i> Добавить уровень';
+  }
+
+  function openTemplateModal() {
+    document.getElementById("templateModal").classList.add("active");
+  }
+  function closeTemplateModal() {
+    document.getElementById("templateModal").classList.remove("active");
+    document.getElementById("templateForm").reset();
+    document.getElementById("templateId").value = "";
+    templateLevels = [];
+    renderTemplateLevels();
+    document.getElementById("templateModalTitle").innerHTML =
+      '<i class="fas fa-folder-plus"></i> Создать шаблон';
+  }
+
+  function openSelectLevelModal() {
+    renderAvailableLevels();
+    document.getElementById("selectLevelModal").classList.add("active");
+  }
+  function closeSelectLevelModal() {
+    document.getElementById("selectLevelModal").classList.remove("active");
+  }
+
+  // ========== ESCAPE HTML ==========
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(
+      /[&<>]/g,
+      (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[m] || m,
+    );
+  }
+
+  // ========== ИНИЦИАЛИЗАЦИЯ ==========
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadLevels();
+    await loadTemplates();
+
+    document
+      .getElementById("openLevelModalBtn")
+      .addEventListener("click", openLevelModal);
+    document
+      .getElementById("openTemplateModalBtn")
+      .addEventListener("click", openTemplateModal);
+    document
+      .getElementById("addLevelToTemplateBtn")
+      .addEventListener("click", openSelectLevelModal);
+
+    document.getElementById("levelForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      saveLevel();
+    });
+    document.getElementById("templateForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      saveTemplate();
+    });
+
+    // Закрытие по клику вне модалки
+    document.querySelectorAll(".modal").forEach((modal) => {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.remove("active");
+      });
+    });
+
+    // Закрытие по Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document
+          .querySelectorAll(".modal.active")
+          .forEach((m) => m.classList.remove("active"));
+      }
+    });
+  });
+
+  window.editLevel = editLevel;
+  window.deleteLevel = deleteLevel;
+  window.editTemplate = editTemplate;
+  window.deleteTemplate = deleteTemplate;
+  window.printTemplate = printTemplate;
+  window.selectLevelForTemplate = selectLevelForTemplate;
+  window.closeLevelModal = closeLevelModal;
+  window.closeTemplateModal = closeTemplateModal;
+  window.closeSelectLevelModal = closeSelectLevelModal;
+  window.editLevelCount = editLevelCount;
+  window.removeLevelFromTemplate = removeLevelFromTemplate;
+</script>
+{% endblock %}

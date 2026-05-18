@@ -39,9 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'barcode',
-    'task',
-    'user',
     'teachbase',
+    'aliquotes',
 ]
 
 MIDDLEWARE = [
