@@ -1,0 +1,280 @@
+/* reagents.css — ACL Top 700, 2 ряда стоек, 6 лунок вертикально */
+
+.reagent-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reagent-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.reagent-header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.reagent-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.reagent-system {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.reagent-selector {
+  flex: 1;
+  min-width: 280px;
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border-color);
+}
+
+.racks-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.racks-row {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+}
+
+.racks-row h4 {
+  margin-bottom: 15px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+}
+
+.rack-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.rack {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  width: 100px;
+  text-align: center;
+}
+
+.rack-header {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  font-weight: bold;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.rack-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.reagent-slot {
+  height: 44px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  transition: var(--transition-normal);
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.reagent-slot.filled {
+  background: var(--success-gradient);
+  border-color: #10b981;
+}
+
+.reagent-slot:hover {
+  background: rgba(16, 185, 129, 0.2);
+  transform: scale(1.02);
+}
+
+.slot-number {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.reagent-content {
+  width: 100%;
+  text-align: center;
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.reagent-type {
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.reagent-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  margin: 2px auto 0;
+}
+
+/* Остальные стили (кнопки, статистика) без изменений */
+.reagent-group {
+  margin-bottom: 20px;
+}
+
+.reagent-group h4 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reagent-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.reagent-btn:hover {
+  background: var(--hover-bg);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.reagent-btn.selected {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
+}
+
+.allowed-racks {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 20px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.quick-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: white;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  font-weight: 600;
+}
+
+.quick-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-btn.btn-secondary {
+  background: var(--danger-gradient);
+}
+
+.reagent-stats {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(4px);
+  margin-top: 20px;
+}
+
+.reagent-stats h3 {
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.stat-item {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .reagent-system {
+    flex-direction: column;
+  }
+  .rack {
+    width: 80px;
+  }
+  .reagent-slot {
+    height: 36px;
+  }
+}

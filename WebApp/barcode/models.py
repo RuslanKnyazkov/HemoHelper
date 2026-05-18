@@ -24,5 +24,5 @@ class CustomLabel(models.Model):
         if self.type_labels == 'barcode':
             options['barcode'] = self.barcode
             options['number'] = self.barcode
-            options['code'] = 'BCN'
+            options['code'] = 'B2N' if self.barcode.isdigit() else 'BCN'
         return {'type': self.type_labels, 'text': self.name, 'description': self.description, 'anchor': 'c', 'size': 'l', **options}

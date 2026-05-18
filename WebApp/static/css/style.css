@@ -1,4 +1,3 @@
-@import "carousel.css";
 @import "barcode-mode.css";
 @import "roshe.css";
 @import "teach.css";
@@ -235,8 +234,7 @@ body {
 
 /* ===== Main Layout (уникальный) ===== */
 .main {
-  padding-top: calc(var(--header-height) + 20px);
-  padding: 20px;
+  padding-top: calc(var(--header-height));
   max-width: 1400px;
   margin: 0 auto;
 }
