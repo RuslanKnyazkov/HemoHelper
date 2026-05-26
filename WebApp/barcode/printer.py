@@ -82,7 +82,7 @@ class ZPL:
 
     def add_lot(self, lot):
         self.build.append(
-            f"^FO30,100^ADN,{self.font[self.size]},{self.font[self.size]}^FB388,1,0,C^FDlot: {lot}^FS")
+            f"^FO30,100^ADN,{self.font["s"]},{self.font["s"]}^FB388,1,0,C^FDlot: {lot}^FS")
 
     def add_barcode(self, number_barcode):
         by_value = 1.5 if self.code == "B2N" else 1

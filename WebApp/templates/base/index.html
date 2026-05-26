@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="{% static 'css/index.css' %}" />
 {% endblock %} {% block content %}
 <section class="hero">
+  <div class="hero-vials" id="hero-vials"></div>
   <div class="hero__content">
     <div class="hero__icon"><i class="fas fa-flask"></i></div>
     <h1 class="hero__title">Гемотест Хелпер</h1>
@@ -51,6 +52,13 @@
           placeholder="Номер пробы"
           autocomplete="off"
         />
+
+        <!-- БЛОК АНИМАЦИИ ШТРИХ-КОДА -->
+        <div id="barcode-animation" class="barcode-animation">
+          <div class="barcode-lines" id="barcode-lines"></div>
+          <div class="barcode-number" id="barcode-number"></div>
+        </div>
+
         <div class="settings-bar">
           <div class="retry-group">
             <span><i class="fas fa-copy"></i></span>
@@ -64,39 +72,6 @@
             <button class="format-btn" data-format="2of5">2of5</button>
           </div>
         </div>
-        <button class="print-main" id="print-barcode-btn">
-          <i class="fas fa-print"></i> Печать (Enter)
-        </button>
-        <button class="print-secondary" id="clear-input-btn">
-          <i class="fas fa-eraser"></i> Очистить поле
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- БЛОК 2: АЛИКВОТЫ (на всю ширину) -->
-<div class="dashboard-card">
-  <div class="card-content">
-    <div class="two-columns">
-      <div class="wheel-column">
-        <div class="wheel-container">
-          <div id="templates-wheel" class="wheel-canvas"></div>
-        </div>
-      </div>
-      <div class="function-column">
-        <div class="template-card" id="template-info">
-          <div style="text-align: center; padding: 30px">
-            <i class="fas fa-spinner fa-pulse" style="font-size: 36px"></i>
-            <div style="margin-top: 12px">Загрузка шаблонов...</div>
-          </div>
-        </div>
-        <button class="print-main" id="print-template-btn" disabled>
-          <i class="fas fa-print"></i> Печать шаблона
-        </button>
-        <button class="print-secondary" id="quick-aliquot-btn">
-          <i class="fas fa-bolt"></i> Быстрая аликвота
-        </button>
       </div>
     </div>
   </div>
@@ -157,7 +132,6 @@
 </div>
 {% endblock %} {% block extra_js %}
 <script>
-  // Функция сброса сессии
   function resetSession() {
     if (confirm("Вы уверены? Все данные текущей сессии будут удалены.")) {
       localStorage.removeItem("barcodeState");

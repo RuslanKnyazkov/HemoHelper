@@ -229,7 +229,7 @@ def aliquot_print(request):
             for tl in template.templatelevel_set.all().select_related('level'):
                 for i in range(tl.count):
                     levels_for_print.append({
-                        'text': f"{tl.level.name} {i+1}" if tl.count > 1 else tl.level.name,
+                        'text': f"{tl.level.name}" if tl.count > 1 else tl.level.name,
                         'lot': tl.level.lot_number,
                         'volume': tl.level.volume,
                         'retry': tl.count,
