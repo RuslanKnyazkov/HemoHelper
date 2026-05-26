@@ -76,6 +76,7 @@ class PrintMonitor:
                 for name in names:
                     zpl_code = self.zpl_generator.create_simple_text_zpl(
                         text=name['text'], date=True, lot=name['lot'])
+                    print(name)
                     self.print_manager.print_barcode(
                         zpl=zpl_code,
                         printer_name=printer_name,
