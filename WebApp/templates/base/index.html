@@ -1,147 +1,213 @@
 {% extends 'base.html' %} {% load static %} {% block title %}Гемотест Хелпер —
-Лабораторная панель{% endblock %} {% block extra_css %}
+Лабораторная информационная система{% endblock %} {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index.css' %}" />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
+  rel="stylesheet"
+/>
 {% endblock %} {% block content %}
+<!-- Анимированный фон -->
+<div class="animated-bg">
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+  <div class="gradient-orb orb-3"></div>
+  <div class="grid-pattern"></div>
+</div>
+
+<!-- Hero секция -->
 <section class="hero">
   <div class="hero-vials" id="hero-vials"></div>
   <div class="hero__content">
-    <div class="hero__icon"><i class="fas fa-flask"></i></div>
+    <div class="hero__icon">
+      <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
+        <path d="M30,70 L50,20 L70,70 Z" fill="url(#grad1)" opacity="0.9" />
+        <rect x="42" y="55" width="16" height="20" rx="3" fill="url(#grad2)" />
+        <circle cx="50" cy="45" r="8" fill="white" opacity="0.3" />
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#667eea" />
+            <stop offset="100%" stop-color="#764ba2" />
+          </linearGradient>
+          <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#10b981" />
+            <stop offset="100%" stop-color="#059669" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
     <h1 class="hero__title">Гемотест Хелпер</h1>
-    <p class="hero__subtitle">Лабораторная система</p>
+    <p class="hero__subtitle">
+      Современная лабораторная информационная система для автоматизации
+      процессов печати, управления анализами и контроля качества
+    </p>
   </div>
 </section>
 
-<!-- Компактная статистика -->
-<div class="quick-stats-bar">
-  <div class="quick-stat-item">
-    <i class="fas fa-print"></i>
-    <span class="quick-stat-label">Принтер:</span>
-    <span class="quick-stat-value" id="quick-stats-printer">—</span>
-  </div>
-  <div class="quick-stat-item">
-    <i class="fas fa-flask"></i>
-    <span class="quick-stat-label">Режим:</span>
-    <span class="quick-stat-value" id="quick-stats-mode">Обычная</span>
-  </div>
-  <div class="quick-stat-item">
-    <i class="fas fa-copy"></i>
-    <span class="quick-stat-label">Копий:</span>
-    <span class="quick-stat-value" id="quick-stats-retry">2</span>
-  </div>
-  <div class="quick-stat-item">
-    <i class="fas fa-barcode"></i>
-    <span class="quick-stat-label">Формат:</span>
-    <span class="quick-stat-value" id="quick-stats-format">CODE128</span>
-  </div>
-</div>
-
-<!-- БЛОК 1: БЫСТРАЯ ПЕЧАТЬ (на всю ширину) -->
-<div class="dashboard-card">
-  <div class="card-content">
-    <div class="two-columns">
-      <div class="wheel-column">
-        <div class="wheel-container">
-          <div id="modes-wheel" class="wheel-canvas"></div>
-        </div>
-      </div>
-      <div class="function-column">
-        <input
-          type="text"
-          id="barcode-input"
-          class="input-large"
-          placeholder="Номер пробы"
-          autocomplete="off"
-        />
-
-        <!-- БЛОК АНИМАЦИИ ШТРИХ-КОДА -->
-        <div id="barcode-animation" class="barcode-animation">
-          <div class="barcode-lines" id="barcode-lines"></div>
-          <div class="barcode-number" id="barcode-number"></div>
-        </div>
-
-        <div class="settings-bar">
-          <div class="retry-group">
-            <span><i class="fas fa-copy"></i></span>
-            <button class="retry-btn" data-retry="1">1</button>
-            <button class="retry-btn active" data-retry="2">2</button>
-            <button class="retry-btn" data-retry="3">3</button>
-          </div>
-          <div class="format-group">
-            <span><i class="fas fa-barcode"></i></span>
-            <button class="format-btn active" data-format="128">CODE128</button>
-            <button class="format-btn" data-format="2of5">2of5</button>
-          </div>
-        </div>
+<main class="main-content">
+  <!-- Панель принтеров -->
+  <div class="printer-panel">
+    <div class="panel-header">
+      <h2><i class="fas fa-print"></i> Управление печатью</h2>
+      <div class="printer-selector">
+        <select id="printer-select" class="printer-select">
+          <option value="">🔍 Поиск принтеров...</option>
+        </select>
+        <button class="btn-refresh" id="refresh-printers">
+          <i class="fas fa-sync-alt"></i> Обновить
+        </button>
       </div>
     </div>
+    <div class="printer-status" id="printer-status">
+      <span class="status-dot"></span>
+      <span id="printer-name">Принтер не выбран</span>
+    </div>
   </div>
-</div>
 
-<!-- БЛОК 3: БЫСТРЫЕ ДЕЙСТВИЯ (на всю ширину) -->
-<div class="quick-actions-full">
-  <div class="quick-actions-title">
-    <i class="fas fa-bolt"></i>
-    <span>Быстрые действия</span>
+  <!-- Две колонки -->
+  <div class="two-columns">
+    <!-- Левая колонка: Баркоды -->
+    <div class="barcode-card">
+      <div class="card-title">
+        <i class="fas fa-barcode" style="color: #667eea"></i>
+        <span>Быстрая печать наклеек</span>
+      </div>
+
+      <input
+        type="text"
+        id="barcode-input"
+        class="barcode-input"
+        placeholder="Введите или отсканируйте номер пробы"
+        autocomplete="off"
+      />
+
+      <div class="mode-buttons" id="mode-buttons">
+        <button class="mode-btn active" data-mode="default">Обычная</button>
+        <button class="mode-btn" data-mode="testosterone">
+          Тестостерон 1:10
+        </button>
+        <button class="mode-btn" data-mode="a-tpo">A-TPO 1:5</button>
+        <button class="mode-btn" data-mode="prog">Прогестерон 1:10</button>
+      </div>
+
+      <div class="copy-control">
+        <span style="font-size: 13px; color: var(--text-muted)"
+          >Количество копий:</span
+        >
+        <button class="copy-btn" data-retry="1">1</button>
+        <button class="copy-btn active" data-retry="2">2</button>
+        <button class="copy-btn" data-retry="3">3</button>
+      </div>
+
+      <button class="btn-print" id="print-barcode-btn">
+        <i class="fas fa-print"></i> Печать (Enter)
+      </button>
+    </div>
+
+    <!-- Правая колонка: Анализы -->
+    <div class="analysis-card">
+      <div class="card-title">
+        <i class="fas fa-microscope" style="color: #f093fb"></i>
+        <span>Активные анализы</span>
+      </div>
+
+      <div class="analysis-list" id="analysis-list">
+        <div class="analysis-item" data-test="TSH">
+          <div class="analysis-info">
+            <div class="analysis-icon"><i class="fas fa-tint"></i></div>
+            <div>
+              <div class="analysis-name">Тиреотропный гормон (ТТГ)</div>
+              <div class="analysis-status">В очереди: 3 пробы</div>
+            </div>
+          </div>
+          <div class="analysis-badge badge-waiting">В обработке</div>
+        </div>
+        <div class="analysis-item" data-test="FT4">
+          <div class="analysis-info">
+            <div class="analysis-icon"><i class="fas fa-flask"></i></div>
+            <div>
+              <div class="analysis-name">Свободный тироксин (FT4)</div>
+              <div class="analysis-status">В очереди: 5 проб</div>
+            </div>
+          </div>
+          <div class="analysis-badge badge-waiting">В обработке</div>
+        </div>
+        <div class="analysis-item" data-test="CORT">
+          <div class="analysis-info">
+            <div class="analysis-icon"><i class="fas fa-droplet"></i></div>
+            <div>
+              <div class="analysis-name">Кортизол</div>
+              <div class="analysis-status">В очереди: 2 пробы</div>
+            </div>
+          </div>
+          <div class="analysis-badge badge-ready">Готов к запуску</div>
+        </div>
+        <div class="analysis-item" data-test="CA125">
+          <div class="analysis-info">
+            <div class="analysis-icon"><i class="fas fa-bug"></i></div>
+            <div>
+              <div class="analysis-name">CA-125 (Онкомаркер)</div>
+              <div class="analysis-status">В очереди: 1 проба</div>
+            </div>
+          </div>
+          <div class="analysis-badge badge-ready">Готов к запуску</div>
+        </div>
+        <div class="analysis-item" data-test="RF">
+          <div class="analysis-info">
+            <div class="analysis-icon"><i class="fas fa-shield-alt"></i></div>
+            <div>
+              <div class="analysis-name">Ревматоидный фактор</div>
+              <div class="analysis-status">В очереди: 4 пробы</div>
+            </div>
+          </div>
+          <div class="analysis-badge badge-waiting">В обработке</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="quick-actions-grid">
-    <div class="quick-action-card" onclick="window.location.href = '/barcode/'">
-      <div class="quick-action-icon"><i class="fas fa-barcode"></i></div>
-      <div class="quick-action-title">Полный режим Баркодов</div>
-      <div class="quick-action-desc">Расширенные настройки печати</div>
+
+  <!-- Модули с анимацией манипулятора -->
+  <div class="modules-grid">
+    <div class="module-card" onclick="location.href = '/aliquots/'">
+      <div class="module-icon"><i class="fas fa-layer-group"></i></div>
+      <div class="module-title">Многоуровневые аликвоты</div>
+      <div class="module-desc">
+        Создание и управление аликвотами с поддержкой многоуровневых шаблонов
+      </div>
+      <div class="robot-arm">
+        <div class="arm-grip"></div>
+        <div class="arm-beam"></div>
+      </div>
     </div>
-    <div
-      class="quick-action-card"
-      onclick="window.location.href = '/aliquots/'"
-    >
-      <div class="quick-action-icon"><i class="fas fa-layer-group"></i></div>
-      <div class="quick-action-title">Управление шаблонами</div>
-      <div class="quick-action-desc">Создание и редактирование</div>
+    <div class="module-card" onclick="location.href = '/teach/mapping/'">
+      <div class="module-icon"><i class="fas fa-microscope"></i></div>
+      <div class="module-title">Roche Cobas 8000</div>
+      <div class="module-desc">
+        Маппинг реагентов, управление модулями и каналами анализатора
+      </div>
+      <div class="robot-arm">
+        <div class="arm-grip"></div>
+        <div class="arm-beam"></div>
+      </div>
     </div>
-    <div
-      class="quick-action-card"
-      onclick="window.location.href = '/teach/mapping/'"
-    >
-      <div class="quick-action-icon"><i class="fas fa-microscope"></i></div>
-      <div class="quick-action-title">Roche Cobas 8000</div>
-      <div class="quick-action-desc">Маппинг реагентов</div>
-    </div>
-    <div
-      class="quick-action-card"
-      onclick="if (window.PrinterManager) PrinterManager.refreshPrinters();"
-    >
-      <div class="quick-action-icon"><i class="fas fa-sync-alt"></i></div>
-      <div class="quick-action-title">Обновить принтеры</div>
-      <div class="quick-action-desc">Поиск доступных принтеров</div>
-    </div>
-    <div
-      class="quick-action-card"
-      onclick="
-        if (window.KeyboardShortcuts) KeyboardShortcuts.showShortcutsHelp();
-      "
-    >
-      <div class="quick-action-icon"><i class="fas fa-keyboard"></i></div>
-      <div class="quick-action-title">Горячие клавиши</div>
-      <div class="quick-action-desc">Справка по сочетаниям</div>
-    </div>
-    <div class="quick-action-card" onclick="resetSession()">
-      <div class="quick-action-icon"><i class="fas fa-trash-alt"></i></div>
-      <div class="quick-action-title">Сброс сессии</div>
-      <div class="quick-action-desc">Очистить все данные</div>
+    <div class="module-card" onclick="location.href = '/reagents/'">
+      <div class="module-icon"><i class="fas fa-flask"></i></div>
+      <div class="module-title">ACL Top 700</div>
+      <div class="module-desc">
+        Управление реагентами гемостаза, размещение на стойках
+      </div>
+      <div class="robot-arm">
+        <div class="arm-grip"></div>
+        <div class="arm-beam"></div>
+      </div>
     </div>
   </div>
+</main>
+
+<!-- Уведомление -->
+<div id="toast" class="toast-notification">
+  <i class="fas fa-check-circle" style="color: #10b981"></i>
+  <span id="toast-message">Готово!</span>
 </div>
 {% endblock %} {% block extra_js %}
-<script>
-  function resetSession() {
-    if (confirm("Вы уверены? Все данные текущей сессии будут удалены.")) {
-      localStorage.removeItem("barcodeState");
-      localStorage.removeItem("reagentData");
-      localStorage.removeItem("barcodeTemplates");
-      showNotification("Данные сброшены", "success");
-      setTimeout(() => location.reload(), 1000);
-    }
-  }
-  window.resetSession = resetSession;
-</script>
 <script src="{% static 'js/index.js' %}"></script>
 {% endblock %}

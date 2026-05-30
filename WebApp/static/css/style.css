@@ -234,9 +234,8 @@ body {
 
 /* ===== Main Layout (уникальный) ===== */
 .main {
-  padding-top: calc(var(--header-height));
   max-width: 1400px;
-  margin: 0 auto;
+  margin-top: calc(70px);
 }
 
 /* Hero, Modules Grid, Container Modern, etc. удалены — они дублируются в barcode-mode.css */

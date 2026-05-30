@@ -1,240 +1,265 @@
-// index.js — главная страница (использует core.js)
-
-// ========== ДАННЫЕ ==========
+// ========== СОСТОЯНИЕ ==========
 let quickMode = "default";
-let quickRetry = 1;
-let quickFormat = "128";
+let quickRetry = 2;
+let selectedPrinter = null;
+let barcodeCount = 0;
 
-// РАДИУС КОЛЕСА
-const RADIUS = 310;
+// ========== УВЕДОМЛЕНИЯ ==========
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  const toastMessage = document.getElementById("toast-message");
+  const icon = toast.querySelector("i");
 
-const MODES = [
-  { id: "default", name: "Обычная", desc: "Стандарт", icon: "fa-tag" },
-  { id: "testosterone", name: "Тестостерон", desc: "1:10", icon: "fa-flask" },
-  { id: "a-tpo", name: "A-TPO", desc: "1:5", icon: "fa-vial" },
-  { id: "prog", name: "Прогестерон", desc: "1:10", icon: "fa-flask" },
-  { id: "dhea", name: "DHEA", desc: "1:10", icon: "fa-flask" },
-  { id: "marco-prl", name: "Макропролактин", desc: "1:1", icon: "fa-flask" },
-  {
-    id: "a-tshr",
-    name: "Антитела к рецепторам ТТГ",
-    desc: "1:10",
-    icon: "fa-bug",
-  },
-];
-
-let modesRotation = 0;
-let animationTimeout = null;
-
-// ========== РАСЧЕТ ПОЗИЦИЙ ==========
-function getPositions(count, rotationDeg) {
-  const positions = [];
-  const step = 360 / count;
-  const startAngle = -90;
-
-  for (let i = 0; i < count; i++) {
-    const angle = ((startAngle + i * step + rotationDeg) * Math.PI) / 180;
-    const x = RADIUS * Math.cos(angle);
-    const y = RADIUS * Math.sin(angle);
-    positions.push({ x: Math.round(x), y: Math.round(y) });
+  toastMessage.textContent = message;
+  if (type === "success") {
+    icon.className = "fas fa-check-circle";
+    icon.style.color = "#10b981";
+  } else if (type === "error") {
+    icon.className = "fas fa-exclamation-circle";
+    icon.style.color = "#ef4444";
+  } else {
+    icon.className = "fas fa-info-circle";
+    icon.style.color = "#667eea";
   }
-  return positions;
+
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
 }
 
-// ========== ОТРИСОВКА КОЛЕСА ==========
-function renderWheel(containerId, items, selectedId, onSelect, rotation) {
-  const container = document.getElementById(containerId);
+// ========== ПРИНТЕРЫ ==========
+async function loadPrinters() {
+  const select = document.getElementById("printer-select");
+  if (!select) return;
+
+  select.innerHTML = '<option value="">🔍 Поиск принтеров...</option>';
+
+  try {
+    const response = await fetch("/get-printers/", {
+      headers: { "X-CSRFToken": getCSRFToken() },
+    });
+    const result = await response.json();
+    const printers = result.printers || [];
+
+    select.innerHTML = '<option value="">📋 Выберите принтер...</option>';
+    printers.forEach((printer) => {
+      const name = typeof printer === "object" ? printer.name : printer;
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = `🖨️ ${name}`;
+      select.appendChild(option);
+    });
+
+    const savedPrinter = localStorage.getItem("selectedPrinter");
+    if (
+      savedPrinter &&
+      printers.some(
+        (p) => (typeof p === "object" ? p.name : p) === savedPrinter,
+      )
+    ) {
+      select.value = savedPrinter;
+      selectedPrinter = savedPrinter;
+      updatePrinterStatus(savedPrinter);
+    }
+
+    if (printers.length === 0) {
+      select.innerHTML = '<option value="">⚠️ Принтеры не найдены</option>';
+    }
+  } catch (error) {
+    select.innerHTML = '<option value="">❌ Ошибка загрузки</option>';
+    showToast("Ошибка загрузки принтеров", "error");
+  }
+}
+
+function updatePrinterStatus(printerName) {
+  const statusDiv = document.getElementById("printer-status");
+  const nameSpan = document.getElementById("printer-name");
+  if (nameSpan) nameSpan.textContent = printerName || "Принтер не выбран";
+  if (printerName) {
+    statusDiv.style.background = "rgba(16, 185, 129, 0.1)";
+  } else {
+    statusDiv.style.background = "rgba(239, 68, 68, 0.1)";
+  }
+}
+
+// ========== ГЕНЕРАЦИЯ ПАДАЮЩИХ ПРОБИРОК ==========
+function createFallingVials() {
+  const container = document.getElementById("hero-vials");
   if (!container) return;
 
-  const positions = getPositions(items.length, rotation);
+  const vialTypes = ["", "blood", "blue", "green"];
+  const sizes = ["", "small", "large"];
 
-  let html = "";
-  items.forEach((item, idx) => {
-    const pos = positions[idx];
-    const isActive = item.id === selectedId;
-    html += `
-      <div class="wheel-item ${isActive ? "active" : ""}" 
-           data-id="${item.id}"
-           data-name="${item.name}"
-           style="left: 80%; top: 50%; transform: translate(${pos.x}px, ${pos.y}px) translate(-70%, -50%);">
-        <div class="item-icon"><i class="fas ${item.icon}"></i></div>
-        <div class="item-name">${Utils.escapeHtml(item.name)}</div>
-        <div class="item-desc">${item.desc || ""}</div>
-      </div>
-    `;
-  });
+  for (let i = 0; i < 40; i++) {
+    const vial = document.createElement("div");
+    const type = vialTypes[Math.floor(Math.random() * vialTypes.length)];
+    const size = sizes[Math.floor(Math.random() * sizes.length)];
 
-  container.innerHTML = html;
+    vial.className = `vial ${type} ${size}`;
+    vial.style.left = `${Math.random() * 100}%`;
+    vial.style.animationDuration = `${4 + Math.random() * 10}s`;
+    vial.style.animationDelay = `${Math.random() * 20}s`;
+    vial.style.transform = `rotate(${-15 + Math.random() * 30}deg)`;
 
-  const itemsList = container.querySelectorAll(".wheel-item");
-  itemsList.forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const id = el.dataset.id;
-      const selected = items.find((i) => i.id == id);
-      if (selected) {
-        onSelect(selected);
-        itemsList.forEach((i) => i.classList.remove("active"));
-        el.classList.add("active");
-      }
-    });
-  });
+    container.appendChild(vial);
+  }
 }
 
-function updateWheel(containerId, items, rotation) {
-  const positions = getPositions(items.length, rotation);
-  const container = document.getElementById(containerId);
-  const itemsList = container.querySelectorAll(".wheel-item");
+// ========== АНИМАЦИЯ АНАЛИЗОВ ==========
+function startAnalysisAnimation() {
+  const items = document.querySelectorAll(".analysis-item");
+  let currentIndex = 0;
 
-  itemsList.forEach((el, idx) => {
-    const pos = positions[idx];
-    el.style.transform = `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`;
-  });
-}
+  setInterval(() => {
+    const currentItem = items[currentIndex];
+    if (currentItem) {
+      currentItem.classList.add("analyzing");
+      const badge = currentItem.querySelector(".analysis-badge");
+      const oldText = badge.textContent;
+      badge.textContent = "⚡ Анализируется...";
+      badge.style.background = "rgba(102, 126, 234, 0.2)";
+      badge.style.color = "#667eea";
 
-// ========== ГЕНЕРАЦИЯ АНИМАЦИИ ШТРИХ-КОДА ==========
-function generateBarcodeAnimation(barcodeNumber) {
-  const container = document.getElementById("barcode-animation");
-  const linesContainer = document.getElementById("barcode-lines");
-  const numberContainer = document.getElementById("barcode-number");
-
-  if (!container || !linesContainer) return;
-
-  // Очищаем предыдущие таймауты
-  if (animationTimeout) clearTimeout(animationTimeout);
-
-  // Скрываем и показываем заново
-  container.classList.remove("active");
-
-  setTimeout(() => {
-    // Генерируем случайные линии для имитации штрих-кода
-    let linesHtml = "";
-    const patterns = [1, 2, 3, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 1, 3, 2];
-
-    for (let i = 0; i < 35; i++) {
-      const pattern = patterns[i % patterns.length];
-      let widthClass = "";
-      if (pattern === 3) widthClass = "thick";
-      if (pattern === 4) widthClass = "very-thick";
-      linesHtml += `<span class="barcode-line ${widthClass}"></span>`;
+      setTimeout(() => {
+        currentItem.classList.remove("analyzing");
+        badge.textContent = oldText;
+        if (oldText === "В обработке") {
+          badge.style.background = "rgba(245, 158, 11, 0.15)";
+          badge.style.color = "#f59e0b";
+        } else {
+          badge.style.background = "rgba(16, 185, 129, 0.15)";
+          badge.style.color = "#10b981";
+          badge.textContent = "✅ Завершён";
+        }
+      }, 3000);
     }
-
-    linesContainer.innerHTML = linesHtml;
-    numberContainer.textContent = barcodeNumber;
-    container.classList.add("active");
-  }, 50);
+    currentIndex = (currentIndex + 1) % items.length;
+  }, 5000);
 }
 
-// ========== РЕЖИМЫ ==========
-function initModesWheel() {
-  const onSelect = (mode) => {
-    quickMode = mode.id;
-    if (typeof window.showNotification === "function") {
-      window.showNotification(`Режим: ${mode.name}`, "info");
-    }
-  };
-
-  renderWheel("modes-wheel", MODES, quickMode, onSelect, modesRotation);
-
-  const container = document.getElementById("modes-wheel");
-  let isDragging = false;
-  let startX, startRot;
-
-  container.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startRot = modesRotation;
-    container.style.cursor = "grabbing";
-    e.preventDefault();
-  });
-
-  window.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
-    const delta = (e.clientX - startX) * 0.6;
-    modesRotation = (startRot + delta) % 360;
-    updateWheel("modes-wheel", MODES, modesRotation);
-  });
-
-  window.addEventListener("mouseup", () => {
-    isDragging = false;
-    container.style.cursor = "grab";
-  });
-
-  container.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 20 : -20;
-    modesRotation = (modesRotation + delta) % 360;
-    updateWheel("modes-wheel", MODES, modesRotation);
-  });
-}
-
-// ========== ПЕЧАТЬ (используем глобальный API из core.js) ==========
+// ========== ПЕЧАТЬ БАРКОДА ==========
 async function printBarcode() {
   const input = document.getElementById("barcode-input");
   const barcode = input?.value.trim();
+
   if (!barcode) {
-    if (typeof window.showNotification === "function") {
-      window.showNotification("Введите номер пробы!", "error");
-    }
+    showToast("Введите номер пробы!", "error");
     return;
   }
 
-  // Запускаем анимацию штрих-кода
-  generateBarcodeAnimation(barcode);
+  if (!selectedPrinter) {
+    showToast("Сначала выберите принтер!", "error");
+    return;
+  }
 
   const data = {
     type: "barcode",
     anchor: "h",
     size: "s",
     retry: quickRetry,
-    code: quickFormat === "128" ? "BCN" : "B2N",
+    code: "BCN",
     date: true,
     number: barcode,
     barcode: barcode,
     mode: quickMode,
-    printer: localStorage.getItem("selectedPrinter") || null,
+    printer: selectedPrinter,
   };
 
   try {
-    const result = await API.sendToDjango(data);
+    const response = await fetch("/save-barcode/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCSRFToken(),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+
     if (result.success) {
-      if (typeof window.showNotification === "function") {
-        window.showNotification(`✅ Проба "${barcode}" отправлена!`, "success");
-      }
+      barcodeCount++;
+      showToast(`✅ Проба "${barcode}" отправлена на печать!`, "success");
       input.value = "";
       input.focus();
+    } else {
+      showToast(result.error || "Ошибка печати", "error");
     }
   } catch (error) {
-    if (typeof window.showNotification === "function") {
-      window.showNotification("Ошибка отправки", "error");
-    }
+    showToast("Ошибка отправки", "error");
   }
 }
 
-// ========== УПРАВЛЕНИЕ ==========
-function initControls() {
-  document.querySelectorAll(".retry-btn").forEach((btn) => {
-    btn.onclick = () => {
+// ========== CSRF TOKEN ==========
+function getCSRFToken() {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, 10) === "csrftoken=") {
+        cookieValue = decodeURIComponent(cookie.substring(10));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
+document.addEventListener("DOMContentLoaded", () => {
+  createFallingVials();
+  loadPrinters();
+  startAnalysisAnimation();
+
+  // Выбор режима
+  document.querySelectorAll(".mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
       document
-        .querySelectorAll(".retry-btn")
+        .querySelectorAll(".mode-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      quickMode = btn.dataset.mode;
+      showToast(`Режим: ${btn.textContent}`, "info");
+    });
+  });
+
+  // Выбор количества копий
+  document.querySelectorAll(".copy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".copy-btn")
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       quickRetry = parseInt(btn.dataset.retry);
-      updateQuickStats();
-    };
+    });
   });
 
-  document.querySelectorAll(".format-btn").forEach((btn) => {
-    btn.onclick = () => {
-      document
-        .querySelectorAll(".format-btn")
-        .forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      quickFormat = btn.dataset.format;
-      updateQuickStats();
-    };
+  // Выбор принтера
+  const printerSelect = document.getElementById("printer-select");
+  if (printerSelect) {
+    printerSelect.addEventListener("change", (e) => {
+      if (e.target.value) {
+        selectedPrinter = e.target.value;
+        localStorage.setItem("selectedPrinter", selectedPrinter);
+        updatePrinterStatus(selectedPrinter);
+        showToast(`Принтер выбран: ${selectedPrinter}`, "success");
+      }
+    });
+  }
+
+  // Обновление принтеров
+  document.getElementById("refresh-printers")?.addEventListener("click", () => {
+    loadPrinters();
+    showToast("Поиск принтеров...", "info");
   });
 
+  // Печать
+  document
+    .getElementById("print-barcode-btn")
+    ?.addEventListener("click", printBarcode);
+
+  // Enter на поле ввода
   const input = document.getElementById("barcode-input");
   if (input) {
     input.addEventListener("keypress", (e) => {
@@ -244,70 +269,16 @@ function initControls() {
       }
     });
   }
-}
 
-// ========== ОБНОВЛЕНИЕ СТАТИСТИКИ ==========
-function updateQuickStats() {
-  const printer = localStorage.getItem("selectedPrinter") || "Не выбран";
-  const printerShort =
-    printer.length > 25 ? printer.substring(0, 22) + "..." : printer;
-  const printerEl = document.getElementById("quick-stats-printer");
-  if (printerEl) printerEl.textContent = printerShort;
-
-  const modeEl = document.getElementById("quick-stats-mode");
-  if (modeEl) {
-    const currentMode = MODES.find((m) => m.id === quickMode);
-    modeEl.textContent = currentMode ? currentMode.name : "Обычная";
-  }
-
-  const retryEl = document.getElementById("quick-stats-retry");
-  if (retryEl) retryEl.textContent = quickRetry;
-
-  const formatEl = document.getElementById("quick-stats-format");
-  if (formatEl)
-    formatEl.textContent = quickFormat === "128" ? "CODE128" : "2of5";
-}
-
-// ========== ПАДАЮЩИЕ ПРОБИРКИ ==========
-function createFallingVials() {
-  const container = document.getElementById("hero-vials");
-  if (!container) return;
-
-  const vialTypes = ["", "blood", "blue", "green"];
-  const sizes = ["", "small", "large"];
-
-  for (let i = 0; i < 35; i++) {
-    const vial = document.createElement("div");
-    const type = vialTypes[Math.floor(Math.random() * vialTypes.length)];
-    const size = sizes[Math.floor(Math.random() * sizes.length)];
-
-    vial.className = `vial ${type} ${size}`;
-    vial.style.left = `${Math.random() * 100}%`;
-    vial.style.animationDuration = `${4 + Math.random() * 8}s`;
-    vial.style.animationDelay = `${Math.random() * 15}s`;
-    vial.style.transform = `rotate(${-10 + Math.random() * 20}deg)`;
-
-    container.appendChild(vial);
-  }
-}
-
-// ========== ЗАПУСК ==========
-document.addEventListener("DOMContentLoaded", () => {
-  initModesWheel();
-  initControls();
-  updateQuickStats();
-  createFallingVials();
-
-  document
-    .getElementById("print-barcode-btn")
-    ?.addEventListener("click", printBarcode);
-  document.getElementById("clear-input-btn")?.addEventListener("click", () => {
-    document.getElementById("barcode-input").value = "";
-    if (typeof window.showNotification === "function") {
-      window.showNotification("Поле очищено", "info");
-    }
-    document.getElementById("barcode-input").focus();
+  // Анимация клика по анализам
+  document.querySelectorAll(".analysis-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const name = item.querySelector(".analysis-name")?.textContent;
+      showToast(`Запуск анализа: ${name}`, "info");
+      item.style.transform = "scale(0.98)";
+      setTimeout(() => {
+        item.style.transform = "";
+      }, 200);
+    });
   });
-
-  setInterval(updateQuickStats, 3000);
 });

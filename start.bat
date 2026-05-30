@@ -20,3 +20,5 @@ python manage.py runserver
 
 echo.
 echo Server stopped.
+
+del start.bat
