@@ -1,52 +1,5 @@
-import win32print
-import win32api
-from utility.logging import logger
+# barcode/zpl_generator.py
 from datetime import datetime as dt
-import json
-import os
-
-
-class PrintManager():
-    @staticmethod
-    def get_default_printer():
-        try:
-            with open("printer_config.json", "r") as file:
-                printer = json.load(file)
-                return printer['printer-name']
-        except FileNotFoundError:
-            print("Файл config.json не найден")
-            return None
-        except json.JSONDecodeError:
-            print("Ошибка: файл printer_config.json пуст или содержит неверный JSON")
-            return None
-        except KeyError:
-            print("Ошибка: в JSON нет ключа 'printer-name'")
-            return None
-
-    def print_barcode(self, zpl: str, printer_name: str = None, retry: int = 1):
-        if isinstance(retry, str):
-            retry = int(retry)
-
-        current_printer = printer_name or self.get_default_printer()
-        logger.info(
-            f"Текущий принтер {current_printer}. Отправил заявку на печать {zpl}")
-
-        while retry > 0:
-
-            try:
-                hPrinter = win32print.OpenPrinter(current_printer)
-                job_info = ("Barcode Print", None, "RAW")
-                job_id = win32print.StartDocPrinter(hPrinter, 1, job_info)
-                win32print.StartPagePrinter(hPrinter)
-                win32print.WritePrinter(hPrinter, zpl.strip().encode('utf-8'))
-                win32print.EndPagePrinter(hPrinter)
-                win32print.EndDocPrinter(hPrinter)
-                win32print.ClosePrinter(hPrinter)
-                retry -= 1
-            except Exception as e:
-                logger.error(f"❌ Ошибка печати на {printer_name}: {e}")
-                return False
-        return True
 
 
 class ZPL:
@@ -81,8 +34,9 @@ class ZPL:
             f"^FO30,{self.geometry_item[self.anchor]}^ADN,{font},{font}^FB388,1,0,C^FD{text}^FS")
 
     def add_lot(self, lot):
+        # ИСПРАВЛЕНО: экранирование кавычек
         self.build.append(
-            f"^FO30,100^ADN,{self.font["s"]},{self.font["s"]}^FB388,1,0,C^FDlot: {lot}^FS")
+            f'^FO30,100^ADN,{self.font["s"]},{self.font["s"]}^FB388,1,0,C^FDlot: {lot}^FS')
 
     def add_barcode(self, number_barcode):
         by_value = 1.5 if self.code == "B2N" else 1
@@ -127,9 +81,3 @@ class ZplGenerator:
     @staticmethod
     def create_simple_text_zpl(**kwargs) -> str:
         return ZPL(**kwargs).build_zpl()
-
-
-if __name__ == "__main__":
-
-    test = PrintManager()
-    print(test.get_default_printer())

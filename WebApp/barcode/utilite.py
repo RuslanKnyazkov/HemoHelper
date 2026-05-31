@@ -1,15 +1,22 @@
 # barcode/utilite.py
 from django.http import JsonResponse
 from utility.logging import logger
+from printer import get_printer  # ← ИСПРАВЛЕНО: импорт из printer, а не из .
+from .zpl_generator import ZplGenerator  # нужно создать этот файл
 
 
 class PrintMonitor:
     def __init__(self):
-        from .printer import PrintManager, ZplGenerator
-        self.print_manager = PrintManager()
+        # Получаем кроссплатформенный принтер
+        self.printer = get_printer()
         self.zpl_generator = ZplGenerator
         logger.info(
-            f"🎯 Принтер по умолчанию: {self.print_manager.get_default_printer()}")
+            f"🎯 Принтер по умолчанию: {self.printer.get_default_printer()}")
+        logger.info(f"🖥️ Платформа: {self._get_platform()}")
+
+    def _get_platform(self):
+        import platform
+        return platform.system()
 
     def process_json_data(self, data):
         """Обработка JSON данных с поддержкой внешнего принтера"""
@@ -32,7 +39,7 @@ class PrintMonitor:
                     return JsonResponse({'success': False, 'error': 'Нет текста'}, status=400)
 
                 zpl_code = self.zpl_generator.create_simple_text_zpl(**data)
-                success = self.print_manager.print_barcode(
+                success = self.printer.print_zpl(
                     zpl=zpl_code,
                     printer_name=printer_name
                 )
@@ -40,7 +47,7 @@ class PrintMonitor:
                 return JsonResponse({
                     'success': True,
                     'message': 'Текст напечатан',
-                    'printer': printer_name or self.print_manager.get_default_printer()
+                    'printer': printer_name or self.printer.get_default_printer()
                 } if success else {
                     'success': False,
                     'error': 'Ошибка печати'
@@ -53,9 +60,8 @@ class PrintMonitor:
                     return JsonResponse({'success': False, 'error': 'Нет штрих-кода'}, status=400)
 
                 retry = int(data.get('retry', 1))
-
                 zpl_code = self.zpl_generator.create_simple_text_zpl(**data)
-                success = self.print_manager.print_barcode(
+                success = self.printer.print_zpl(
                     zpl=zpl_code,
                     printer_name=printer_name,
                     retry=retry
@@ -64,7 +70,7 @@ class PrintMonitor:
                 return JsonResponse({
                     'success': True,
                     'message': f'Штрихкод "{barcode}" отправлен на печать',
-                    'printer': printer_name or self.print_manager.get_default_printer()
+                    'printer': printer_name or self.printer.get_default_printer()
                 } if success else {
                     'success': False,
                     'error': 'Ошибка печати штрих-кода'
@@ -72,29 +78,34 @@ class PrintMonitor:
 
             # --- Тип: aliquote ---
             elif type_label == "aliquote":
-                names = data.pop("levels")
-                for name in names:
+                levels = data.get("levels", [])
+                for level in levels:
                     zpl_code = self.zpl_generator.create_simple_text_zpl(
-                        text=name['text'], date=True, lot=name['lot'])
-                    print(name)
-                    self.print_manager.print_barcode(
+                        text=level.get('text', ''),
+                        date=True,
+                        lot=level.get('lot')
+                    )
+                    self.printer.print_zpl(
                         zpl=zpl_code,
                         printer_name=printer_name,
-                        retry=name.get('retry', 1)
+                        retry=level.get('retry', 1)
                     )
                 return JsonResponse({'success': True, 'message': 'Пакетная печать завершена'})
 
             # --- Тип: serial ---
             elif type_label == "serial":
-                ranges = data.pop('retry')
-                text = data.pop('text')
-                if '-' in ranges:
+                ranges = data.get('retry')
+                text = data.get('text', '')
+
+                if ranges and '-' in str(ranges):
                     try:
                         start, end = map(int, ranges.split('-'))
                         for i in range(start, end + 1):
                             zpl_code = self.zpl_generator.create_simple_text_zpl(
-                                text=f'{text}\n{i}', **data)
-                            self.print_manager.print_barcode(
+                                text=f'{text}\n{i}',
+                                **{k: v for k, v in data.items() if k not in ['type', 'retry', 'text']}
+                            )
+                            self.printer.print_zpl(
                                 zpl=zpl_code,
                                 printer_name=printer_name
                             )

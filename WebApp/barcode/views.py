@@ -1,6 +1,6 @@
+# barcode/views.py
 from django.http import JsonResponse
 import json
-from .printer import PrintManager
 from .utilite import PrintMonitor
 from django.views.decorators.csrf import csrf_exempt
 from utility.controller import PcController
@@ -8,41 +8,46 @@ from .models import CustomLabel
 from django.views.generic import CreateView
 from .forms import LabelCreateForm
 from django.urls import reverse_lazy
-from django.shortcuts import render
-import win32print
+from printer import get_printer  # ← ИСПРАВЛЕНО: импорт из printer
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 def enum_local_printers():
-    """Получает список локальных принтеров через win32print"""
+    """Получает список локальных принтеров"""
+    from printer import get_printer
 
-    # if PrintManager.get_default_printer():
-    # return [PrintManager.get_default_printer()]
-    # else:
-    try:
-        # Получаем все принтеры
-        printers = win32print.EnumPrinters(
-            win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
-        )
-        # Извлекаем имена
-        printer_names = [printer[2]
-                         # [2] — это имя принтера
-                         for printer in printers]
-        return sorted(printer_names)  # Сортируем по алфавиту
-    except Exception as e:
-        logger.error(f"❌ Ошибка при получении принтеров: {e}")
-        return []
+    printer_instance = get_printer()
+
+    # Если это WindowsPrinter, используем win32print
+    if hasattr(printer_instance, 'win32print'):
+        try:
+            printers = printer_instance.win32print.EnumPrinters(
+                printer_instance.win32print.PRINTER_ENUM_LOCAL |
+                printer_instance.win32print.PRINTER_ENUM_CONNECTIONS
+            )
+            printer_names = [printer[2] for printer in printers]
+            return sorted(printer_names)
+        except Exception as e:
+            logger.error(f"❌ Ошибка при получении принтеров: {e}")
+            return []
+
+    # Для других ОС возвращаем принтер по умолчанию
+    default = printer_instance.get_default_printer()
+    return [default] if default else []
 
 
 def get_printers(request):
-    """API: возвращает список доступных принтеров (реальные из Windows)"""
+    """API: возвращает список доступных принтеров"""
+    from printer import get_printer
+
+    printer_instance = get_printer()
 
     return JsonResponse({
         'success': True,
         'printers': enum_local_printers(),
-        'default': PrintManager.get_default_printer(),
+        'default': printer_instance.get_default_printer(),
     })
 
 
@@ -79,13 +84,9 @@ def save_barcode(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-
-            from .utilite import PrintMonitor
             monitor = PrintMonitor()
             result = monitor.process_json_data(data)
-
             return result
-
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -99,16 +100,13 @@ mouse_state = PcController()
 def turn_state_mouse(request):
     if request.method == "POST":
         try:
-
             if request.content_type == 'application/json':
                 state = json.loads(request.body)
-
                 mouse_state.state = state['state']
-
                 mouse_state.prevent_sleep()
                 return JsonResponse({'status': f"{state}"})
         except Exception as e:
-            return JsonResponse({'e': e})
+            return JsonResponse({'e': str(e)})
 
 
 def get_custom_labels(request):
