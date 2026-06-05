@@ -488,7 +488,7 @@ body {
   margin-bottom: 40px;
 }
 
-.module-card {
+.simple-module-card {
   position: relative;
   background: var(--glass);
   backdrop-filter: blur(12px);

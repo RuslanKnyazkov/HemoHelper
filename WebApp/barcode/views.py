@@ -8,7 +8,7 @@ from .models import CustomLabel
 from django.views.generic import CreateView
 from .forms import LabelCreateForm
 from django.urls import reverse_lazy
-from printer import get_printer  # ← ИСПРАВЛЕНО: импорт из printer
+from printer import get_printer
 import logging
 
 logger = logging.getLogger(__name__)

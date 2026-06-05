@@ -1,0 +1,48 @@
+<div class="roche-analyzer">
+  <div class="analyzer-header">
+    <div class="analyzer-title">
+      <div class="analyzer-icon">
+        <i class="fas fa-microscope"></i>
+      </div>
+      <div class="analyzer-info">
+        <div class="analyzer-selector">
+          <label for="analyzer-select">Анализатор:</label>
+          <select id="analyzer-select" class="analyzer-select">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+        <h2 id="analyzer-name">Roche Cobas 8000</h2>
+        <p id="analyzer-description">Модульная аналитическая система</p>
+      </div>
+    </div>
+    <div class="analyzer-status">
+      <span class="status-badge online"
+        ><i class="fas fa-circle"></i> Онлайн</span
+      >
+      <span class="status-badge" id="modules-count"
+        ><i class="fas fa-microchip"></i> 0 модулей</span
+      >
+    </div>
+  </div>
+
+  <div class="analyzer-modules">
+    <!-- Модули будут загружаться динамически -->
+  </div>
+
+  <div class="analyzer-legend">
+    <div class="legend-title">
+      <i class="fas fa-info-circle"></i> Состояние каналов:
+    </div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="channel-dot active"></span><span>Активен</span>
+      </div>
+      <div class="legend-item">
+        <span class="channel-dot inactive"></span><span>Неактивен</span>
+      </div>
+      <div class="legend-item">
+        <span class="both-icon">⚡</span><span>Работает на обоих каналах</span>
+      </div>
+    </div>
+  </div>
+</div>

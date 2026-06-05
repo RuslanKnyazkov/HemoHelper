@@ -1,10 +1,12 @@
 {% extends 'base.html' %} {% load static %} {% block title %}Гемотест Хелпер —
 Лабораторная информационная система{% endblock %} {% block extra_css %}
+
 <link rel="stylesheet" href="{% static 'css/index.css' %}" />
 <link
   href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
   rel="stylesheet"
 />
+
 {% endblock %} {% block content %}
 <!-- Анимированный фон -->
 <div class="animated-bg">
@@ -36,10 +38,7 @@
       </svg>
     </div>
     <h1 class="hero__title">Гемотест Хелпер</h1>
-    <p class="hero__subtitle">
-      Современная лабораторная информационная система для автоматизации
-      процессов печати, управления анализами и контроля качества
-    </p>
+    <p class="hero__subtitle">Маленький помошник для лаборатории.</p>
   </div>
 </section>
 
@@ -167,7 +166,7 @@
 
   <!-- Модули с анимацией манипулятора -->
   <div class="modules-grid">
-    <div class="module-card" onclick="location.href = '/aliquots/'">
+    <div class="simple-module-card" onclick="location.href = '/aliquots/'">
       <div class="module-icon"><i class="fas fa-layer-group"></i></div>
       <div class="module-title">Многоуровневые аликвоты</div>
       <div class="module-desc">
@@ -178,7 +177,7 @@
         <div class="arm-beam"></div>
       </div>
     </div>
-    <div class="module-card" onclick="location.href = '/teach/mapping/'">
+    <div class="simple-module-card" onclick="location.href = '/teach/mapping/'">
       <div class="module-icon"><i class="fas fa-microscope"></i></div>
       <div class="module-title">Roche Cobas 8000</div>
       <div class="module-desc">
@@ -189,7 +188,7 @@
         <div class="arm-beam"></div>
       </div>
     </div>
-    <div class="module-card" onclick="location.href = '/reagents/'">
+    <div class="simple-module-card" onclick="location.href = '/reagents/'">
       <div class="module-icon"><i class="fas fa-flask"></i></div>
       <div class="module-title">ACL Top 700</div>
       <div class="module-desc">
@@ -201,6 +200,7 @@
       </div>
     </div>
   </div>
+  {%include 'roche-analyzer.html'%}
 </main>
 
 <!-- Уведомление -->
@@ -210,4 +210,11 @@
 </div>
 {% endblock %} {% block extra_js %}
 <script src="{% static 'js/index.js' %}"></script>
+<script src="{% static 'js/teach-analyzer.js' %}"></script>
+<script src="{% static 'js/teach-guide.js' %}"></script>
+<script src="{% static 'js/teach-roche-api.js' %}"></script>
+<script src="{% static 'js/teach-roche-ui.js' %}"></script>
+<script src="{% static 'js/teach-crude.js' %}"></script>
+<script src="{% static 'js/teach-init.js' %}"></script>
+
 {% endblock %}

@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
   createFallingVials();
   loadPrinters();
   startAnalysisAnimation();
-
+  window.renderRocheModules();
   // Выбор режима
   document.querySelectorAll(".mode-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
